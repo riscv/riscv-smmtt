@@ -1,0 +1,252 @@
+[[chapter4]]
+
+=== Smmtt: Page-based Physical Address Protection for Supervisor Domains
+
+==== Smmtt[34, 46, 56]rw
+
+The MTTPPN rooted structure for the MTT is shown below. The structure
+below shows a 56 bit physical address lookup; for lower physical address
+widths e.g. 46 bits, the L3 table is not applicable. In this mode of the
+SmmttXrw, each page is associated with a read and a write access
+permission (2 bits). Figure 4.1.1 shows the Physical address (PA) being
+used to index into the MTT structure in memory to lookup access
+permissions for the supervisor domain specified in the MTT L1 entry.
+Intermediate MTT L3 and L2 entries are used to allow this structure to
+be sparsely populated.
+
+[caption="Figure {counter:image}: ", reftext="Figure {image}"]
+[title= "MTT Structures (overview)"]
+image::fig3.png[]
+
+
+MTT L3 Entry
+
+[width="100%",cols="10%,9%,26%,55%",options="header",]
+|===
+|63 |44 |43 |0
+|ZERO | |MTT L2 PPN |
+|20 | |44 |
+|===
+
+==== Figure 4.1.2: MTT L3 Entry
+
+MTT L2 Entry
+
+[width="100%",cols="11%,9%,14%,14%,26%,26%",options="header",]
+|===
+|63 |46 |45 |44 |43 |0
+|ZERO | |TYPE | |INFO |
+|18 | |2 | |44 |
+|===
+
+==== Figure 4.1.3: MTT L2 Entry
+
+The ZERO field must always be 0.
+
+The TYPE field determines the interpretation of the MTT L2 entry. The
+TYPE field encoding is as follows:
+
+* 0000b - 1G_disallow - read and write access is not allowed for the 1G
+range for this supervisor domain
+* 0001b - 1G_allow_r - read access for the 1G range is allowed for the
+supervisor domain
+* 0011b - 1G_allow_rw - read and write access for the 1G range is allowed
+for the supervisor domain
+* 0100b - MTT_L1_DIR - The 32M range is composed of 8192x4K pages
+* 0111b - 2M_PAGES - The 32M range is composed of 16x2M pages
+* All other encodings are reserved and cause an access violation
+
+The INFO field depends on the TYPE field and is formatted as per the
+table:
+
+[width="100%",cols="19%,81%",options="header",]
+|===
+|*MTT L2 Entry Type* |*Description, INFO and TYPE field encoding*
+|1G_disallow a|
+The 1G range of address is not allowed for the domain.
+
+The INFO field must be 0.
+
+When configuring 1G ranges, RDSM ensures that 16 L2 entries, each
+corresponding to 32M of address space, have identical TYPE field values.
+
+|1G_allow_r a|
+The 1G range of address is allowed (read only) for the domain.
+
+The INFO field must be 0.
+
+When configuring 1G ranges, RDSM ensures that 16 L2 entries, each
+corresponding to 32M of address space, have identical TYPE field values.
+The INFO field must be 0.
+
+|1G_allow_rw a|
+The 1G range of address is allowed (read/write) for the domain.
+
+The INFO field must be 0.
+
+When configuring 1G ranges, RDSM ensures that 16 L2 entries, each
+corresponding to 32M of address space, have identical TYPE field values.
+The INFO field must be 0.
+
+|MTT_L1_DIR a|
+The INFO field provides the PPN of the MTT L1 page.
+
+Entries of the L1 page hold a 4-bit permission field to indicate the
+access for the supervisor domain (described in the L1 entry - see figure
+4.1.4).
+
+|2M_PAGES a|
+The 32M range of address space is partitioned into 2M pages where each
+page has read/write access allowed/not.
+
+The INFO field 31:0 holds 2 bits per 2M address range to indicate access
+disallowed (00b), read allowed (01b), read-write-allowed (11b); (10b is
+reserved). Bits 32:43 are reserved and must be zero.
+
+|===
+
+==== Table 4.1.1: MTT L2 Entry Type for Smmtt[
+
+MTT L1 table is populated if protection granularity of the 4KiB page is
+desired for the supervisor domain.
+
+MTT L1 entry is indexed using PA[24:12] and each entry is a 4-bit field
+in the referenced page. The bits 24:16 are used to select a 64-bit field
+in the page and bits 15:12 are used to select a 4 bit field in those 64
+bits. Thus, there are 4 bits for each 4 KiB page. The encoding is as
+follows:
+
+* 0000b - the 4K page specifies access is not allowed for the domain
+* 0001b - the 4K page specifies *read* access is allowed for the domain
+* 0011b - the 4K page specifies *read* and *write* access is allowed for
+the domain
+* Remaining encodings are reserved and cause an access violation.
+
+MTT L3 Entry
+
+//[width="99%",cols="12%,16%,6%,38%,2%,26%",options="header",]
+|===
+|63 |61 |60 |4 |3 |0
+|Perms (see encoding above) | |… | |Perms (see encoding above) |
+|4 | | | |4 |
+|===
+
+==== Figure 4.1.4: MTT L3 Entry
+
+==== Smmtt[34, 46, 56]
+
+The MTTPPN rooted structure for the MTT is shown below. The structure
+below shows a 56 bit physical address lookup; for lower physical address
+widths e.g. 46 bits, the L3 table is not applicable. In this mode of the
+SmmttX, each page is associated with an access allowed/disallowed
+permission (1 bit) to allow for efficient caching.
+
+[caption="Figure {counter:image}: ", reftext="Figure {image}"]
+[title= "MTT Structures (overview)"]
+image::fig4.png[]
+
+
+MTT L3 Entry
+
+//[width="100%",cols="10%,9%,26%,55%",options="header",]
+|===
+|63 |44 |43 |0
+|ZERO | |MTT L2 PPN |
+|20 | |44 |
+|===
+
+==== Figure 4.2.2: MTT L3 Entry
+
+MTT L2 Entry
+
+//[width="100%",cols="11%,9%,14%,14%,26%,26%",options="header",]
+|===
+|63 |46 |45 |44 |43 |0
+|ZERO | |TYPE | |INFO |
+|18 | |2 | |44 |
+|===
+
+==== Figure 4.2.3: MTT L2 Entry
+
+The ZERO field must always be 0.
+
+The TYPE field determines the interpretation of the MTT L2 entry. The
+TYPE field encoding is as follows:
+
+* 00b - 1G_disallow - access to the 1G range is disallowed
+* 01b - 1G_allow - access to the 1G range is allowed
+* 10b - MTT_L1_DIR - The 64M range is composed of 16384x4K pages
+* 11b - 2M_PAGES - The 64M range is composed of 32x2M pages
+
+The INFO field depends on the TYPE field and is formatted as per the
+table:
+
+//[width="100%",cols="19%,81%",options="header",]
+|===
+|*MTT L2 Entry Type* |*Description, INFO and TYPE field encoding*
+|1G_allow a|
+The 1G range of address is allowed for the domain.
+
+The INFO field must be 0.
+
+When configuring 1G ranges, RDSM ensures that 16 L2 entries, each
+corresponding to 64M of address space, have identical TYPE field values.
+
+|1G_disallow a|
+The 1G range of address is not allowed for the domain.
+
+The INFO field must be 0.
+
+When configuring 1G ranges, RDSM ensures that 16 L2 entries, each
+corresponding to 64M of address space, have identical TYPE field values.
+
+|MTT_L1_DIR a|
+The INFO field provides the PPN of the MTT L1 page.
+
+Entries of the L1 page hold a 2-bit field to indicate the access for the
+supervisor domain (described in the L1 entry - see figure 4.2.4).
+
+|2M_PAGES a|
+The 64M range of address space is partitioned into 2M pages where each
+page has access allowed/not.
+
+The INFO field bits 31:0 holds 1 bit per 2M address range to indicate
+access disallowed(0b) or allowed (1b). INFO field bits 43:32 are
+reserved (must be zero).
+
+|===
+
+==== Table 4.2.1: MTT L2 Entry Type for Smmtt[34, 46, 56]
+
+MTT L1 table is populated if 4KiB page confidential pages are required
+for the supervisor domain.
+
+MTT L1 entry is indexed using PA[25:12] and each entry is a 2-bit field
+in the referenced page. The bits 25:16 are used to select a 64-bit field
+in the page and bits 16:12 are used to select a 2 bit field in those 64
+bits. Thus, there are 2 bits for each 4 KiB page. The encoding is as
+follows:
+
+* 00b - the 4K page specifies access is not allowed for the domain
+* 01b - the 4K page specifies access is allowed for the domain
+* 1xb - reserved (access causes access violation).
+
+MTT L3 Entry
+
+//[width="99%",cols="12%,16%,6%,38%,2%,26%",options="header",]
+|===
+|63 |62 |61 |2 |1 |0
+|Perms (see encoding above) | |… | |Perms (see encoding above) |
+|2 | | | |2 |
+|===
+
+==== Figure 4.2.4: MTT L3 Entry
+
+===== Caching
+
+Implementations with virtual memory are permitted to cache translations and permissions in address translation cache structures. Similarly, access permissions from the MTT lookup may be cached. The PMP and MTT settings for the resulting physical address may be checked (and possibly cached) at any point between the address translation and the explicit memory access. If caching is occuring, when the MTT settings are modified, M-mode software must synchronize the cached MTT state with the virtual memory system and any PMP, MTT or address-translation caches. This is accomplished by executing an SFENCE.VMA instruction with rs1=x0 and rs2=x0, or HFENCE.GVMA as needed, after the MTT is modified. If page-based virtual memory is not implemented, memory accesses check the PMP settings synchronously, but may check MTT settings that are cached, so a new MTT invalidation (MTTINVAL) instruction is needed. When Svinval is implemented, MTTINVAL is only ordered against SFENCE.W.INVAL and SFENCE.INVAL.IR instructions. As part of the MTT update, the RDSM must ensure that it uses SFENCE.W.INVAL to guarantee that any previous stores to MTT are made visible before invoking the MTTINVAL. The RDSM must then use SFENCE.INVAL.IR to guarantee that all subsequent implicit references to MTT are ordered to be after the MTT cache invalidation. [TBD - register interface for flushing all MTT cached entries, vs specific physical address at page size granularity].
+
+Data and instructions cached for one supervisor domain shall not be accessible to another supervisor domain, so the SDID (along with the other execution context identifiers such as ASID, VMID, shall factor into the data and instruction caches tags to enforce isolation.
+
+
+

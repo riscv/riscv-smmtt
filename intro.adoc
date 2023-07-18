@@ -1,15 +1,34 @@
-[[intro]]
-== Introduction
+== Supervisor Domain Access Protection (SmMTT)
+v0.51
 
-Lorem ipsum indexterm:[Lorem ipsum] dolor sit amet, consectetur adipiscing elit, sed do *eiusmod tempor* incididunt ut labore et dolore magna aliqua. Felis imperdiet proin fermentum leo vel orci porta. Volutpat lacus laoreet non curabitur indexterm:[curabitur] gravida indexterm:[gravida]. Posuere urna nec tincidunt praesent semper feugiat nibh. Elit ``ullamcorper`` dignissim cras tincidunt lobortis. Malesuada fames ac turpis egestas integer eget. Tristique sollicitudin nibh sit amet commodo. Sed felis eget velit aliquet. Sit amet aliquam id diam maecenas ultricies mi. Consectetur purus ut faucibus pulvinar. Lectus urna duis convallis convallis tellus id. Fermentum iaculis eu non diam. Feugiat in fermentum posuere urna nec tincidunt praesent semper feugiat. Urna nec tincidunt praesent semper feugiat nibh.
+[width="100%",cols="11%,89%",options="header",]
+*The following is a proposal being submitted for the purposes of
+discussion and collaboration to extend the RISC-V privileged ISA. This
+proposal has inputs from AP-TEE TG, Security HC discussions and the RVI
+Security F2F on April 25, 2023. At this time, this is an initial
+proposal and is not an official draft of a RISC-V specification.*
 
-Commodo viverra maecenas accumsan lacus. Vulputate odio ut enim blandit indexterm:[blandit] volutpat maecenas volutpat blandit. Urna porttitor rhoncus dolor purus non. Tellus mauris a diam maecenas sed. Vitae auctor eu augue ut lectus. Ridiculus mus mauris vitae ultricies leo integer. Consequat semper viverra nam *libero* justo laoreet sit amet. Pellentesque pulvinar pellentesque habitant morbi tristique senectus et netus et. Ac placerat vestibulum lectus mauris ``ultrices`` eros in cursus turpis. Accumsan in nisl nisi scelerisque eu ultrices vitae. Cras ornare arcu dui vivamus. Vitae congue mauris rhoncus aenean. Consequat mauris nunc congue nisi vitae suscipit tellus. Tempus egestas sed sed risus pretium quam vulputate dignissim. Quis varius quam quisque id diam vel. Mattis nunc sed blandit libero volutpat sed cras ornare arcu. Amet mauris commodo quis imperdiet massa tincidunt nunc.
 
-[NOTE]
-====
-The name RISC-V indexterm:[RISC-V] was chosen to represent the fifth major RISC ISA design from UC Berkeley (RISC-I cite:[riscI-isca1981], RISC-II cite:[Katevenis:1983], SOAR cite:[Ungar:1984], and SPUR cite:[spur-jsscc1989] were the first four). We also pun on the use of the Roman numeral "V" to signify "variations" and "vectors", as support for a range of architecture research, including various data-parallel accelerators, is an explicit goal of the ISA design.
-====
+=== Introduction and Motivation
+This document describes Supervisor Domain Access Protection - RISC-V privileged architecture extension to support physical address space (memory and devices) isolation for more than one supervisor domain use cases for RISC-V platforms. Use cases may use supervisor domains to reduce the supervisor Trusted Computing Base (TCB), with differential access to memory and other platform resources e.g. Confidential Computing (CoVE), Security Services, Secure Devices etc.
 
-=== Sub Section of Introduction
+Tenant (application or VM) workloads on multi-tenant platforms rely on hardware-based isolation primitives that are managed by the host/privileged software. Traditional host software (operating systems and virtual machine monitors) have unfettered access to system memory, devices and hardware isolation mechanisms such as the memory management unit (MMU) or physical memory protection (PMP) registers. Typical multi-tenant platforms also have a very large Trusted Computing Base (TCB) and have many threat actors that influence the TCB. For example, in a multi-tenant data-center environment, the host software, devices and device drivers, cloud operators, orchestration services, other tenant workloads etc. are all considered threat vectors. Additional threats originate due to deployment models, for example, an embedded platform deployed in the field is exposed to physical threat vectors. Hence, in many scenarios isolated supervisor domains are desired to be able to express differentiated trust models and secure access to platform resources. A supervisor domain has resources (such as memory/IO regions, processing elements, devices and interrupts) to perform their function.
 
-Pellentesque habitant morbi *tristique* senectus et netus et. Aliquam purus sit amet luctus. Odio eu ``feugiat`` pretium nibh ipsum consequat nisl vel. Euismod lacinia at quis risus sed vulputate odio ut. Eu sem integer vitae justo eget. Cursus euismod quis viverra nibh. Tempus egestas sed sed risus. Quis imperdiet massa tincidunt nunc pulvinar. Id venenatis a condimentum vitae sapien pellentesque habitant.
+[caption="Figure {counter:image}: ", reftext="Figure {image}"]
+[title= "Supervisor Domains"]
+image::fig1.png[]
+
+
+A supervisor domain is associated with a set of physical address regions that are isolated from other supervisor domains on the same platform, with only the Root Domain Security Manager (RDSM) with access to all of the physical address space. A supervisor domain identifier (SDID) is associated with the supervisor domain to facilitate physical address protection fences on a per supervisor domain basis. Supervisor domains must rely on a TCB which consists of the RDSM (software) and hardware (hart, SoC, Root-of-trust) that enforces the isolation properties for the supervisor domain. Isolation of the workloads within a supervisor domain is the responsibility of the OS/hypervisor managing the supervisor domain, here referred to as the Supervisor Domain Security Manager (SDSM). 
+
+A key goal of using multiple domains is to be able to reduce the common TCB across domains, and should enable the attestation [2] of each domain independently from other domains. Sensitive data may be entrusted to a particular domain after verifying the trust properties statically (via boot) or dynamically (via attestation). These trust properties are established as part of the hardware and software supply chain, system configuration and may be additionally evaluated using attestation mechanisms. The security certification of the RDSM is desirable but out of scope of this specification.
+
+Use cases for supervisor domain isolation range from embedded to application/server-class platforms. Some examples where supervisor domains can be used are: 
+
+* A trusted execution environment domain that isolates security services/applications.
+* A confidential computing domain which enforces confidentiality and integrity for workload data-in-use from the host/untrusted hypervisor, along with attestation of the TCB. 
+* A host (operator) domain that manages resources on the platform, and may assign resources to other domains.
+* A service-provider domain that has exclusive access to some devices.
+
+In order to avoid re-factoring of deployed host software, workloads and applications, new hardware primitives are required to support memory isolation for domains. A second key requirement the new hardware primitives must address is the performance and scalability of physical memory isolation at a page-level to support rich-OS memory management models. This specification describes the architecture primitives to support the requirements of a multi-supervisor domain physical address isolation model via a Supervisor Domain Access Protection (Smmtt) extension for RISC-V processor-based platforms.
+

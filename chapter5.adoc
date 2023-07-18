@@ -1,0 +1,117 @@
+[[chapter5]]
+
+=== Svpams: Physical Address Metadata Selector
+
+
+*Usage*: The RDSM uses the MTT to create isolated memory regions
+associated with specific supervisor domains to enforce the required
+software access-control policies. Typically a supervisor domain has
+*exclusive/private memory* access to the memory pages of a region - a
+property enforced by the RDSM via the MTT. In some usage scenarios, one
+of more SDSMs may negotiate access to a common/shared pool of memory
+pages - this memory region may be accessible to all supervisor domains
+i.e. *globally-shared memory,* or a specific subset of supervisor
+domains may share a set of one or more memory pages as
+*restricted-shared* *memory*.
+
+As described in the
+link:#semantics-and-security-properties[[.underline]#security semantics
+and properties#] section, some usage/threat models may require physical
+protection for memory via cryptography. In this scenario, the meta-data
+associated with physical memory may be the SDID and a key ID used to
+identify a cryptographic context (in other sub-systems on the platform).
+The RDSM-enforced SDID may be sufficient to select a unique key ID for
+memory exclusive to the workload for a particular domain. However for
+shared memory or additional cryptographic contexts for a workload, a
+SDSM or one of the SDSM-hosted workloads may provide additional key IDs
+that can be selected via the *physical address metadata selector.* In
+the minimal case, globally-shared memory setup for all supervisor
+domains may require the selection of one different key ID for memory
+encryption of the shared region. Other meta-data values associated with
+the physical address may also be selected via the Physical Address
+Metadata Selector.
+
+Svpams
+
+Svpams may be enabled via the menvcfg (and henvcfg) registers. Once
+enabled, the 4 bit PA metadata is derived as part of the address
+translation and is used to select 1 of 16 possible metadata qualifiers
+that should be applied to accesses that use the translated address. Any
+caching structures that cache the address translation may also cache the
+PA meta-data as part of the cached translation.
+
+Figure 5.1.1: Enabling Svpams via menvcfg and menvcfgh:
+
+//[width="83%",cols="13%,4%,5%,4%,5%,19%,18%,6%,7%,4%,3%,3%,3%,6%",options="header",]
+|===
+|63 |62 | |*61* | |60 |8 |7 |6 |5 |4 |3 |1 |0
+|STCE |PBMTE | |*PAMSE* | |WPRI | |CBZE |CBCFE |CBIE | |WPRI | |FIOM
+|===
+
+Figure 5.1.2: Enabling Svpams via henvcfg and henvcfgh:
+
+//[width="83%",cols="14%,3%,5%,4%,5%,19%,18%,6%,7%,4%,3%,3%,3%,6%",options="header",]
+|===
+|63 |62 | |*61* | |60 |8 |7 |6 |5 |4 |3 |1 |0
+|VSTCE |PBMTE | |*PAMSE* | |WPRI | |CBZE |CBCFE |CBIE | |WPRI | |FIOM
+|===
+
+Figure 5.1.3: Page table entry for Sv57, Sv48, Sv39:
+
+//[width="83%",cols="16%,4%,5%,4%,5%,4%,7%,12%,18%,9%,2%,2%,2%,2%,2%,2%,2%,2%",options="header",]
+|===
+|63 |62 |61 |60 |58 |57 |54 |53 |10 |9 8 |7 | | | | | | |0
+|N |PBMT | |Reserved | |*PA Metadata Selector* | a|
+PPN per Sv
+
+MODE
+
+| |Reserved |D |A |G |U |X |W |R |V
+|===
+
+Page table entry for Sv32 (TBD): Only option is to use bits 8:9 in the
+pte for a 2-bit PAMS
+
+Figure 5.1.4: Metadata CSRs
+
+//[width="100%",cols="26%,25%,25%,6%,6%,12%",options="header",]
+|===
+| |MXLEN-1 |4 |3 | |0
+|CSR0 |Metadata (WARL interpreted per Type) | |Type | |
+| | | | | |
+| |… | | | |
+|CSR15 | | | | |
+|===
+
+PAMS Types:
+
+0 - None - Metadata is Reserved (must be zero)
+
+1 - Key Id - Metadata is a WARL field for supported Key identifier
+
+Figure 5.1.4: Metadata CSRs mapping for key ID selector
+
+//[width="100%",cols="26%,25%,25%,6%,6%,12%",options="header",]
+|===
+| |MXLEN-1 |4 |3 | |0
+|CSR0 |Key ID (WARL) | |Type = 1 | |
+| |Key ID (WARL) | |Type = 1 | |
+| |… | | | |
+|CSR15 |Key ID (WARL) | |Type = 1 | |
+|===
+
+Other metadata types may be defined in the future. Any other types to
+define now?
+
+When two-stage translation is not enabled in a supervisor domain, and
+satp.MODE is not zero, S-stage PAMS selects the physical address
+metadata. When two-stage address translation is enabled using the
+H-extension in a supervisor domain, If the hgatp.MODE is not zero,
+G-stage PAMS is used to select the metadata and VS-stage PAMS is ignored
+(VS-stage PAMS becomes reserved). This model is enforced to enforce the
+policy per the highest privilege supervisor entity in the supervisor
+domain.
+
+Same CSRs indexed from PMP also?
+
+
