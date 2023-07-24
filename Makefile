@@ -1,5 +1,5 @@
 HEADER_SOURCE := header.adoc
-PDF_RESULT := example-spec.pdf
+PDF_RESULT := smmtt-spec.pdf
 
 all: build
 

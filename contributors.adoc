@@ -1,18 +1,7 @@
 == Contributors
 
-This RISC-V specification has been contributed to directly or indirectly by:
+This RISC-V specification has been contributed to directly or indirectly by (in 
+alphabetical order): Andy Dellow, Dean Liberty, Deepak Gupta, Guerney Hunt, 
+Krste Asanovic, Mark Hill, Nick Wood, Osman Koyuncu, Paul Elliott, Ravi Sahita (Editor), 
+Samuel Ortiz, Ved Shanbhogue, Wojchiech Ozga
 
-[%hardbreaks]
-* Ravi Sahita <ravi@rivos.com>
-* Krste Asanovic <krste@sifive.com>
-* Ved Shanbhogue
-* Osman Koyuncu 
-* Mark Hill
-* Dean Liberty
-* Guerney Hunt
-* Nick Wood
-* Samuel Ortiz
-* Deepak Gupta
-* Andy Dellow
-* Paul Elliott
-* Wojchiech Ozga

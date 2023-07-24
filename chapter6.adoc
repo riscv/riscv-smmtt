@@ -1,6 +1,6 @@
 [[chapter6]]
 
-=== Static and Runtime Configuration
+== Static and Runtime Configuration
 
 MTT must support both static and run-time configurability. A memory
 region (consisting of one or more pages) may be (re)assigned from one
@@ -37,7 +37,7 @@ enforced via an inline memory encryption engine. It is expected that the
 RDSM can use trusted platform-specific methods to enumerate which
 regions can be designated as access-controlled via the MTT.
 
-=== Hardware Enforcement
+== MTT Checker Implementation considerations 
 
 MTTs are checked by the MTT checker for all accesses to eligible
 physical memory, including accesses that have undergone virtual to
@@ -80,36 +80,7 @@ CSR mode field must allow the RDSM to explicitly disable the MTT lookup
 for RDSM-selected SDIDs. The CSR allows this by setting the MTT to Bare
 mode for such cases.
 
-=== Caching
-
-Implementations with virtual memory are permitted to cache translations
-and permissions in address translation cache structures. Similarly,
-access permissions from the MTT lookup may be cached. The PMP and MTT
-settings for the resulting physical address may be checked (and possibly
-cached) at any point between the address translation and the explicit
-memory access. If caching occuring, when the MTT settings are modified,
-M-mode software must synchronize the cached MTT state with the virtual
-memory system and any PMP, MTT or address-translation caches. This is
-accomplished by executing an SFENCE.VMA instruction with rs1=x0 and
-rs2=x0, or HFENCE.GVMA as needed, after the MTT is modified. If
-page-based virtual memory is not implemented, memory accesses check the
-PMP settings synchronously, but may check MTT settings that are cached,
-so a new MTT invalidation (MTTINVAL) instruction is needed. When Svinval
-is implemented, MTTINVAL is only ordered against SFENCE.W.INVAL and
-SFENCE.INVAL.IR instructions. As part of the MTT update, the RDSM must
-ensure that it uses SFENCE.W.INVAL to guarantee that any previous stores
-to MTT are made visible before invoking the MTTINVAL. The RDSM must then
-use SFENCE.INVAL.IR to guarantee that all subsequent implicit references
-to MTT are ordered to be after the MTT cache invalidation. [TBD -
-register interface for flushing all MTT cached entries, vs specific
-physical address at page size granularity].
-
-Data and instructions cached for one supervisor domain should not be
-accessible to another supervisor domain, so the SDID (along with the
-other execution context identifiers such as ASID, VMID, shall factor
-into the data and instruction caches tags to enforce isolation.
-
-=== Extensibility
+== Extensibility
 
 In addition to the access permissions looked up via the MTT structure,
 additional access qualifiers and metadata may be maintained and/or
