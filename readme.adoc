@@ -1,10 +1,6 @@
-= RISC-V docs-spec-template
+= RISC-V Specification
 
-This repository is used to prime GitHub repos for the RISC-V organization which will be used
-to create specifications.
-
-**If you are reading this in a specification repo, please update the title for this section and
-provide your introduction to your repository.**
+This document describes Supervisor Domain Access Protection - RISC-V privileged architecture extension to support physical address space (memory and devices) isolation for more than one supervisor domain use cases for RISC-V platforms. Use cases may use supervisor domains to reduce the supervisor Trusted Computing Base (TCB), with differential access to memory and other platform resources e.g. Confidential Computing (CoVE), Security Services, Secure Devices etc.
 
 = License
 
@@ -19,35 +15,24 @@ For instructions on how to contribute please see the link:CONTRIBUTING.md[CONTRI
 
 = Dependencies
 
-This project is built using AsciiDoctor (Ruby). The repository has been setup to build the PDF on
-checkin using GitHub actions.  Workflow dependencies are located in the `dependencies` directory.
+To build the document, you'll need the following tools installed on your system:
 
-For more information on AsciiDoctor, specification guidelines, or building locally, see the
-https://github.com/riscv/docs-dev-guide[RISC-V Documentation Developer Guide].
+```
+  Make
+  asciiDoctor-pdf, asciidoctor-bibtex, asciidoctor-diagram and asciidoctor-mathematical
+  Docker
+```
 
-= Cloning the project
+= Cloning and Building the Document
 
-This project uses https://git-scm.com/book/en/v2/Git-Tools-Submodules[GitHub Submodules]
-to include the https://github.com/riscv/docs-resources[RISC-V docs-resources project]
-to achieve a common look and feel.
+This project uses submodules to include the RISC-V documentation toolchain. 
 
-When cloning this repository for the first time, you must either use
-`git clone --recurse-submodules` or execute `git submodule init` and `git submodule update` after the clone to populate the docs-resources directory.  Failure to clone the submodule, will result
-in the PDF build fail with an error message like the following:
+```
+  git clone --recurse-submodules https://github.com/riscv/riscv-smmtt.git
+  cd ./riscv-smmtt.git
+  make VERSION=v1.0.0 REVMARK=Draft
+```
 
-    $ make
-    asciidoctor-pdf \
-    -a toc \
-    -a compress \
-    -a pdf-style=docs-resources/themes/riscv-pdf.yml \
-    -a pdf-fontsdir=docs-resources/fonts \
-    --failure-level=ERROR \
-    -o profiles.pdf profiles.adoc
-    asciidoctor: ERROR: could not locate or load the built-in pdf theme `docs-resources/themes/riscv-pdf.yml'; reverting to default theme
-    No such file or directory - notoserif-regular-subset.ttf not found in docs-resources/fonts
-      Use --trace for backtrace
-    make: *** [Makefile:7: profiles.pdf] Error 1
+`VERSION`: Represents the version of the specification being built. By default, this is set to 'v0.0.0'. You can change this to a different value, like 'v1.0.0', 'v1.1.0', etc., based on the current version of your specification.
 
-= Building the document
-
-The final specification form of PDF can be generated using the `make` command.
+`REVMARK`: This represents a revision marker for the project. Its default value is 'Draft'. You may want to change this to something like 'Release', 'Stable' or 'Ratified'.
