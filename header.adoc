@@ -66,6 +66,7 @@ include::chapter3.adoc[]
 include::chapter4.adoc[]
 include::chapter5.adoc[]
 include::chapter6.adoc[]
+include::chapter7.adoc[]
 //the index must precede the bibliography
 include::index.adoc[]
 include::bibliography.adoc[]
