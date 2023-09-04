@@ -156,7 +156,7 @@ checker capabilities.
   {bits:  8, name: 'VER'},
   {bits:  1, name: 'MXL'},
   {bits: 39, name: 'WPRI'},
-  {bits: 16, name: 'custom'},
+  {bits: 16, name: 'custom'}
 ], config:{lanes: 4, hspace:1024}}
 ....
 
@@ -186,8 +186,8 @@ supervisor domain ID (`SDID`) and the MTT pointer (`MTTP).
   {bits:  8, name: 'WPRI'},
   {bits:  7, name: 'STATUS (RO)'},
   {bits:  1, name: 'BUSY (RO)'},
-  {bits: 24, name: 'WPRI'},
-], config:{lanes: 8, hspace:1024}}
+  {bits: 24, name: 'WPRI'}
+], config:{lanes: 4, hspace:1024}}
 ....
 
 The `OP` field is used to instruct IOMTTCHK to perform an operation listed in
@@ -212,8 +212,10 @@ rules and is supported only if explicitly specified by an operation.
                              rule. If the operation is not successful then the
                              contents of `operand-0` and `operand-1` are
                              `UNSPECIFIED`.
-|`MTTINVAL`    | 3         | Invalidate MTT entries from the MTT cache. The
-                             PPN of entries to invalidate are specified in
+|`MTTINVAL`    | 3         | Invalidate MTT entries from a MTT cache. The
+                             operation may be requested to invalidate all
+                             entries of an MTT cache or to invalidate entries
+                             corresponding to an address range specified in the
                              `operand-1`.
 |`IOFENCE`     | 4         | This command can be used to request that IOMTTCHK
                              ensure that all previous read and write requests
@@ -252,36 +254,57 @@ provides a status value (<<IOMTTCHK_STS>>) of the requested operation.
 | 1       | Operation was successfully completed.
 | 2       | Invalid operation (`OP`) requested.
 | 3       | Operation requested for invalid `RULEID`.
-| 4       | Operation requested for invalid `EVT_ID`.
-| 5       | Operation requested for invalid `AT`.
-| 6-63    | Reserved for future standard use.
-| 64-127  | Designated for custom use.
+| 4       | Illegal/invalid operand encodings used.
+| 5-127   | Reserved for future standard use.
+| 128-255 | Designated for custom use.
 |===
 
-Software should program the `operand-0` and `operand-1` register fields before
-requesting the `SET_ENTRY` operation using the `control` register. The following
-fields of the `operand-0` and `operand-1` register are used by the `SET_ENTRY`
-operation:
+Before requesting the `SET_ENTRY` operation using the `control` register,
+software should program the fields of the `operand-0` and `operand-1`
+registers. The `SET_ENTRY` operation utilizes the following fields from the
+`operand-0` and `operand-1` registers:
 
 * `SRC_IDT`
 * `SRC_IDM`
-* `TEE_LIM`
+* `TEE_FLT`
 * `SRC_ID`
 * `IOMMU_ID`
+* `SDID`
+* `MTT_MODE`
+* `PPN`
 
-The contents of `operand-0` and `operand-1` register are ignored by the
-`GET_ENTRY` operation. If the `GET_ENTRY` operation is not successful, then the
-contents of the `operand-0` and `operand-1` registers is unspecified. On
-successful completion of the `GET_ENTRY` operation, the following fields hold
-the configurations of the rule identified by `control.RULEID`:
+If multiple rules are programmed to match a transaction, the implementation may
+act based on any of those matching rules. However, if a transaction does not
+match any of the rules, the IO Bridge is notified of this condition. The 
+subsequent behavior of the IO Bridge for unmatched transactions remains
+`UNSPECIFIED`.
+
+An implementation that can always perform the requested operation synchronously
+The `GET_ENTRY` operation ignores the contents of both the `operand-0` and
+`operand-1` registers. If the `GET_ENTRY` operation is unsuccessful, the
+contents of these registers remain `UNSPECIFIED`. However, upon a successful
+`GET_ENTRY` operation, the listed fields reflect the configurations of the
+rule identified by `control.RULEID`. The state of any unlisted fields in the
+`operand-0` and `operand-1` registers is `UNSPECIFIED`.
 
 * `SRC_IDT`
 * `SRC_IDM`
-* `TEE_LIM`
+* `TEE_FLT`
 * `SRC_ID`
 * `IOMMU_ID`
+* `SDID`
+* `MTT_MODE`
+* `PPN`
 
+The contents of `operand-0` and `operand-1` are disregarded by the `IOFENCE`
+operation. 
 
+The `MTTINVAL` operation ignores the contents of `operand-0` register but
+utilizes the following fields from the `operand-1` register:
+
+* `PPNV`
+* `PPN`
+* `S`
 
 [[OP-0]]
 === Operand 0 register (`operand-0`)
@@ -295,12 +318,11 @@ operations requested through `control.OP`.
 {reg: [
   {bits:  4, name: 'SRC_IDT (WARL)'},
   {bits:  1, name: 'SRC_IDM (WARL)'},
-  {bits:  1, name: 'TEE_LIM (WARL)'},
-  {bits:  2, name: 'WPRI'},
+  {bits:  2, name: 'TEE_FLT (WARL)'},
+  {bits:  1, name: 'WPRI'},
   {bits: 24, name: 'SRC_ID'},
   {bits: 16, name: 'IOMMU_ID (WARL)'},
-  {bits:  8, name: 'WPRI'},
-  {bits:  8, name: 'custom'},
+  {bits: 16, name: 'SDID (WARL)'}
 ], config:{lanes: 8, hspace:1024}}
 ....
 
@@ -366,8 +388,22 @@ representing any 1-bit value.
 
 ====
 
-The `TEE_LIM` field, when set to 1, causes the rule to be matched only for
-transactions that are associated with a Trusted Execution Environment (TEE).
+The `TEE_FLT` field may be used to filter transactions associated with a Trusted
+Execution Environment (TEE). The encodings for the `TEE_FLT` field can be found
+in <<TEE_FLT>>.
+
+[[TEE_FLT]]
+.`operand-0.TEE_FLT` field encodings
+[width=100%]
+[%header, cols="12,70"]
+|===
+|`TEE_FLT` | Description
+|   0      | Reserved for future standard use.
+|   1      | Rule matches TEE-associated transactions. 
+|   2      | Rule matches transactions that are not TEE associated.
+|   3      | Rule matches both TEE-associated and non-TEE associated
+             transactions.
+|===
 
 [NOTE]
 ====
@@ -385,10 +421,78 @@ The `IOMMU_ID` field identifies the instance of the IOMMU that should be used to
 provide address translation and protection for the transactions matching this
 rule.
 
+The `SDID` field identifies the supervisor domain whose memory is accessed by
+this transaction.
+
+[[OP-1]]
+=== Operand 1 register (`operand-1`)
+
+The `operand-1` register holds the input operands or the output results of
+operations requested through `control.OP`.
+
+.Operand-1 register (`operand-1`)
+[wavedrom, , ]
+....
+{reg: [
+  {bits:  4, name: 'MTT_MODE (WARL)'},
+  {bits:  1, name: 'PPNV (WARL)'},
+  {bits:  1, name: 'S (WARL)'},
+  {bits:  4, name: 'WPRI'},
+  {bits: 44, name: 'PPN'},
+  {bits: 10, name: 'WPRI'}
+], config:{lanes: 4, hspace:1024}}
+....
+
+The `MTT_MODE` field identifies the mode of the MTT. It's interpreted as
+outlined in Table 3.1 when `capabilities.MXL` is 1, and as detailed in Table 3.2
+otherwise. The `MTT_MODE` field is programmed into the rule identified by
+`RULEID` via the `SET_ENTRY` operation and can be retrieved by the `GET_ENTRY`
+operation. Both the `IOFENCE` and `MTTINVAL` operations disregard the `MTT_MODE`
+field.
+
+The `PPN` field programs the PPN of the root page of the MTT during the
+`SET_ENTRY` operation and is retrieved by the `GET_ENTRY` operation. The
+`IOFENCE` operation disregards this field.
+
+The `MTTINVAL` operation refers to the PPNV field to determine the validity of
+the `PPN` field when it's set to 1. If the `PPNV` field is 0, the `MTTINVAL`
+operation affects all entries from the MTT associated with `RULEID`. If not, it
+acts on the PPN range as specified by the `PPN` and `S` fields. When the `PPNV`
+field is 1, the `S` field sets the address range size for the `MTTINVAL`
+operation. With an `S` field value of 0, the range size is 4 KiB. But, when the
+`S` field has a value of 1, the `MTTINVAL` operation focuses on a NAPOT range.
+This range is decided by the low-order bits of the `PPN` field, going up to the
+first low-order 0 bit (inclusive of this position). If the initial low-order 0
+bit position is denoted as `x`, the size of the range is computed as
+`(1 << (12 + x + 1))`.
 
 
 
 
+
+
+
+The `MTT_MODE` identifies the mode of the MTT and is interpreted as specified in
+Table 3.1 when `capabilities.MXL` is 1 and as specified in Table 3.2 otherwise.
+The `MTT_MODE` field is programmed into the rule identified by `RULEID` by the
+`SET_ENTRY` operation and is read out by the `GET_ENTRY` operation. The
+`MTT_MODE` field is disregareded by the `IOFENCE` and `MTTINVAL` operations.
+
+The `PPN` field is used to program the PPN of the root page of the MTT by the
+`SET_ENTRY` operation and is read out by the `GET_ENTRY` operation. This field
+is disregarded by the `IOFENCE` operation.
+
+The `MTTINVAL` operation uses the `PPNV` field to determine the validity of the
+PPN field when set to 1. If the `PPNV` field is set to 0, the `MTTINVAL`
+operation acts on all entries from the MTT associated with `RULEID`. Otherwise,
+it operates on the PPN range defined by both the `PPN` and `S` fields. When the
+`PPNV` field is set to 1, the `S` field defines the address range size for the
+`MTTINVAL` operation. If the `S` field is set to 0, the range size is 4 KiB.
+However, when the `S` field is set to 1, the `MTTINVAL` operation acts on a
+NAPOT range, determined by the low-order bits of the `PPN` field extending up to
+the first low-order 0 bit (inclusive of the 0 bit position). If the first
+ low-order 0 bit position is represented as `x`, then the range's size is
+calculated as `(1 << (12 + x + 1))`.
 
 
 
