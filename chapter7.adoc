@@ -1,4 +1,4 @@
-[[chapter6]]
+[[chapter7]]
 
 == Static and Runtime Configuration
 
