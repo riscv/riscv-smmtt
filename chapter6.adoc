@@ -2,3 +2,397 @@
 
 == I/O MTT extension
 
+Supervisor domains may be granted control over DMA-capable devices. When such
+direct device association is supported, the system might also incorporate
+multiple instances of IOMMU. Each IOMMU instance can be tied directly to a
+supervisor domain, allowing that domain to manage address translation
+and protection for DMA that originates from devices under its control.
+
+To uphold isolation properties, the DMA from the devices and the IOMMU
+linked with a supervisor domain must adhere strictly to the access protections
+encoded in the MTT of the respective supervisor domain.
+
+At any given time, a solitary supervisor domain is scheduled for execution on a
+RISC-V hart by the root domain security manager (RDSM). As part of this
+scheduling, the RDSM programs a pointer to the MTT into a CSR within the hart.
+Unlike the RISC-V harts, DMA-capable devices connected to a supervisor domain
+remain continuously active. Such devices might initiate DMA even if the
+associated domain is not currently active on any RISC-V harts. As a result, the
+MTT of all supervisor domains must be constantly active for DMA protection.
+Furthermore, the IO subsystem must possess the capability to select the
+appropriate MTT for enforcement based on the identity of the device initiating
+the DMA.
+
+Given this setup, the I/O subsystem is required to offer the following functions:
+
+* Supervisor Domain Classifier (SDCL): This classifier within the I/O subsystem
+  interprets the attributes of a DMA request and determines the appropriate MTT
+  for that request.
+
+* MTT Checker (MTTCHK): This function ensures that stipulated access controls by
+  Smmtt are applied to the memory regions accessed by the DMA. It uses the MTT
+  identified by the SDCL.
+
+Collectively, these two functionalities form a logical block in the I/O
+subsystem, referred to as the I/O MTT checker.
+
+=== Placement of I/O MTT checker
+
+The IO Bridge serves as an intermediary, situated between the IO devices and the
+system interconnect, with the primary role of processing DMA transactions. These
+IO devices can initiate DMA transactions utilizing IO Virtual Addresses (IOVA).
+Notably, an IOVA could be in the form of a Virtual Address (VA), Guest Virtual
+Address (GVA), or Guest Physical Address (GPA). The configuration and
+interfacing of the I/O MTT Checker with respect to the IO Bridge is graphically
+represented in the diagram <<IOMTTCHK>>.
+
+[[fig:IOMTTCHK]]
+.I/O MTT checker placement
+image::IOMTTCHK.png[width=800]
+
+The IO Bridge invokes the SDCL function using the SDID request interface (SDR)
+and provides it the identifiers associated with the incoming transaction. The
+SDCL classifies the request using the identifiers and provides the SDID and the
+IOMMU ID on the SDID completion interface (SDC).
+
+The IO Bridge uses the IOMMU ID to determine the IOMMU governing this request.
+The IO Bridge uses the device translation request (DTR) interface to the
+selected IOMMU to request address translation. The selected IOMMU provides the
+response to the address translation request on the device translation completion
+(DTC) interface. As part of the address translation process, the IOMMU may need
+to access its in-memory data structures over its data structure interface (DSI).
+
+The IO Bridge invokes the MTTCHK function over the MTT check request (MCR)
+interface and provides it the SDID and physical address of the access. The
+MTTCHK uses the SDID to determine the MTT associated with the supervisor domain
+and checks if the physical address may be accessed by the device or IOMMU
+associated with that supervisor domain. The result of the check is provided on
+the MTT check completion (MTC) interface to the IO Bridge. As part of the MTT
+check, the MTTCHK may need to perform implicit accesses to the MTT using the MTT
+walk interface (MWI).
+
+Each IOMMU offers a memory-mapped register programming interface that the
+associated supervisor domain uses to configure and control the IOMMU. The RISC-V
+hart employs the MTT to enforce access controls on the physical address. This is
+done to ascertain whether the supervisor domain currently executing on that
+RISC-V hart possesses the rights to access the physical address of an IOMMU
+register programming interface.
+
+The I/O MTT checker provides a memory-mapped register programming interface
+associated with the RDSM. The RDSM employs the MTT to prohibit access to these
+registers from any of the supervisor domains.
+
+=== I/O MTT Checker Register Interface
+
+Each I/O MTT checker (IOMTTCHK) register interface is memory-mapped starting at
+an 8-byte aligned physical address and inlcudes the registers used to configure
+the SDCL and MTTCHK functions in the I/O MTT checker.
+
+[NOTE]
+====
+Implementations may implementing a coarser alignment for the start address of
+the register interface. For example, some implementations may locate the
+register interface within a naturally aligned 4-KiB region (a page) of physical
+address space for each register interface. Coarser alignments may enable register
+decoding to be implemented without a hardware adder circuit.
+====
+
+The behavior for register accesses where the address is not aligned to
+the size of the access, or if the access spans multiple registers, or if the
+size of the access is not 4 bytes or 8 bytes, is `UNSPECIFIED`. An aligned 4
+byte access to a IOMTTCHK register must be single-copy atomic. Whether an 8 byte
+access to an IOMTTCHK register is single-copy atomic is `UNSPECIFIED`, and such
+an access may appear, internally to the IOMTTCHK implementation, as if two
+separate 4 byte accesses were performed.
+
+[NOTE]
+====
+The IOMTTCHK registers are defined in such a way that software can perform two
+individual 4 byte accesses, or hardware can perform two independent 4 byte
+transactions resulting from an 8 byte access, to the high and low halves of the
+register as long as the register semantics, with regards to side-effects, are
+respected between the two software accesses, or two hardware transactions,
+respectively.
+====
+
+The IOMTTCHK registers have little-endian byte order (even for systems where
+all harts are big-endian-only).
+
+[NOTE]
+====
+Big-endian-configured harts that make use of an RERI may implement the `REV8`
+byte-reversal instruction defined by the Zbb extension. If `REV8` is not
+implemented, then endianness conversion may be implemented using a sequence
+of instructions.
+====
+
+.I/O MTT Checker register layout
+[width=100%]
+[%header, cols="^3,10,^3, 18, 5"]
+|===
+|Offset|Name           |Size    |Description              | Optional?
+|0     |`capabilities` |8       |<<CAP,  Capabilities >>  | No
+|8     |`control`      |8       |<<CTRL, Control      >>  | No
+|16    |`operand-0`    |8       |<<OP-0, Operand 0    >>  | No
+|24    |`operand-1`    |8       |<<OP-1, Operand 1    >>  | No
+|===
+
+The reset value is 0 for the following registers fields.
+
+* `control` - `BUSY` and `STATUS` fields
+
+The reset value is `UNSPECIFIED` for all other registers and/or fields.
+
+[[CAP]]
+=== Capabilities (`capabilities`)
+
+The `capabilities` register is a read-only register that holds the I/O MTT
+checker capabilities.
+
+.Capabilities register fields
+[wavedrom, , ]
+....
+{reg: [
+  {bits:  8, name: 'VER'},
+  {bits:  1, name: 'MXL'},
+  {bits: 39, name: 'WPRI'},
+  {bits: 16, name: 'custom'},
+], config:{lanes: 4, hspace:1024}}
+....
+
+The `VER` field holds the version of the specification implemented by the
+I/O MTT checker. The low nibble is used to hold the minor version of the
+specification and the upper nibble is used to hold the major version of the
+specification. For example, an implementation that supports version 1.0 of the
+specification reports 0x10.
+
+The `MXL` field indicates the supported MTT address protection schemes. If 1,
+then the MTT modes for `XLEN=64` are supported else the MTT modes for `XLEN=32`
+are supported.
+
+[[CTRL]]
+=== Control register (`control`)
+
+The `control` register is used to control classification of DMA requests using
+the identifiers associated with the DMA requests to determine the associated
+supervisor domain ID (`SDID`) and the MTT pointer (`MTTP).
+
+.Control register (`control`)
+[wavedrom, , ]
+....
+{reg: [
+  {bits:  8, name: 'OP (WARL)'},
+  {bits: 16, name: 'RULEID (WARL)'},
+  {bits:  8, name: 'WPRI'},
+  {bits:  7, name: 'STATUS (RO)'},
+  {bits:  1, name: 'BUSY (RO)'},
+  {bits: 24, name: 'WPRI'},
+], config:{lanes: 8, hspace:1024}}
+....
+
+The `OP` field is used to instruct IOMTTCHK to perform an operation listed in
+<<IOMTTCHK_OP>>. The `RULEID` is identifier of a rule in the SDCL function to
+operate on. The `RULEID` value of 0 indicates that the operation applies to all
+rules and is supported only if explicitly specified by an operation.
+
+[[IOMTTCHK_OP]]
+.I/O MTT checker operations (`OP`)
+[width=100%]
+[%header, cols="16,^12,70"]
+|===
+|Operation     | Encoding ^| Description
+|--            | 0         | Reserved for future standard use.
+|`SET_ENTRY`   | 1         | Configure the rule identified by `RULEID` with the
+                             operands specified in `operand-0` and `operand-1`
+                             registers.
+|`GET_ENTRY`   | 2         | Read the configurations of a rule identified by
+                             `RULEID`. On successful completion of the
+                             operation, the `operand-0` and `operand-1`
+                             registers hold the current configurations of the
+                             rule. If the operation is not successful then the
+                             contents of `operand-0` and `operand-1` are
+                             `UNSPECIFIED`.
+|`MTTINVAL`    | 3         | Invalidate MTT entries from the MTT cache. The
+                             PPN of entries to invalidate are specified in
+                             `operand-1`.
+|`IOFENCE`     | 4         | This command can be used to request that IOMTTCHK
+                             ensure that all previous read and write requests
+                             from devices that have already been processed by
+                             IOMTTCHK be committed to a global ordering point
+                             such that they can be observed by all RISC-V harts,
+                             IOMMUs and devices in the system.
+| --           | 5-127     | Reserved for future standard use.
+| --           | 128-255   | Designated for custom use.
+|===
+
+When the `control` is written, IOMTTCHK may need to perform several actions that
+may not complete synchronously with the write. A write to the `control` sets the
+`BUSY` bit to 1 indicating that IOMTTCHK is performing the requested operation.
+The behavior of writing the `control` register when the `BUSY` bit is 1 is
+`UNSPECIFIED`.  Some implementations may ignore the second write and others may
+perform the operation determined by the second write. Software must verify that
+`BUSY` is 0 before writing `control`.
+
+[NOTE]
+====
+An implementation that can always perform the requested operation synchronously
+with the write to `control` register may hardwire the `BUSY` field to 0.
+====
+
+When the `BUSY` bit reads 0 the operation is complete and the `STATUS` field
+provides a status value (<<IOMTTCHK_STS>>) of the requested operation.
+
+[[IOMTTCHK_STS]]
+.`control.STATUS` field encodings
+[width=100%]
+[%header, cols="12,70"]
+|===
+|`STATUS` | Description
+| 0       | Reserved
+| 1       | Operation was successfully completed.
+| 2       | Invalid operation (`OP`) requested.
+| 3       | Operation requested for invalid `RULEID`.
+| 4       | Operation requested for invalid `EVT_ID`.
+| 5       | Operation requested for invalid `AT`.
+| 6-63    | Reserved for future standard use.
+| 64-127  | Designated for custom use.
+|===
+
+Software should program the `operand-0` and `operand-1` register fields before
+requesting the `SET_ENTRY` operation using the `control` register. The following
+fields of the `operand-0` and `operand-1` register are used by the `SET_ENTRY`
+operation:
+
+* `SRC_IDT`
+* `SRC_IDM`
+* `TEE_LIM`
+* `SRC_ID`
+* `IOMMU_ID`
+
+The contents of `operand-0` and `operand-1` register are ignored by the
+`GET_ENTRY` operation. If the `GET_ENTRY` operation is not successful, then the
+contents of the `operand-0` and `operand-1` registers is unspecified. On
+successful completion of the `GET_ENTRY` operation, the following fields hold
+the configurations of the rule identified by `control.RULEID`:
+
+* `SRC_IDT`
+* `SRC_IDM`
+* `TEE_LIM`
+* `SRC_ID`
+* `IOMMU_ID`
+
+
+
+[[OP-0]]
+=== Operand 0 register (`operand-0`)
+
+The `operand-0` register holds the input operands or the output results of
+operations requested through `control.OP`.
+
+.Operand-0 register (`operand-0`)
+[wavedrom, , ]
+....
+{reg: [
+  {bits:  4, name: 'SRC_IDT (WARL)'},
+  {bits:  1, name: 'SRC_IDM (WARL)'},
+  {bits:  1, name: 'TEE_LIM (WARL)'},
+  {bits:  2, name: 'WPRI'},
+  {bits: 24, name: 'SRC_ID'},
+  {bits: 16, name: 'IOMMU_ID (WARL)'},
+  {bits:  8, name: 'WPRI'},
+  {bits:  8, name: 'custom'},
+], config:{lanes: 8, hspace:1024}}
+....
+
+The `SRC_IDT` field identifies the type of identifier from the DMA transaction
+used by this classification rule. The `SRC_IDT` encodings are listed in
+<<SRC_IDT>>.
+
+[[SRC_IDT]]
+.`operand-0.SRC_IDT` field encodings
+[width=100%]
+[%header, cols="12,70"]
+|===
+|`SRC_IDT` | Description
+|    0     | None. This rule does not match any incoming transaction. All other
+             fields of the `operand-0` and `operand-1` register are ignored if
+             the `control.OP` is `SET_ENTRY`. All other fields of `operand-0`
+             and `operand-1` register are `UNSPECIFIED` if the `control.OP` is
+             `GET_ENTRY`.
+|    1     | Filter by device ID. The device ID is specified in `SRC_ID` field
+             and may be up to 24-bit wide.
+|    2     | Filter by PCIe IDE stream ID and PCIe segment ID. The IDE stream ID
+             is specified in the bits 7:0 of the `SRC_ID` field and the segment
+             ID in bits 15:8 of the `SRC_ID`. The bits 23:16 of the `SRC_ID`
+             field are ignored.
+|  3 - 7   | Reserved for future standard use.
+|  8 - 15  | Designated for custom use.
+|===
+
+[NOTE]
+====
+In PCIe systems, an originating device can be pinpointed using a unique 16-bit
+identifier. This identifier is a composite of the PCI bus number (8 bits),
+device number (5 bits), and function number (3 bits), collectively referred to
+as the routing identifier or RID. In scenarios where an IOMMU manages multiple
+hierarchies, there's also an optional segment number, which can be up to 8 bits.
+Each hierarchy in this context represents a distinct PCI Express I/O
+interconnect topology. Here, the Configuration Space addresses, which are
+delineated by the Bus, Device, and Function number tuple, remain distinct.
+Sometimes, the term Hierarchy is synonymous with Segment. Especially when in
+Flit Mode, the Segment number can be part of a Function's ID.
+====
+
+The `SRC_IDM` field, enables partial matching of the `SRC_ID` for the
+transaction.  When `SRC_IDM` is 1, the lower bits of the `SRC_ID` all the way to
+the first low order 0 bit (including the 0 bit position itself) are masked.
+
+[NOTE]
+====
+The following example illustrates the use of `SRC_IDM` when `SRC_IDT` is by
+`DEVID` and a 24-bit PCIe `device_id` comprised of the segment, bus, device, and
+function number is used. In the table below, `y` acts as a placeholder
+representing any 1-bit value.
+
+.`SRC_IDM` with `SRC_IDT` set to `DEVID` based filtering
+[cols="^1,3,3", options="header"]
+|===
+| `SRC_IDM` | `SRC_ID`                     | *Comment*
+| 0         |`yyyyyyyy  yyyyyyyy  yyyyyyyy`| One specific seg:bus:dev:func
+| 1         |`yyyyyyyy  yyyyyyyy  yyyyy011`| seg:bus:dev - any func 
+| 1         |`yyyyyyyy  yyyyyyyy  01111111`| seg:bus - any dev:func
+| 1         |`yyyyyyyy  01111111  11111111`| seg - any bus:dev:func
+|===
+
+====
+
+The `TEE_LIM` field, when set to 1, causes the rule to be matched only for
+transactions that are associated with a Trusted Execution Environment (TEE).
+
+[NOTE]
+====
+PCIe IDE provides security for transactions from one Port to another. These
+transactions might be initiated by contexts within the device, such as an SR-IOV
+virtual function, which are associated with a Trusted Execution Environment
+(TEE). Within the IDE TLP header, there's a "T" bit that helps differentiate
+transactions related to a TEE. The `TEE_LIM` filter can be employed to associate
+these TEE-related transactions with a different supervisor domain than the
+transactions not related to TEE. This distinction is made even if both types of
+transactions are received on the same PCIe IDE stream.
+====
+
+The `IOMMU_ID` field identifies the instance of the IOMMU that should be used to
+provide address translation and protection for the transactions matching this
+rule.
+
+
+
+
+
+
+
+
+
+
+
+
