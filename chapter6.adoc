@@ -187,7 +187,7 @@ supervisor domain ID (`SDID`) and the MTT pointer (`MTTP).
   {bits:  7, name: 'STATUS (RO)'},
   {bits:  1, name: 'BUSY (RO)'},
   {bits: 24, name: 'WPRI'}
-], config:{lanes: 4, hspace:1024}}
+], config:{lanes: 8, hspace:1024}}
 ....
 
 The `OP` field is used to instruct IOMTTCHK to perform an operation listed in
@@ -317,9 +317,8 @@ operations requested through `control.OP`.
 ....
 {reg: [
   {bits:  4, name: 'SRC_IDT (WARL)'},
-  {bits:  1, name: 'SRC_IDM (WARL)'},
+  {bits:  2, name: 'SRC_IDM (WARL)'},
   {bits:  2, name: 'TEE_FLT (WARL)'},
-  {bits:  1, name: 'WPRI'},
   {bits: 24, name: 'SRC_ID'},
   {bits: 16, name: 'IOMMU_ID (WARL)'},
   {bits: 16, name: 'SDID (WARL)'}
@@ -365,13 +364,38 @@ Sometimes, the term Hierarchy is synonymous with Segment. Especially when in
 Flit Mode, the Segment number can be part of a Function's ID.
 ====
 
-The `SRC_IDM` field, enables partial matching of the `SRC_ID` for the
-transaction.  When `SRC_IDM` is 1, the lower bits of the `SRC_ID` all the way to
-the first low order 0 bit (including the 0 bit position itself) are masked.
+The `SRC_IDM` field can configure `SRC_ID` matching mode for
+transactions. The `SRC_IDM` encodings are listed in <<SRC_IDM>>.
+
+[[SRC_IDM]]
+.operand-0.SRC_IDM field encodings
+[width=100%]
+[%header, cols="12,70"]
+|===
+|`SRC_IDM` | Description
+|    0     | Reserved for future standard use.
+|    1     | Unary. If Unary is selected, then this rule matches if all the bits
+             of the source ID of the transaction match the value configured in
+             the `SRC_ID` field.
+|    2     | NAPOT. If NAPOT is selected, then the rule matches a naturally
+             aligned power-of-two range of source IDs. In this mode, the lower
+             bits of the `SRC_ID`, up to and including the first low-order zero
+             bit, are masked; the unmasked bits are compared with the
+             corresponding bits in the source ID of the transaction to match.
+|    3     | TOR. If TOR (Top-Of-Range) is selected, the `SRC_ID` field
+             forms the top of a range of source IDs. If rule __r__'s `SRC_IDM`
+             is set to TOR, the rule matches any source ID __s__ if: __s__ is
+             greater than or equal to `SRC_ID` of rule __r-1__ and is less than
+             the `SRC_ID` of rule __r__. If __r__ is 0, then zero is used as the
+             lower bound. If `SRC_ID` of rule __r-1__ is greater than or equal
+             to that of rule __r__ and TOR is selected for rule __r__, then rule
+             __r__ does not match any address.
+|===
+
 
 [NOTE]
 ====
-The following example illustrates the use of `SRC_IDM` when `SRC_IDT` is by
+The following example illustrates the use of `SRC_IDM=NAPOT` when `SRC_IDT` is by
 `DEVID` and a 24-bit PCIe `device_id` comprised of the segment, bus, device, and
 function number is used. In the table below, `y` acts as a placeholder
 representing any 1-bit value.
@@ -440,7 +464,7 @@ operations requested through `control.OP`.
   {bits:  4, name: 'WPRI'},
   {bits: 44, name: 'PPN'},
   {bits: 10, name: 'WPRI'}
-], config:{lanes: 4, hspace:1024}}
+], config:{lanes: 8, hspace:1024}}
 ....
 
 The `MTT_MODE` field identifies the mode of the MTT. It's interpreted as
