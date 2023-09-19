@@ -465,38 +465,3 @@ This range is decided by the low-order bits of the `PPN` field, going up to the
 first low-order 0 bit (inclusive of this position). If the initial low-order 0
 bit position is denoted as `x`, the size of the range is computed as
 `(1 << (12 + x + 1))`.
-
-
-
-
-
-
-
-The `MTT_MODE` identifies the mode of the MTT and is interpreted as specified in
-Table 3.1 when `capabilities.MXL` is 1 and as specified in Table 3.2 otherwise.
-The `MTT_MODE` field is programmed into the rule identified by `RULEID` by the
-`SET_ENTRY` operation and is read out by the `GET_ENTRY` operation. The
-`MTT_MODE` field is disregareded by the `IOFENCE` and `MTTINVAL` operations.
-
-The `PPN` field is used to program the PPN of the root page of the MTT by the
-`SET_ENTRY` operation and is read out by the `GET_ENTRY` operation. This field
-is disregarded by the `IOFENCE` operation.
-
-The `MTTINVAL` operation uses the `PPNV` field to determine the validity of the
-PPN field when set to 1. If the `PPNV` field is set to 0, the `MTTINVAL`
-operation acts on all entries from the MTT associated with `RULEID`. Otherwise,
-it operates on the PPN range defined by both the `PPN` and `S` fields. When the
-`PPNV` field is set to 1, the `S` field defines the address range size for the
-`MTTINVAL` operation. If the `S` field is set to 0, the range size is 4 KiB.
-However, when the `S` field is set to 1, the `MTTINVAL` operation acts on a
-NAPOT range, determined by the low-order bits of the `PPN` field extending up to
-the first low-order 0 bit (inclusive of the 0 bit position). If the first
- low-order 0 bit position is represented as `x`, then the range's size is
-calculated as `(1 << (12 + x + 1))`.
-
-
-
-
-
-
-
