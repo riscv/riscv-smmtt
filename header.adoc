@@ -1,5 +1,5 @@
 [[header]]
-:description: RISC-V Supervisor Domains Access Protection (SmMTT)
+:description: RISC-V Supervisor Domains Access Protection
 :company: RISC-V.org
 :revdate: 7/2023
 :revnumber: 1.0
@@ -36,7 +36,7 @@ endif::[]
 :footnote:
 :xrefstyle: short
 
-= RISC-V Supervisor Domains Access Protection (SmMTT)
+= RISC-V Supervisor Domains Access Protection
 RISC-V SmMTT Task Group
 
 // Preamble
@@ -67,6 +67,7 @@ include::chapter4.adoc[]
 include::chapter5.adoc[]
 include::chapter6.adoc[]
 include::chapter7.adoc[]
+include::chapter8.adoc[]
 //the index must precede the bibliography
 include::index.adoc[]
 include::bibliography.adoc[]
