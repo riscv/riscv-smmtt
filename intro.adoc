@@ -1,23 +1,12 @@
-== Supervisor Domain Access Protection (SmMTT)
-v0.51
+== Introduction
 
-[width="100%",cols="11%,89%",options="header",]
-*The following is a proposal being submitted for the purposes of
-discussion and collaboration to extend the RISC-V privileged ISA. This
-proposal has inputs from AP-TEE TG, Security HC discussions and the RVI
-Security F2F on April 25, 2023. At this time, this is an initial
-proposal and is not an official draft of a RISC-V specification.*
-
-
-=== Introduction and Motivation
-This document describes Supervisor Domain Access Protection - RISC-V privileged architecture extension to support physical address space (memory and devices) isolation for more than one supervisor domain use cases for RISC-V platforms. Use cases may use supervisor domains to reduce the supervisor Trusted Computing Base (TCB), with differential access to memory and other platform resources e.g. Confidential Computing (CoVE), Security Services, Secure Devices etc.
+RISC-V privileged architecture defines mode for execution of supervisor software called S-mode. S-mode software may optionally enable Hypervisor extension to host virtual machines. Typically, there is a single supervisor domain of execution with access to all physical memory. This document describes *Supervisor Domain Access Protection* - a RISC-V privileged architecture extension to support physical address space (memory and devices) isolation for more than one supervisor domain. Supervisor domains enable trusted execution use cases for RISC-V platforms. Supervisor domains may also be used to reduce the supervisor Trusted Computing Base (TCB), with differential access to memory and other platform resources e.g. in Confidential VM Extension (CoVE), TEE Security Services, Secure Devices etc.
 
 Tenant (application or VM) workloads on multi-tenant platforms rely on hardware-based isolation primitives that are managed by the host/privileged software. Traditional host software (operating systems and virtual machine monitors) have unfettered access to system memory, devices and hardware isolation mechanisms such as the memory management unit (MMU) or physical memory protection (PMP) registers. Typical multi-tenant platforms also have a very large Trusted Computing Base (TCB) and have many threat actors that influence the TCB. For example, in a multi-tenant data-center environment, the host software, devices and device drivers, cloud operators, orchestration services, other tenant workloads etc. are all considered threat vectors. Additional threats originate due to deployment models, for example, an embedded platform deployed in the field is exposed to physical threat vectors. Hence, in many scenarios isolated supervisor domains are desired to be able to express differentiated trust models and secure access to platform resources. A supervisor domain has resources (such as memory/IO regions, processing elements, devices and interrupts) to perform their function.
 
 [caption="Figure {counter:image}: ", reftext="Figure {image}"]
 [title= "Supervisor Domains"]
 image::fig1.png[]
-
 
 A supervisor domain is associated with a set of physical address regions that are isolated from other supervisor domains on the same platform, with only the Root Domain Security Manager (RDSM) with access to all of the physical address space. A supervisor domain identifier (SDID) is associated with the supervisor domain to facilitate physical address protection fences on a per supervisor domain basis. Supervisor domains must rely on a TCB which consists of the RDSM (software) and hardware (hart, SoC, Root-of-trust) that enforces the isolation properties for the supervisor domain. Isolation of the workloads within a supervisor domain is the responsibility of the OS/hypervisor managing the supervisor domain, here referred to as the Supervisor Domain Security Manager (SDSM). 
 

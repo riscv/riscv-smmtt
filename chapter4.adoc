@@ -1,8 +1,8 @@
 [[chapter4]]
 
-=== Smmtt: Page-based Physical Address Protection for Supervisor Domains
+== `Smmtt`: Hart MTT Extension
 
-==== Smmtt[34, 46, 56]rw
+=== Smmtt[34, 46, 56]rw
 
 The `MTTPPN` rooted structure for the MTT is shown below. The structure
 below shows a 56 bit physical address lookup; for lower physical address
@@ -18,7 +18,7 @@ be sparsely populated.
 [title= "`MTT` Structures (overview)"]
 image::fig3.png[]
 
-.`MTTL3` Entry register
+.`MTTL3` entry
 [wavedrom, ,svg]
 ....
 {reg: [
@@ -27,7 +27,7 @@ image::fig3.png[]
 ], config:{lanes: 1, hspace:1024}}
 ....
 
-.`MTTL2` Entry register
+.`MTTL2` entry
 [wavedrom, ,svg]
 ....
 {reg: [
@@ -106,7 +106,7 @@ follows:
 * 0011b - the 4K page specifies *read* and *write* access is allowed for the domain
 * Remaining encodings are *reserved* and cause an access violation.
 
-.`MTTL1` Entry
+.`MTTL1` entry
 [wavedrom, ,svg]
 ....
 {reg: [
@@ -116,7 +116,7 @@ follows:
 ], config:{lanes: 1, hspace:1024}}
 ....
 
-==== Smmtt[34, 46, 56]
+=== Smmtt[34, 46, 56]
 
 The MTTPPN rooted structure for the MTT is shown below. The structure
 below shows a 56 bit physical address lookup; for lower physical address
@@ -128,7 +128,7 @@ permission (1 bit) to allow for efficient caching.
 [title= "MTT Structures (overview)"]
 image::fig4.png[]
 
-.`MTTL3` Entry register
+.`MTTL3` entry
 [wavedrom, ,svg]
 ....
 {reg: [
@@ -137,7 +137,7 @@ image::fig4.png[]
 ], config:{lanes: 1, hspace:1024}}
 ....
 
-.`MTTL2` Entry register
+.`MTTL2` entry
 [wavedrom, ,svg]
 ....
 {reg: [
@@ -201,7 +201,7 @@ follows:
 * 01b - the 4K page specifies access is *allowed* for the domain
 * 1xb - *reserved* (access causes access violation).
 
-.`MTTL1` Entry
+.`MTTL1` entry
 [wavedrom, ,svg]
 ....
 {reg: [
@@ -211,7 +211,7 @@ follows:
 ], config:{lanes: 1, hspace:1024}}
 ....
 
-===== Caching
+=== Caching
 
 Implementations with virtual memory are permitted to cache translations and permissions in address translation cache structures. Similarly, access permissions from the `MTT` lookup may be cached. The `PMP` and `MTT` settings for the resulting physical address may be checked (and possibly cached) at any point between the address translation and the explicit memory access. If caching is occuring, when the `MTT` settings are modified, `M-mode` software must synchronize the cached `MTT` state with the virtual memory system and any `PMP`, `MTT` or address-translation caches. This is accomplished by executing an `SFENCE.VMA` instruction with `rs1=x0` and `rs2=x0`, or `HFENCE.GVMA` as needed, after the `MTT` is modified. If page-based virtual memory is not implemented, memory accesses check the `PMP` settings synchronously, but may check `MTT` settings that are cached, so a `MTT` invalidation (`MTTINVAL`) instruction is needed. When Svinval is implemented, `MTTINVAL` is only ordered against `SFENCE.W.INVAL` and `SFENCE.INVAL.IR` instructions. As part of the `MTT` update, the RDSM must ensure that it uses `SFENCE.W.INVAL` to guarantee that any previous stores to `MTT` are made visible before invoking the `MTTINVAL`. The RDSM must then use `SFENCE.INVAL.IR` to guarantee that all subsequent implicit references to `MTT` are ordered to be after the `MTT` cache invalidation. 
 
