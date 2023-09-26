@@ -1,4 +1,7 @@
 [bibliography]
 == Bibliography
 
+[1] 	The RISC-V Instruction Set Manual Volume II: Privileged Architecture Document Version 20211203
+
+[2] 	Common Terminology for Confidential Computing - Whitepaper, Accessed July 10, 2023
 
