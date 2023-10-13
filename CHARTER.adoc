@@ -9,4 +9,4 @@ The SmMTT task group will define privileged ISA extensions to be used by machine
 
 The TG will develop written specification, executable model, simulator (Spike/QEMU), priv. software prototypes for supervisor domain security manager (e.g. TSM), and compliance suite (Sail specification) for the RISC-V SmMTT extensions. The TG will interface with sub-groups in the Security HC: Trusted computing SIG (AP-TEE TG, AP-TEE-IO TG, Runtime Integrity SIG) as well as the Privileged Software HC, BRS TG and Hypervisor SIG.
 
-=== Logistics: TBD - suggested TG meeting time Friday 8am pacific.
+=== Logistics: TG meeting time alternate (even work week) Tuesdays at 7am US Pacific.
