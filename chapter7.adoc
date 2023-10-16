@@ -1,33 +1,45 @@
 [[chapter7]]
-
+[[Smsdia]]
 == `Smsdia`: Supervisor Domains Interrupt Assignment
 
 === Initialization
 
-Each supervisor domain is associated with its dedicated IMSIC S-interrupt file or an APLIC domain.
-A supervisor domain is not aware of the existence of another domain. Each supervisor domain interacts with its assigned interrupt
-controller instance as defined by the AIA [ref] architecture without any change to its interface and behavior. MTT (or PMP) is
-used to restrict a supervisor domain (and its devices) to its memory mapped registers. Wires are expected to be connected
-statically or configurable to APLICs.
+Each supervisor domain is associated with its dedicated IMSIC S-interrupt file
+or an APLIC domain. A supervisor domain is not aware of the existence of
+another domain. Each supervisor domain interacts with its assigned interrupt
+controller instance as defined by the AIA <<R3>> architecture without any change
+to its interface and behavior. MTT (or PMP) is used to restrict a supervisor
+domain (and its devices) to its memory mapped registers. Wires are expected to
+be connected statically or configurable to APLICs.
 
 [caption="Figure {counter:image}: ", reftext="Figure {image}"]
 [title= "Example of S-interrupt file assignment"]
-image::fig7.png[]
+image::fig7.png[width=800]
 
 === Operation
 
-All Supervisor Domain external interrupts are reflected in a new M-mode CSR `msdeia`. The SDID programmed on the hart
-selects the external interrupt for the hart from msdeia. M-mode can be interrupted using a new local interrupt `msdeip`,
-that indicates if any of the supervisor domain external interrupts are pending. External interrupts to a supervisor domain
-can be masked using new M-mode CSR `msdeie`. M-mode can use the `msdeip` interrupt for scheduling decisions. IMSIC CSRs:
-siselect, sireg, stopei operate on S-mode interrupt register file selected per the hart SDID.
+All Supervisor Domain external interrupts are reflected in a new M-mode CSR
+`msdeia`. The SDID programmed on the hart selects the external interrupt for
+the hart from msdeia. M-mode can be interrupted using a new local interrupt
+`msdeip`, that indicates if any of the supervisor domain external interrupts
+are pending. External interrupts to a supervisor domain can be masked using
+new M-mode CSR `msdeie`. M-mode can use the `msdeip` interrupt for scheduling
+decisions. IMSIC CSRs: siselect, sireg, stopei operate on S-mode interrupt
+register file selected per the hart SDID.
 
 [caption="Figure {counter:image}: ", reftext="Figure {image}"]
 [title= "M-mode CSRs for Smsdia"]
-image::fig8.png[]
+image::fig8.png[width=800]
 
 === Other considerations
 
-* Local interrupts - LCOFI, high/low priority RAS can be delegated, context switched or virtually injected normally to supervisor domain by M-mode software.
-* Timer interrupt - stimecmp for a supervisor domain is context-switched. M-mode can use its timer for deadlines associated with non-scheduled supervisor domains.
-* Software interrupts can be handled similar to external interrupts - if required - using a `msdsia` and `msdsie` CSR - SW interrupts are implementation defined.
+* Local interrupts - LCOFI, high/low priority RAS can be delegated, context
+switched or virtually injected normally to supervisor domain by M-mode software.
+
+* Timer interrupt - stimecmp for a supervisor domain is context-switched.
+M-mode can use its timer for deadlines associated with non-scheduled supervisor
+domains.
+
+* Software interrupts can be handled similar to external interrupts - if
+required - using a `msdsia` and `msdsie` CSR - SW interrupts are implementation
+defined.
