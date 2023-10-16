@@ -1,22 +1,35 @@
 [[chapter3]]
-
+[[Smsdid]]
 == `Smsdid`: Supervisor Domain Identifier and Protection Register
 
-The `mttp` register is an `XLEN`-bit read/write register, formatted as shown in Figure 3.1 for `XLEN=32` and Figure 3.2 for `XLEN=64`, which controls physical address protection for supervisor domains. This register holds the physical page number (`MTTPPN`) of the root page of the memory tracking table (`MTT`), a supervisor domain identifier (`SDID`), which facilitates address protection fences on a per-supervisor-domain basis; and the `MODE` field, which selects the address protection scheme (MTT Mode to be enforced) for physical addresses. The MTT is a structure that holds the access permissions for a physical address and is looked up per the programmed `MODE`.
+The `mttp` register is an `XLEN`-bit read/write register, formatted as shown in
+<<sdid-32>> for `XLEN=32` and <<sdid-64>> for `XLEN=64`, which controls
+physical address protection for supervisor domains. This register holds the
+physical page number (`MTTPPN`) of the root page of the memory tracking table
+(`MTT`), a supervisor domain identifier (`SDID`), which facilitates address
+protection fences on a per-supervisor-domain basis; and the `MODE` field, which
+selects the address protection scheme (MTT Mode to be enforced) for physical
+addresses. The MTT is a structure that holds the access permissions for a
+physical address and is looked up per the programmed `MODE`.
 
-Attempts to read or write `mttp` while executing in U, S or HS-mode will raise an illegal instruction exception.
+Attempts to read or write `mttp` while executing in U, S or HS-mode will raise
+an illegal instruction exception.
 
-.M-mode MTTP register (`mttp`) when `XLEN=32` for `MODE` values `Bare`, `Smmtt34`. All sub-fields are WARL.
+[caption="Register {counter:rimage}: ", reftext="Register {rimage}"]
+[title="M-mode MTTP register (`mttp`) when `XLEN=32`. All sub-fields are WARL."]
+[id=sdid-32]
 [wavedrom, ,svg]
 ....
 {reg: [
-  {bits:  22, name: 'MTTPPN)'},
+  {bits:  22, name: 'MTTPPN'},
   {bits:  8, name: 'SDID'},
   {bits:  2, name: 'Mode'},
 ], config:{lanes: 1, hspace:1024}}
 ....
 
-.M-mode MTTP register (`mttp`) when `XLEN=64` for `MODE` values `Bare`, `Smmtt46`, `Smmtt56`. All sub-fields are WARL.
+[caption="Register {counter:rimage}: ", reftext="Register {rimage}"]
+[title="M-mode MTTP register (`mttp`) when `XLEN=64`. All sub-fields are WARL."]
+[id=sdid-64]
 [wavedrom, ,svg]
 ....
 {reg: [
@@ -26,14 +39,25 @@ Attempts to read or write `mttp` while executing in U, S or HS-mode will raise a
 ], config:{lanes: 1, hspace:1024}}
 ....
 
-Table 3.1 shows the encodings of the `MODE` field when `XLEN=32` and `XLEN=64`. When `mttp` `MODE=Bare`, supervisor physical addresses have no MTT-based protection across supervisor domains beyond the physical memory protection scheme described in Section 3.7 of the RISC-V privileged architecture specification [1]. In this case, the remaining fields (`SDID`, `MTTPPN`) in `mttp` must be set to zeros, else generate a fault. When `XLEN=32`, the other valid settings for `MODE` are `Smmtt34` and `Smmtt34rw`, to support allow/disallow and read-write access permissions for 34-bit system physical addresses.
+<<mtt-32>> shows the encodings of the `MODE` field when `XLEN=32` and
+<<mtt-64>> shows the encodings of the `MODE` field when `XLEN=64`. When `mttp`
+`MODE=Bare`, supervisor physical addresses have no MTT-based protection across
+supervisor domains beyond the physical memory protection scheme described in
+Section 3.7 of the RISC-V privileged architecture specification [1]. In this
+case, the remaining fields (`SDID`, `MTTPPN`) in `mttp` must be set to zeros,
+else generate a fault. When `XLEN=32`, the other valid settings for `MODE` are
+`Smmtt34` and `Smmtt34rw`, to support allow/disallow and read-write access
+permissions for 34-bit system physical addresses.
 
-When `XLEN=64`, other than `BARE`, the other valid settings for `MODE` are `Smmtt[46, 56][rw]` to support read-write/access permissions for 56-bit system physical addresses.
+When `XLEN=64`, other than `BARE`, the other valid settings for `MODE` are
+`Smmtt[46, 56][rw]` to support read-write/access permissions for 46-bit and
+56-bit system physical addresses.
 
-The remaining `MODE` settings when `XLEN=64` are `reserved` for future use and may define different interpretations of the other fields in `mttp`.
+The remaining `MODE` settings when `XLEN=64` are `reserved` for future use and
+may define different interpretations of the other fields in `mttp`.
 
-Table 3.2: Encoding of `mttp` `MODE` field for `XLEN=64`.
-[width="100%",cols="10%,14%,76%",options="header",]
+.Encoding of `mttp` `MODE` field for `XLEN=32`.
+[width="100%",cols="10%,14%,76%", options="header", id=mtt-32]
 |===
 |Value |Name |Description
 |0 |`Bare` |No inter-supervisor domain protection
@@ -45,9 +69,8 @@ addresses with access allowed/disallowed per page
 physical addresses with RW permissions per page
 |===
 
-Table 3.1: Encoding of `mttp` `MODE` field for `XLEN=32`.
-
-[width="100%",cols="10%,14%,76%",options="header",]
+.Encoding of `mttp` `MODE` field for `XLEN=64`.
+[width="100%",cols="10%,14%,76%", options="header", id=mtt-64]
 |===
 |Value |Name |Description
 |0 |`Bare` |No inter-supervisor domain protection
@@ -61,23 +84,44 @@ physical addresses with RW permissions per page
 |3 |`Smmtt56` |Page-based supervisor domain protection for 56 bit physical
 addresses
 
-|4 |`Smmtt56rw` |Page-based supervisor domain protection for 46 bit
+|4 |`Smmtt56rw` |Page-based supervisor domain protection for 56 bit
 physical addresses with RW permissions per page
 
 |5-15 |- |`_Reserved_`
 |===
 
-Implementations are not required to support all defined `MODE` settings when `XLEN=64`. A write to `mttp` with an unsupported `MODE` value is not ignored. Instead, the fields of `mttp` are `WARL` in the normal way, when so indicated.
+Implementations are not required to support all defined `MODE` settings when
+`XLEN=64`. A write to `mttp` with an unsupported `MODE` value is not ignored.
+Instead, the fields of `mttp` are `WARL` in the normal way, when so indicated.
 
-The `MTTPPN` refers to an `MTTL3` table or an `MTTL2` table based on physical address width (`PAW`). For 56<=`PAW`<46, `MTTL3` table must be of size `2^(PAW-43)` bytes and naturally aligned to that sized byte boundary. For 46<=`PAW`<32 the `MTTL2` table must be of size 2^(`PAW`-23) or 2^(`PAW`-22) bytes (depending on the Smmtt `MODE` selected) and must be naturally aligned to that sized byte boundary. In these modes, the lowest two bits of the physical page number (`MTTPPN`) in `mttp` always read as zeros.
+The `MTTPPN` refers to an `MTTL3` table or an `MTTL2` table based on physical
+address width (`PAW`). For 56 \<= `PAW` < 46, `MTTL3` table must be of size
+`2^(PAW-43)` bytes and naturally aligned to that sized byte boundary. For 46
+\<= `PAW` < 32 the `MTTL2` table must be of size 2^(`PAW`-23) or 2^(`PAW`-22)
+bytes (depending on the Smmtt `MODE` selected) and must be naturally aligned to
+that sized byte boundary. In these modes, the lowest two bits of the physical
+page number (`MTTPPN`) in `mttp` always read as zeros.
 
-The number of `SDID` bits is `UNSPECIFIED` and may be zero. The number of implemented `SDID` bits, termed `SDIDLEN`, may be determined by writing one to every bit position in the `SDID` field, then reading back the value in `mttp` to see which bit positions in the `SDID` field hold a one. The least-significant bits of `SDID` are implemented first: that is, if `SDIDLEN` > 0, `SDID`[`SDIDLEN`-1:0] is writable. The maximal value of `SDIDLEN`, termed `SDIDMAX`, is 8 for `Smmtt34[rw]` or 16 for `Smmtt46[rw]`, `Smmtt56[rw]`.
+The number of `SDID` bits is `UNSPECIFIED` and may be zero. The number of
+implemented `SDID` bits, termed `SDIDLEN`, may be determined by writing one to
+every bit position in the `SDID` field, then reading back the value in `mttp`
+to see which bit positions in the `SDID` field hold a one. The
+least-significant bits of `SDID` are implemented first: that is, if `SDIDLEN` >
+0, `SDID`[`SDIDLEN`-1:0] is writable. The maximal value of `SDIDLEN`, termed
+`SDIDMAX`, is 8 for `Smmtt34[rw]` or 16 for `Smmtt46[rw]`, `Smmtt56[rw]`.
 
-The `mttp` register is considered active for the purposes of the physical address protection algorithm unless the effective privilege mode is `M`.
+The `mttp` register is considered active for the purposes of the physical
+address protection algorithm unless the effective privilege mode is `M`.
 
-Physical accesses that began while `mttp` was active are not required to complete or terminate when `mttp` is no longer active, unless an `FENCE.MTT` instruction matches the `SDID` (and optionally, `PA`) is executed. The `FENCE.MTT` instruction must be used to ensure that updates to the `MTT` data structures are observed by subsequent implicit reads to those structures by a hart.
+Physical accesses that began while `mttp` was active are not required to
+complete or terminate when `mttp` is no longer active, unless an `FENCE.MTT`
+instruction matches the `SDID` (and optionally, `PA`) is executed. The
+`FENCE.MTT` instruction must be used to ensure that updates to the `MTT` data
+structures are observed by subsequent implicit reads to those structures by a
+hart.
 
-Note that writing `mttp` does not imply any ordering constraints between `S-mode` and `G-stage` page-table updates and subsequent address translations. If a supervisor domain's `MTT` structure has been modified, or if a `SDID` is reused, it may be necessary to execute a `FENCE.MTT` instruction before or after writing `mttp`.
-
-
-
+Note that writing `mttp` does not imply any ordering constraints between
+`S-mode` and `G-stage` page-table updates and subsequent address translations.
+If a supervisor domain's `MTT` structure has been modified, or if a `SDID` is
+reused, it may be necessary to execute a `FENCE.MTT` instruction before or
+after writing `mttp`.
