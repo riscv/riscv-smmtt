@@ -1,7 +1,17 @@
 [bibliography]
 == Bibliography
 
-[1] 	The RISC-V Instruction Set Manual Volume II: Privileged Architecture Document Version 20211203
+* [[[R1,1]]] The RISC-V Instruction Set Manual Volume II: Privileged
+Architecture Document Version 20211203
+(https://drive.google.com/file/d/1EMip5dZlnypTk7pt4WWUKmtjUKTOkBqh/view[link])
 
-[2] 	Common Terminology for Confidential Computing - Whitepaper, Accessed July 10, 2023
+* [[[R2,2]]] Common Terminology for Confidential Computing - Whitepaper,
+Accessed July 10, 2023
+(https://confidentialcomputing.io/wp-content/uploads/sites/10/2023/03/Common-Terminology-for-Confidential-Computing.pdf[link])
+
+* [[[R3,3]]] RISC-V Advanced Interrupt Architecture 1.0
+(https://github.com/riscv/riscv-aia/releases/download/1.0/riscv-interrupts-1.0.pdf[link])
+
+* [[[R4,4]]] RISC-V Confidential VM Extension (CoVE) - Draft specification
+(https://github.com/riscv-non-isa/riscv-ap-tee/blob/main/specification/riscv-cove.pdf[link])
 
