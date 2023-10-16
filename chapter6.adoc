@@ -1,5 +1,5 @@
 [[chapter6]]
-
+[[IO-MTT]]
 == I/O MTT extension
 
 Supervisor domains may be granted control over DMA-capable devices. When such
@@ -10,7 +10,9 @@ and protection for DMA that originates from devices under its control.
 
 To uphold isolation properties, the DMA from the devices and the IOMMU
 linked with a supervisor domain must adhere strictly to the access protections
-encoded in the MTT of the respective supervisor domain.
+encoded in the MTT of the respective supervisor domain. Additionally, Using the
+MTT, the RDSM enforces that the IOMMU memory-mapped programming regions are
+access-restricted to the supervisor domain the IOMMU is assigned to.
 
 At any given time, a solitary supervisor domain is scheduled for execution on a
 RISC-V hart by the root domain security manager (RDSM). As part of this
@@ -23,7 +25,8 @@ Furthermore, the IO subsystem must possess the capability to select the
 appropriate MTT for enforcement based on the identity of the device initiating
 the DMA.
 
-Given this setup, the I/O subsystem is required to offer the following functions:
+Given this setup, the I/O subsystem is required to offer the following
+functions:
 
 * Supervisor Domain Classifier (SDCL): This classifier within the I/O subsystem
   interprets the attributes of a DMA request and determines the appropriate MTT
@@ -46,9 +49,10 @@ Address (GVA), or Guest Physical Address (GPA). The configuration and
 interfacing of the I/O MTT Checker with respect to the IO Bridge is graphically
 represented in the diagram <<fig:IOMTTCHK>>.
 
-[[fig:IOMTTCHK]]
-.I/O MTT checker placement
+[caption="Figure {counter:image}: ", reftext="Figure {image}"]
+[title= "I/O MTT checker placement", id=io-mtt-checker]
 image::IOMTTCHK.png[width=800]
+[[fig:IOMTTCHK]]
 
 The IO Bridge invokes the SDCL function using the SDID request interface (SDR)
 and provides it the identifiers associated with the incoming transaction. The
@@ -79,22 +83,22 @@ RISC-V hart possesses the rights to access the physical address of an IOMMU
 register programming interface.
 
 The I/O MTT checker provides a memory-mapped register programming interface
-associated with the RDSM. The RDSM employs the MTT to prohibit access to these
-registers from any of the supervisor domains.
+associated with the RDSM. The RDSM employs the MTT (or PMP) to prohibit access
+to these registers from any of the supervisor domains.
 
 === I/O MTT Checker Register Interface
 
 Each I/O MTT checker (IOMTTCHK) register interface is memory-mapped starting at
-an 8-byte aligned physical address and inlcudes the registers used to configure
+an 8-byte aligned physical address and includes the registers used to configure
 the SDCL and MTTCHK functions in the I/O MTT checker.
 
 [NOTE]
 ====
-Implementations may implementing a coarser alignment for the start address of
-the register interface. For example, some implementations may locate the
-register interface within a naturally aligned 4-KiB region (a page) of physical
-address space for each register interface. Coarser alignments may enable register
-decoding to be implemented without a hardware adder circuit.
+Implementations may choose to implement a coarser alignment for the start
+address of the register interface. For example, some implementations may locate
+the register interface within a naturally aligned 4-KiB region (a page) of
+physical address space for each register interface. Coarser alignments may
+enable register decoding to be implemented without a hardware adder circuit.
 ====
 
 The behavior for register accesses where the address is not aligned to
@@ -149,7 +153,8 @@ The reset value is `UNSPECIFIED` for all other registers and/or fields.
 The `capabilities` register is a read-only register that holds the I/O MTT
 checker capabilities.
 
-.Capabilities register fields
+[caption="Register {counter:rimage}: ", reftext="Register {rimage}"]
+[title="Capabilities register fields"]
 [wavedrom, , ]
 ....
 {reg: [
@@ -177,7 +182,7 @@ The `control` register is used to control classification of DMA requests using
 the identifiers associated with the DMA requests to determine the associated
 supervisor domain ID (`SDID`) and the MTT pointer (`MTTP).
 
-.Control register (`control`)
+[caption="Register {counter:rimage}: ", reftext="Register {rimage}", title="Control register (`control`)"]
 [wavedrom, , ]
 ....
 {reg: [
@@ -262,24 +267,17 @@ provides a status value (<<IOMTTCHK_STS>>) of the requested operation.
 Before requesting the `SET_ENTRY` operation using the `control` register,
 software should program the fields of the `operand-0` and `operand-1`
 registers. The `SET_ENTRY` operation utilizes the following fields from the
-`operand-0` and `operand-1` registers:
-
-* `SRC_IDT`
-* `SRC_IDM`
-* `TEE_FLT`
-* `SRC_ID`
-* `IOMMU_ID`
-* `SDID`
-* `MTT_MODE`
-* `PPN`
+`operand-0` and `operand-1` registers: `SRC_IDT`, `SRC_IDM`, `TEE_FLT`,
+`SRC_ID`, `IOMMU_ID`, `SDID`, `MTT_MODE` and `PPN`.
 
 If multiple rules are programmed to match a transaction, the implementation may
-act based on any of those matching rules. However, if a transaction does not
-match any of the rules, the IO Bridge is notified of this condition. The 
+act based on any one of those matching rules. However, if a transaction does not
+match any of the rules, the IO Bridge is notified of this condition. The
 subsequent behavior of the IO Bridge for unmatched transactions remains
 `UNSPECIFIED`.
 
-An implementation that can always perform the requested operation synchronously
+An implementation that performs the requested operation synchronously may
+hardwire the `BUSY` bit to 0.
 The `GET_ENTRY` operation ignores the contents of both the `operand-0` and
 `operand-1` registers. If the `GET_ENTRY` operation is unsuccessful, the
 contents of these registers remain `UNSPECIFIED`. However, upon a successful
@@ -287,24 +285,12 @@ contents of these registers remain `UNSPECIFIED`. However, upon a successful
 rule identified by `control.RULEID`. The state of any unlisted fields in the
 `operand-0` and `operand-1` registers is `UNSPECIFIED`.
 
-* `SRC_IDT`
-* `SRC_IDM`
-* `TEE_FLT`
-* `SRC_ID`
-* `IOMMU_ID`
-* `SDID`
-* `MTT_MODE`
-* `PPN`
-
 The contents of `operand-0` and `operand-1` are disregarded by the `IOFENCE`
-operation. 
+operation.
 
 The `MTTINVAL` operation ignores the contents of `operand-0` register but
-utilizes the following fields from the `operand-1` register:
-
-* `PPNV`
-* `PPN`
-* `S`
+utilizes the following fields from the `operand-1` register: `PPNV`, `PPN`
+and `S`.
 
 [[OP-0]]
 === Operand 0 register (`operand-0`)
@@ -312,7 +298,8 @@ utilizes the following fields from the `operand-1` register:
 The `operand-0` register holds the input operands or the output results of
 operations requested through `control.OP`.
 
-.Operand-0 register (`operand-0`)
+[caption="Register {counter:rimage}: ", reftext="Register {rimage}"]
+[title="Operand-0 register (`operand-0`)"]
 [wavedrom, , ]
 ....
 {reg: [
@@ -395,9 +382,9 @@ transactions. The `SRC_IDM` encodings are listed in <<SRC_IDM>>.
 
 [NOTE]
 ====
-The following example illustrates the use of `SRC_IDM=NAPOT` when `SRC_IDT` is by
-`DEVID` and a 24-bit PCIe `device_id` comprised of the segment, bus, device, and
-function number is used. In the table below, `y` acts as a placeholder
+The following example illustrates the use of `SRC_IDM=NAPOT` when `SRC_IDT` is
+by `DEVID` and a 24-bit PCIe `device_id` comprised of the segment, bus, device,
+and function number is used. In the table below, `y` acts as a placeholder
 representing any 1-bit value.
 
 .`SRC_IDM` with `SRC_IDT` set to `DEVID` based filtering
@@ -405,9 +392,9 @@ representing any 1-bit value.
 |===
 | `SRC_IDM` | `SRC_ID`                     | *Comment*
 | 0         |`yyyyyyyy  yyyyyyyy  yyyyyyyy`| One specific seg:bus:dev:func
-| 1         |`yyyyyyyy  yyyyyyyy  yyyyy011`| seg:bus:dev - any func 
-| 1         |`yyyyyyyy  yyyyyyyy  01111111`| seg:bus - any dev:func
-| 1         |`yyyyyyyy  01111111  11111111`| seg - any bus:dev:func
+| 1         |`yyyyyyyy  yyyyyyyy  yyyyy011`| seg:bus:dev - any func
+| 2         |`yyyyyyyy  yyyyyyyy  01111111`| seg:bus - any dev:func
+| 3         |`yyyyyyyy  01111111  11111111`| seg - any bus:dev:func
 |===
 
 ====
@@ -423,7 +410,7 @@ in <<TEE_FLT>>.
 |===
 |`TEE_FLT` | Description
 |   0      | Reserved for future standard use.
-|   1      | Rule matches TEE-associated transactions. 
+|   1      | Rule matches TEE-associated transactions.
 |   2      | Rule matches transactions that are not TEE associated.
 |   3      | Rule matches both TEE-associated and non-TEE associated
              transactions.
@@ -454,7 +441,8 @@ this transaction.
 The `operand-1` register holds the input operands or the output results of
 operations requested through `control.OP`.
 
-.Operand-1 register (`operand-1`)
+[caption="Register {counter:rimage}: ", reftext="Register {rimage}"]
+[title="Operand-1 register (`operand-1`)"]
 [wavedrom, , ]
 ....
 {reg: [
@@ -468,11 +456,11 @@ operations requested through `control.OP`.
 ....
 
 The `MTT_MODE` field identifies the mode of the MTT. It's interpreted as
-outlined in Table 3.1 when `capabilities.MXL` is 1, and as detailed in Table 3.2
-otherwise. The `MTT_MODE` field is programmed into the rule identified by
-`RULEID` via the `SET_ENTRY` operation and can be retrieved by the `GET_ENTRY`
-operation. Both the `IOFENCE` and `MTTINVAL` operations disregard the `MTT_MODE`
-field.
+outlined in <<mtt-32>> when `capabilities.MXL` is 1, and as detailed in
+<<mtt-64>> otherwise. The `MTT_MODE` field is programmed into the rule
+identified by `RULEID` via the `SET_ENTRY` operation and can be retrieved by
+the `GET_ENTRY` operation. Both the `IOFENCE` and `MTTINVAL` operations
+disregard the `MTT_MODE` field.
 
 The `PPN` field programs the PPN of the root page of the MTT during the
 `SET_ENTRY` operation and is retrieved by the `GET_ENTRY` operation. The
