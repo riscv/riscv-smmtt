@@ -18,8 +18,7 @@ be sparsely populated.
 [title= "`MTT` Structures (overview)", id=mtt-map-rw]
 image::fig3.png[]
 
-The following registers depicted are for MTT L2/L3 entries to accomodate a 56
-bit PAW.
+The following MTT L2/L3 entries accomodate a 56 bit PAW.
 
 [caption="Figure {counter:image}: ", reftext="Figure {image}"]
 [title="`MTTL3` entry"]
