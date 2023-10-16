@@ -1,5 +1,5 @@
 [[chapter4]]
-
+[[Smmtt]]
 == `Smmtt`: Hart MTT Extension
 
 === Smmtt[34, 46, 56]rw
@@ -8,17 +8,21 @@ The `MTTPPN` rooted structure for the MTT is shown below. The structure
 below shows a 56 bit physical address lookup; for lower physical address
 widths e.g. 46 bits, the `MTTL3` table is not applicable. In this mode of the
 Smmtt[34, 46, 56]rw, each page is associated with a read and a write access
-permission (2 bits). Figure 4.1.1 shows the Physical address (PA) being
+permission (2 bits). <<mtt-map-rw>> shows the Physical address (PA) being
 used to index into the `MTT` structure in memory to lookup access
 permissions for the supervisor domain specified in the `MTTL1` entry.
 Intermediate `MTTL3` and `MTTL2` entries are used to allow this structure to
 be sparsely populated.
 
 [caption="Figure {counter:image}: ", reftext="Figure {image}"]
-[title= "`MTT` Structures (overview)"]
+[title= "`MTT` Structures (overview)", id=mtt-map-rw]
 image::fig3.png[]
 
-.`MTTL3` entry
+The following registers depicted are for MTT L2/L3 entries to accomodate a 56
+bit PAW.
+
+[caption="Figure {counter:image}: ", reftext="Figure {image}"]
+[title="`MTTL3` entry"]
 [wavedrom, ,svg]
 ....
 {reg: [
@@ -27,13 +31,14 @@ image::fig3.png[]
 ], config:{lanes: 1, hspace:1024}}
 ....
 
-.`MTTL2` entry
+[caption="Figure {counter:image}: ", reftext="Figure {image}"]
+[title="`MTTL2` entry"]
 [wavedrom, ,svg]
 ....
 {reg: [
   {bits:  44, name: 'INFO'},
-  {bits:  2, name: 'TYPE'},
-  {bits:  18, name: 'ZERO'},
+  {bits:  4, name: 'TYPE'},
+  {bits:  16, name: 'ZERO'},
 ], config:{lanes: 1, hspace:1024}}
 ....
 
@@ -55,40 +60,41 @@ for the supervisor domain
 The `INFO` field depends on the `TYPE` field and is formatted as per the
 following table:
 
-Table 4.1.1: `MTTL2` Entry Type for Smmtt
-[width="100%",cols="19%,81%",options="header",]
+.`MTTL2` Entry Type for Smmtt
+[width="100%",cols="25%,75%",options="header",]
 |===
 |*`MTTL2` Entry `TYPE`* |*Description, `INFO` and `TYPE` field encoding*
 |`1G_disallow` a|
 _The 1G range of address is not allowed for the domain._
 The `INFO` field must be 0.
-When configuring 1G ranges, RDSM ensures that 16 `MTTL2` entries, each
+When configuring 1G ranges, RDSM ensures that 32 `MTTL2` entries, each
 corresponding to 32M of address space, have identical `TYPE` field values.
 
 |`1G_allow_r` a|
 _The 1G range of address is allowed (read only) for the domain._
 The `INFO` field must be 0.
-When configuring 1G ranges, RDSM ensures that 16 `MTTL2` entries, each
+When configuring 1G ranges, RDSM ensures that 32 `MTTL2` entries, each
 corresponding to 32M of address space, have identical `TYPE` field values.
 The INFO field must be 0.
 
 |`1G_allow_rw` a|
 _The 1G range of address is allowed (read/write) for the domain._
 The `INFO` field must be 0.
-When configuring 1G ranges, RDSM ensures that 16 `MTTL2` entries, each
+When configuring 1G ranges, RDSM ensures that 32 `MTTL2` entries, each
 corresponding to 32M of address space, have identical `TYPE` field values.
 
 |`MTT_L1_DIR` a|
 The `INFO` field provides the PPN of the `MTTL1` page.
-Entries of the `MTTL1` page hold a 4-bit `PERM` (permissions) field to indicate the
-access for the supervisor domain (described in the `MTTL1` entry - see figure 4.1.4).
+Entries of the `MTTL1` page hold a 4-bit `PERM` (permissions) field to indicate
+the access for the supervisor domain (described in the `MTTL1` entry
+<<mtt-l1-rw>>).
 
 |`2M_PAGES` a|
 _The 32M range of address space is partitioned into 2M pages where each
 page has read/write access allowed/not._
-The `INFO` field 31:0 holds 2 `PERM` bits per 2M address range to indicate 
-`access_disallowed` (00b), `read_allowed` (01b), `read_write_allowed` (11b); (10b is
-`reserved`). Bits 32:43 are reserved and must be zero.
+The `INFO` field 31:0 holds 2 `PERM` bits per 2M address range to indicate
+`access_disallowed` (00b), `read_allowed` (01b), `read_write_allowed` (11b);
+(10b is `reserved`). Bits 32:43 are reserved and must be zero.
 |===
 
 
@@ -98,15 +104,17 @@ desired for the supervisor domain.
 `MTTL1` entry is indexed using PA[24:12] and each entry is a 4-bit `PERM` field
 in the referenced page. The bits 24:16 are used to select a 64-bit field
 in the page and bits 15:12 are used to select a 4 bit `PERM` field in those 64
-bits. Thus, there are 4 `PERM` bits for each 4 KiB page. The encoding of `PERM` is as
-follows:
+bits. Thus, there are 4 `PERM` bits for each 4 KiB page. The encoding of `PERM`
+is as follows:
 
 * 0000b - the 4K page specifies access is *not allowed* for the domain
 * 0001b - the 4K page specifies *read* access is allowed for the domain
-* 0011b - the 4K page specifies *read* and *write* access is allowed for the domain
+* 0011b - the 4K page specifies *read* and *write* access is allowed for the
+domain
 * Remaining encodings are *reserved* and cause an access violation.
 
-.`MTTL1` entry
+[caption="Figure {counter:image}: ", reftext="Figure {image}"]
+[title="`MTTL1` entry", id=mtt-l1-rw]
 [wavedrom, ,svg]
 ....
 {reg: [
@@ -125,10 +133,11 @@ SmmttX, each page is associated with an access allowed/disallowed
 permission (1 bit) to allow for efficient caching.
 
 [caption="Figure {counter:image}: ", reftext="Figure {image}"]
-[title= "MTT Structures (overview)"]
+[title= "MTT Structures (overview)", id=mtt-map]
 image::fig4.png[]
 
-.`MTTL3` entry
+[caption="Figure {counter:image}: ", reftext="Figure {image}"]
+[title="`MTTL3` entry"]
 [wavedrom, ,svg]
 ....
 {reg: [
@@ -137,7 +146,8 @@ image::fig4.png[]
 ], config:{lanes: 1, hspace:1024}}
 ....
 
-.`MTTL2` entry
+[caption="Figure {counter:image}: ", reftext="Figure {image}"]
+[title="`MTTL2` entry"]
 [wavedrom, ,svg]
 ....
 {reg: [
@@ -159,8 +169,8 @@ The `TYPE` field determines the interpretation of the `MTTL2` entry. The
 
 The `INFO` field depends on the `TYPE` field and is formatted as per the table:
 
-Table 4.2.1: `MTTL2` Entry for Smmtt[34, 46, 56]
-//[width="100%",cols="19%,81%",options="header",]
+.`MTTL2` Entry for Smmtt[34, 46, 56]
+[width="100%",cols="25%,75%",options="header",]
 |===
 |*`MTTL2` Entry Type* |*Description, `INFO` and `TYPE` field encoding*
 |`1G_allow` a|
@@ -177,8 +187,8 @@ corresponding to 64M of address space, have identical `TYPE` field values.
 
 |`MTT_L1_DIR` a|
 The `INFO` field provides the PPN of the `MTTL1` page.
-Entries of the `MTTL1` page hold a 2-bit `PERM` field to indicate the access for the
-supervisor domain (described in the `MTTL1` entry - see figure 4.2.4).
+Entries of the `MTTL1` page hold a 2-bit `PERM` field to indicate the access
+for the supervisor domain (described in the `MTTL1` entry <<mtt-l1>>).
 
 |`2M_PAGES` a|
 _The 64M range of address space is partitioned into 2M pages where each
@@ -201,7 +211,8 @@ follows:
 * 01b - the 4K page specifies access is *allowed* for the domain
 * 1xb - *reserved* (access causes access violation).
 
-.`MTTL1` entry
+[caption="Figure {counter:image}: ", reftext="Figure {image}"]
+[title="`MTTL1` entry", id=mtt-l1]
 [wavedrom, ,svg]
 ....
 {reg: [
@@ -213,10 +224,26 @@ follows:
 
 === Caching
 
-Implementations with virtual memory are permitted to cache translations and permissions in address translation cache structures. Similarly, access permissions from the `MTT` lookup may be cached. The `PMP` and `MTT` settings for the resulting physical address may be checked (and possibly cached) at any point between the address translation and the explicit memory access. If caching is occuring, when the `MTT` settings are modified, `M-mode` software must synchronize the cached `MTT` state with the virtual memory system and any `PMP`, `MTT` or address-translation caches. This is accomplished by executing an `SFENCE.VMA` instruction with `rs1=x0` and `rs2=x0`, or `HFENCE.GVMA` as needed, after the `MTT` is modified. If page-based virtual memory is not implemented, memory accesses check the `PMP` settings synchronously, but may check `MTT` settings that are cached, so a `MTT` invalidation (`MTTINVAL`) instruction is needed. When Svinval is implemented, `MTTINVAL` is only ordered against `SFENCE.W.INVAL` and `SFENCE.INVAL.IR` instructions. As part of the `MTT` update, the RDSM must ensure that it uses `SFENCE.W.INVAL` to guarantee that any previous stores to `MTT` are made visible before invoking the `MTTINVAL`. The RDSM must then use `SFENCE.INVAL.IR` to guarantee that all subsequent implicit references to `MTT` are ordered to be after the `MTT` cache invalidation. 
+Implementations with virtual memory are permitted to cache translations and
+permissions in address translation cache structures. Similarly, access
+permissions from the `MTT` lookup may be cached. The `PMP` and `MTT` settings
+for the resulting physical address may be checked (and possibly cached) at any
+point between the address translation and the explicit memory access. If
+caching is occuring, when the `MTT` settings are modified, `M-mode` software
+must synchronize the cached `MTT` state with the virtual memory system and any
+`PMP`, `MTT` or address-translation caches. This is accomplished by executing
+an `SFENCE.VMA` instruction with `rs1=x0` and `rs2=x0`, or `HFENCE.GVMA` as
+needed, after the `MTT` is modified. If page-based virtual memory is not
+implemented, memory accesses check the `PMP` settings synchronously, but may
+check `MTT` settings that are cached, so a `MTT` invalidation (`MTTINVAL`)
+instruction is needed. When Svinval is implemented, `MTTINVAL` is only ordered
+against `SFENCE.W.INVAL` and `SFENCE.INVAL.IR` instructions. As part of the
+`MTT` update, the RDSM must ensure that it uses `SFENCE.W.INVAL` to guarantee
+that any previous stores to `MTT` are made visible before invoking the
+`MTTINVAL`. The RDSM must then use `SFENCE.INVAL.IR` to guarantee that all
+subsequent implicit references to `MTT` are ordered to be after the `MTT` cache
+invalidation.
 
-_[TBD - register interface for flushing all MTT cached entries, vs specific physical address at page size granularity]._
-
-Data and instructions cached for one supervisor domain shall not be accessible to another supervisor domain, so the `SDID` (along with the other execution context identifiers such as `ASID`, `VMID`, shall factor into the data and instruction caches tags to enforce isolation.
-
+_[TBD - register interface for flushing all MTT cached entries, vs specific
+physical address at page size granularity]._
 
