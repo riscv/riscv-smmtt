@@ -1,20 +1,53 @@
 [[chapter5]]
-
+[[Svpams]]
 == `Svpams`: Supervisor domain physical address metadata selector
 
-M-mode software uses the MTT to create isolated physical memory regions associated with specific supervisor domains to enforce the required software access-control policies. Typically a supervisor domain has *domain exclusive* access to the memory region/pages of a region. Supervisor domains may also negotiate/grant access to a common/shared pool of memory regions/pages between supervisor domains - these memory regions may be accessible to all supervisor domains i.e. *domain global-shared* memory, or a specific subset of supervisor domains i.e., *domain restricted-shared* memory. Note here that the MTT enforces access-control based isolation only.
+M-mode software uses the MTT to create isolated physical memory regions
+associated with specific supervisor domains to enforce the required software
+access-control policies. Typically a supervisor domain has *domain exclusive*
+access to the memory region/pages of a region. Supervisor domains may also
+negotiate/grant access to a common/shared pool of memory regions/pages between
+supervisor domains - these memory regions may be accessible to all supervisor
+domains i.e. *domain global-shared* memory, or a specific subset of supervisor
+domains i.e., *domain restricted-shared* memory. Note here that the MTT
+enforces access-control based isolation only.
 
-Some supervisor domain usages and threat models may also require cryptographic protection for memory (against forms of physical access attacks). In these cases, meta-data must be supplied to the platform as part of the physical memory accesses to identify the cryptographic contextto be used for those physical memory accesses - this metadata may be identified via a function that combines the SDID and additional execution context fields e.g. VMID, ASID, to identify a unique cryptographic context. The scope of such cryptographic context identifiers are typically the SoC platform but may vary by implementations.
+Some supervisor domain usages and threat models may also require cryptographic
+protection for memory (against forms of physical access attacks). In these
+cases, meta-data must be supplied to the platform as part of the physical
+memory accesses to identify the cryptographic context to be used for those
+physical memory accesses - this metadata may be identified via a function that
+combines the SDID and additional execution context fields e.g. VMID, ASID, to
+identify a unique cryptographic context. The scope of such cryptographic
+context identifiers are typically the SoC platform but may vary by
+implementations.
 
-When accessing shared memory from a supervisor domain workload, it is required for the workload and/or the supervisor domain security manager to be in control of specifying the cryptographic contexts to be used for memory accesses - this context can be selected via the *physical address metadata selector (Svpams).* In the minimal case, globally-shared memory setup for all supervisor domains may require the selection of at least two cryptographic contexts for memory - *domain exclusive* and *globally-shared* memory. For *domain restricted-shared* cases, other n-lateral setup cryptographic contexts can be selected via the Svpams capability. Other meta-data values associated with physical addresses may also be selected via the Physical Address Metadata Selector.
+When accessing shared memory from a supervisor domain workload, it is required
+for the workload and/or the supervisor domain security manager to be in control
+of specifying the cryptographic contexts to be used for memory accesses - this
+context can be selected via the *physical address metadata selector (Svpams).*
+In the minimal case, globally-shared memory setup for all supervisor domains
+may require the selection of at least two cryptographic contexts for memory -
+*domain exclusive* and *globally-shared* memory. For *domain restricted-shared*
+cases, other n-lateral setup cryptographic contexts can be selected via the
+Svpams capability. Other meta-data values associated with physical addresses
+may also be selected via the Physical Address Metadata Selector.
 
-The Svpams mechanism is independent of the Smmtt mechanism since Svpams enables additional properties to be enforced for memory accesses beyond the access-control/isolation mechanism that Smmtt enables.
+The Svpams mechanism is independent of the Smmtt mechanism since Svpams enables
+additional properties to be enforced for memory accesses beyond the
+access-control/isolation mechanism that Smmtt enables.
 
 === Svpams
 
-Svpams may be enabled via the `menvcfg` (and `henvcfg`) registers. Once enabled, the 4 bit PA metadata is derived as part of the address translation and is used to select 1 of 16 possible metadata qualifiers that should be applied to accesses that use the translated address. Any caching structures that cache the address translation may also cache the PA meta-data as part of the cached translation.
+Svpams may be enabled via the `menvcfg` (and `henvcfg`) registers. Once
+enabled, the 4 bit PA metadata is derived as part of the address translation
+and is used to select 1 of 16 possible metadata qualifiers that should be
+applied to accesses that use the translated address. Any caching structures
+that cache the address translation may also cache the PA meta-data as part of
+the cached translation.
 
-.Enabling Svpams via PAMSE bit in `menvcfg` and `menvcfgh`
+[caption="Register {counter:rimage}: ", reftext="Register {rimage}"]
+[title="Enabling Svpams via PAMSE bit in `menvcfg` and `menvcfgh`"]
 [wavedrom, ,svg]
 ....
 {reg: [
@@ -31,7 +64,8 @@ Svpams may be enabled via the `menvcfg` (and `henvcfg`) registers. Once enabled,
 
 ....
 
-.Enabling Svpams via PAMSE bit in `henvcfg` and `henvcfgh`
+[caption="Register {counter:rimage}: ", reftext="Register {rimage}"]
+[title="Enabling Svpams via PAMSE bit in `henvcfg` and `henvcfgh`"]
 [wavedrom, ,svg]
 ....
 {reg: [
@@ -48,7 +82,8 @@ Svpams may be enabled via the `menvcfg` (and `henvcfg`) registers. Once enabled,
 ....
 
 
-.Page table entry for `Sv57`, `Sv48`, `Sv39` with PAMS control field
+[caption="Figure {counter:image}: ", reftext="Figure {image}"]
+[title="Page table entry for `Sv57`, `Sv48`, `Sv39` with PAMS control field"]
 [wavedrom, ,svg]
 ....
 {reg: [
@@ -69,9 +104,11 @@ Svpams may be enabled via the `menvcfg` (and `henvcfg`) registers. Once enabled,
 ], config:{lanes: 2, hspace:1700, bits: 64}}
 ....
 
-*Page table entry for Sv32 (TBD): Only option is to use bits 8:9 in the pte for a 2-bit PAMS*
+*Page table entry for Sv32 (TBD): Only option is to use bits 8:9 in the pte for
+a 2-bit PAMS*
 
-.Svpams metadata CSR0 - CSR15
+[caption="Register {counter:rimage}: ", reftext="Register {rimage}"]
+[title="Svpams metadata CSR0 - CSR15"]
 [wavedrom, ,svg]
 ....
 {reg: [
@@ -84,10 +121,17 @@ Svpams may be enabled via the `menvcfg` (and `henvcfg`) registers. Once enabled,
 
 PAMS Types:
 0 - `None` - Metadata is Reserved (must be zero).
-1 - `Encryption context identifier` - Metadata is an encryption context identfier (WARL).
+1 - `Encryption context identifier` - Metadata is an encryption context
+identfier (WARL).
 
 _Other metadata types may be defined in the future._
 _Should the same CSRs be indexable from PMP also?_
 
-When two-stage translation is not enabled in a supervisor domain, and `satp.MODE` is not zero, `S-stage` `PAMS` selects the physical address metadata. When two-stage address translation is enabled using the `H-extension` in a supervisor domain, If the `hgatp.MODE` is not zero, `G-stage` `PAMS` is used to select the metadata and `VS-stage` `PAMS` is ignored (`VS-stage` `PAMS` becomes reserved). This model is enforced to enforce the policy per the highest privilege supervisor entity in the supervisor domain.
+When two-stage translation is not enabled in a supervisor domain, and
+`satp.MODE` is not zero, `S-stage` `PAMS` selects the physical address
+metadata. When two-stage address translation is enabled using the `H-extension`
+in a supervisor domain, If the `hgatp.MODE` is not zero, `G-stage` `PAMS` is
+used to select the metadata and `VS-stage` `PAMS` is ignored (`VS-stage` `PAMS`
+becomes reserved). This model is enforced to enforce the policy per the highest
+privilege supervisor entity in the supervisor domain.
 
