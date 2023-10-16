@@ -1,23 +1,79 @@
+[[intro]]
+
 == Introduction
 
-RISC-V privileged architecture defines mode for execution of supervisor software called S-mode. S-mode software may optionally enable Hypervisor extension to host virtual machines. Typically, there is a single supervisor domain of execution with access to all physical memory. This document describes *Supervisor Domain Access Protection* - a RISC-V privileged architecture extension to support physical address space (memory and devices) isolation for more than one supervisor domain. Supervisor domains enable trusted execution use cases for RISC-V platforms. Supervisor domains may also be used to reduce the supervisor Trusted Computing Base (TCB), with differential access to memory and other platform resources e.g. in Confidential VM Extension (CoVE), TEE Security Services, Secure Devices etc.
+RISC-V privileged architecture <<R1>> defines mode for execution of supervisor
+software called S-mode. S-mode software may optionally enable Hypervisor
+extension to host virtual machines. Typically, there is a single supervisor
+domain of execution with access to all physical memory. This document describes
+*Supervisor Domain Access Protection* - a RISC-V privileged architecture
+extension to support physical address space (memory and devices) isolation for
+more than one supervisor domain. Supervisor domains enable trusted execution
+use cases for RISC-V platforms. Supervisor domains may also be used to reduce
+the supervisor Trusted Computing Base (TCB), with differential access to memory
+and other platform resources e.g. in Confidential VM Extension (CoVE), TEE
+Security Services, Secure Devices etc.
 
-Tenant (application or VM) workloads on multi-tenant platforms rely on hardware-based isolation primitives that are managed by the host/privileged software. Traditional host software (operating systems and virtual machine monitors) have unfettered access to system memory, devices and hardware isolation mechanisms such as the memory management unit (MMU) or physical memory protection (PMP) registers. Typical multi-tenant platforms also have a very large Trusted Computing Base (TCB) and have many threat actors that influence the TCB. For example, in a multi-tenant data-center environment, the host software, devices and device drivers, cloud operators, orchestration services, other tenant workloads etc. are all considered threat vectors. Additional threats originate due to deployment models, for example, an embedded platform deployed in the field is exposed to physical threat vectors. Hence, in many scenarios isolated supervisor domains are desired to be able to express differentiated trust models and secure access to platform resources. A supervisor domain has resources (such as memory/IO regions, processing elements, devices and interrupts) to perform their function.
+Tenant (application or VM) workloads on multi-tenant platforms rely on
+hardware-based isolation primitives that are managed by the host/privileged
+software. Traditional host software (operating systems and virtual machine
+monitors) have unfettered access to system memory, devices and hardware
+isolation mechanisms such as the memory management unit (MMU) or physical
+memory protection (PMP) registers. Typical multi-tenant platforms also have a
+very large Trusted Computing Base (TCB) and have many threat actors that
+influence the TCB. For example, in a multi-tenant data-center environment, the
+host software, devices and device drivers, cloud operators, orchestration
+services, other tenant workloads etc. are all considered threat vectors.
+Additional threats originate due to deployment models, for example, an embedded
+platform deployed in the field is exposed to physical threat vectors. Hence, in
+many scenarios isolated supervisor domains are desired to be able to express
+differentiated trust models and secure access to platform resources. A
+supervisor domain uses resources (such as memory/IO regions, processing
+elements, devices and interrupts) to perform their function.
 
 [caption="Figure {counter:image}: ", reftext="Figure {image}"]
 [title= "Supervisor Domains"]
 image::fig1.png[]
 
-A supervisor domain is associated with a set of physical address regions that are isolated from other supervisor domains on the same platform, with only the Root Domain Security Manager (RDSM) with access to all of the physical address space. A supervisor domain identifier (SDID) is associated with the supervisor domain to facilitate physical address protection fences on a per supervisor domain basis. Supervisor domains must rely on a TCB which consists of the RDSM (software) and hardware (hart, SoC, Root-of-trust) that enforces the isolation properties for the supervisor domain. Isolation of the workloads within a supervisor domain is the responsibility of the OS/hypervisor managing the supervisor domain, here referred to as the Supervisor Domain Security Manager (SDSM). 
+A supervisor domain is associated with a set of physical address regions that
+are isolated from other supervisor domains on the same platform, with only the
+Root Domain Security Manager (RDSM) with access to all of the physical address
+space. A supervisor domain identifier (SDID) is associated with the supervisor
+domain to facilitate physical address protection fences on a per supervisor
+domain basis. Supervisor domains must rely on a TCB which consists of the RDSM
+(software) and hardware (hart, SoC, Root-of-trust) that enforces the isolation
+properties for the supervisor domain. Isolation of the workloads within a
+supervisor domain is the responsibility of the OS/hypervisor managing the
+supervisor domain, here referred to as the Supervisor Domain Security Manager
+(SDSM).
 
-A key goal of using multiple domains is to be able to reduce the common TCB across domains, and should enable the attestation [2] of each domain independently from other domains. Sensitive data may be entrusted to a particular domain after verifying the trust properties statically (via boot) or dynamically (via attestation). These trust properties are established as part of the hardware and software supply chain, system configuration and may be additionally evaluated using attestation mechanisms. The security certification of the RDSM is desirable but out of scope of this specification.
+A key goal of using multiple domains is to be able to reduce the common TCB
+across domains, and should enable the attestation <<R2>> of each domain
+independently from other domains. Sensitive data may be entrusted to a
+particular domain after verifying the trust properties statically (via boot) or
+dynamically (via attestation). These trust properties are established as part
+of the hardware and software supply chain, system configuration and may be
+additionally evaluated using attestation mechanisms. The security certification
+of the RDSM is desirable but out of scope of this specification.
 
-Use cases for supervisor domain isolation range from embedded to application/server-class platforms. Some examples where supervisor domains can be used are: 
+Use cases for supervisor domain isolation range from embedded to
+application/server-class platforms. Some examples where supervisor domains can
+be used are:
 
-* A trusted execution environment domain that isolates security services/applications.
-* A confidential computing domain which enforces confidentiality and integrity for workload data-in-use from the host/untrusted hypervisor, along with attestation of the TCB. 
-* A host (operator) domain that manages resources on the platform, and may assign resources to other domains.
+* A trusted execution environment domain that isolates security
+services/applications.
+* A confidential computing <<R2>> domain which enforces confidentiality and
+integrity for workload data-in-use from the host/untrusted hypervisor, along
+with attestation of the TCB.
+* A host (operator) domain that manages resources on the platform, and may
+assign resources to other domains.
 * A service-provider domain that has exclusive access to some devices.
 
-In order to avoid re-factoring of deployed host software, workloads and applications, new hardware primitives are required to support memory isolation for domains. A second key requirement the new hardware primitives must address is the performance and scalability of physical memory isolation at a page-level to support rich-OS memory management models. This specification describes the architecture primitives to support the requirements of a multi-supervisor domain physical address isolation model via a Supervisor Domain Access Protection (Smmtt) extension for RISC-V processor-based platforms.
-
+In order to avoid re-factoring of deployed host software, workloads and
+applications, new hardware primitives are required to support memory isolation
+for domains. A second key requirement the new hardware primitives must address
+is the performance and scalability of physical memory isolation at a page-level
+to support rich-OS memory management models. This specification describes the
+architecture primitives to support the requirements of a multi-supervisor
+domain physical address isolation model via a Supervisor Domain Access
+Protection (Smmtt) extension for RISC-V processor-based platforms.
