@@ -2,44 +2,199 @@
 [[Smsdia]]
 == `Smsdia`: Supervisor Domains Interrupt Assignment
 
-=== Initialization
+Interrupts that occur during the execution of a supervisor domain typically
+cause a trap to the RDSM in M-mode by default. The RDSM may redirect traps
+back to a supervisor domain using the `MRET` instruction. Additionally, the
+RDSM may assert a _virtual interrupt_ to a supervisor domain. Such _virtual
+interrupts_ might be asserted as part of handling a real interrupt, such as a
+RAS interrupt, or they may have no direct connection to any actual interrupt
+event.
 
-Each supervisor domain is associated with its dedicated IMSIC S-interrupt file
-or an APLIC domain. A supervisor domain is not aware of the existence of
-another domain. Each supervisor domain interacts with its assigned interrupt
-controller instance as defined by the AIA <<R3>> architecture without any change
-to its interface and behavior. MTT (or PMP) is used to restrict a supervisor
-domain (and its devices) to its memory mapped registers. Wires are expected to
-be connected statically or configurable to APLICs.
+To increase performance, the RDSM can delegate the handling of certain
+interrupts, like the timer interrupt or the local performance counter
+overflow interrupt (LCOFI), to the supervisor domain by setting the
+appropriate `mideleg` bits. This delegation could necessitate the RDSM to
+context switch additional state related to such delegated interrupts,
+including `stimecmp` and the HPM CSRs.
 
-[caption="Figure {counter:image}: ", reftext="Figure {image}"]
-[title= "Example of S-interrupt file assignment"]
-image::fig7.png[width=800]
+Some supervisor domains may have devices assigned to them for I/O operations.
+Devices designed to carry out I/O operations typically signal the completion
+of an I/O task or an associated error via an external interrupt. These external
+interrupts might be aggregated and indicated by an interrupt controller linked
+to the RDSM. The RDSM, in the course of handling an external interrupt, should
+forward the interrupt to the relevant supervisor domain. The efficiency of
+handling external interrupts by a supervisor domain can be enhanced if the
+external interrupts could be directly assigned to the supervisor domain. Such
+direct delivery of external interrupts necessitates a dedicated interrupt
+controller that can be linked to such supervisor domains. To accommodate such
+supervisor domains, the system might feature multiple interrupt controllers,
+enabling an individual interrupt controller to be linked with each supervisor
+domain. The interrupt controllers could be either an APLIC or an IMSIC, as
+delineated by the RISC-V Advanced Interrupt Architecture (AIA) cite:[AIA]. In
+certain systems, both an APLIC and an IMSIC could be linked with a supervisor
+domain, with the APLIC configured to route interrupts to the associated IMSIC
+as MSI. Interrupt controllers other than APLIC and/or IMSIC could also serve
+a supervisor domain.
 
-=== Operation
+Although a variety of interrupt controllers can be activated for external
+interrupts at the S- and VS-levels, a singular interrupt controller manages
+external interrupts at the M-level and is perpetually active. The `Smsdia`
+extension does not impact external interrupts at the M-level.
 
-All Supervisor Domain external interrupts are reflected in a new M-mode CSR
-`msdeia`. The SDID programmed on the hart selects the external interrupt for
-the hart from msdeia. M-mode can be interrupted using a new local interrupt
-`msdeip`, that indicates if any of the supervisor domain external interrupts
-are pending. External interrupts to a supervisor domain can be masked using
-new M-mode CSR `msdeie`. M-mode can use the `msdeip` interrupt for scheduling
-decisions. IMSIC CSRs: siselect, sireg, stopei operate on S-mode interrupt
-register file selected per the hart SDID.
+When an interrupt controller has an S-level external interrupt awaiting
+resolution at the S-level on a hart, an S-level-external-interrupt-pending
+signal is asserted. Certain interrupt controllers, like the IMSIC, support
+delivering external interrupts directly to the VS-level. An IMSIC, for instance,
+supports up to 64 guest interrupt register files, each potentially linked to a
+virtual machine that the hypervisor might schedule for execution on a hart. Each
+guest interrupt register file can assert a VS-level-external-interrupt-pending
+signal when a VS-level external interrupt is pending resolution by a guest
+operating at VS-level. With the introduction of supervisor domains, a multitude
+of S-level and VS-level external interrupt pending signals might be asserted by
+the various interrupt controllers connected to a hart.
 
-[caption="Figure {counter:image}: ", reftext="Figure {image}"]
-[title= "M-mode CSRs for Smsdia"]
-image::fig8.png[width=800]
+Interrupt controllers are configured through a memory-mapped register interface,
+a collection of CSRs, or a blend of both. For instance, software interfaces with
+an APLIC via a memory-mapped register interface. In another case, software
+interacts with an IMSIC through a set of S and VS-level CSRs, along with a
+series of memory-mapped registers.
 
-=== Other considerations
+The RDSM can employ the MTT and/or PMP to limit a supervisor domain's access to
+the memory-mapped register interface of the interrupt controller associated with
+it. The `Smsdia` supports the connection of multiple interrupt controllers to a
+hart, allowing a supervisor domain to be paired with one of these interrupt
+controllers. The `Smsdia` extension introduces the `msdcfg` CSRs to signify the
+active interrupt controller for a supervisor domain. When CSRs are employed to
+interface with the interrupt controller state, they interact with the state
+corresponding to the active interrupt controller.
 
-* Local interrupts - LCOFI, high/low priority RAS can be delegated, context
-switched or virtually injected normally to supervisor domain by M-mode software.
+Upon scheduling a supervisor domain for execution on a hart, the RDSM requires a
+mechanism to appoint the linked interrupt controller as the active one for the
+hart. Selecting an interrupt controller also chooses the linked S and VS-level
+interrupt pending signals as those detected by the hart for instigating the
+associated traps. When CSRs are utilized to interface with an interrupt
+controller's state, the interaction is with the active interrupt controller.
 
-* Timer interrupt - stimecmp for a supervisor domain is context-switched.
-M-mode can use its timer for deadlines associated with non-scheduled supervisor
-domains.
+The RDSM needs a method to be alerted if an external interrupt, whether at the
+S- or VS-level, is pending for any supervisor domains not currently active on a
+hart. The RDSM could leverage this notification to inform its scheduling
+decisions. To facilitate this functionality, the `Smsdia` extension introduces
+the `msdeip` and `msdeie` CSRs, along with an M-level supervisor domain external
+interrupt.
 
-* Software interrupts can be handled similar to external interrupts - if
-required - using a `msdsia` and `msdsie` CSR - SW interrupts are implementation
-defined.
+=== Supervisor domain configuration (`msdcfg`)
+
+The `msdcfg` is a 32-bit read/write register, formatted as shown in <<MSDCFG>>.
+
+[[MSDCFG]]
+.`msdcfg` register
+
+[wavedrom, , ]
+....
+{reg: [
+  {bits:  6, name: 'SDICN'},
+  {bits: 26, name: 'WPRI'},
+], config:{lanes: 1, hspace:1024}}
+....
+
+The `SDICN` field selects an interrupt controller among the plurality of
+supervisor domain interrupt controllers associated with a hart as the active
+supervisor domain interrupt controller for S- and VS-level external interrupts.
+The `SDICN` field is a WARL field that must be able to hold a value between 0
+and maximum supervisor domain interrupt controller number, inclusive. If there
+are no supervisor domain interrupt controllers connected to the hart, then
+`SDICN` may be read-only zero.
+
+When the interrupt controller selected by `msdcfg.SDICN` is an IMSIC, the
+following rules apply:
+
+* The S-level external interrupt pending signal of the selected IMSIC is
+  indicated in `mip.SEIP`.
+* The `siselect` and `stopei` CSRs operate on the registers of the S-level
+  interrupt register file in the selected IMSIC.
+* The VS-level external interrupt pending signals of the selected IMSIC are
+  indicated in the `hgeip` CSR.
+* The `hstatus.VGEIN` selects a guest interrupt file in the selected IMSIC and
+  `vsiselect` and `vstopei` CSRs operate on the registers of the corresponding
+  guest interrupt file in the selected IMSIC.
+
+When the interrupt controller selected by `msdcfg.SDICN` is an APLIC, the
+following rules apply:
+
+* The S-level external interrupt pending signal of the selected IMSIC is
+  indicated in `mip.SEIP`.
+
+[NOTE]
+====
+The `Smsdia` extension provides for directly associating an interrupt controller
+with up to 64 supervisor domains. The RDSM may emulate interrupt controllers for
+additional supervisor domains. To emulate an IMSIC, the RDSM may use the
+controls provided by `Smstateen` extension to cause an illegal instruction trap
+on access to the associated CSRs for emulation purposes.
+====
+
+=== Supervisor domain external interrupt pending (`msdeip/msdeiph`)
+
+The `msdeip` is a MXLEN-bit read-only register, formatted for MXLEN=64 as
+shown in <<MSDEIP>>. When MXLEN=32, `msdeiph` is a 32-bit read-only register
+which aliases bits 63:32 of `msdeip`. When MXLEN=64, `msdeiph` does not exist.
+
+[[MSDEIP]]
+.`msdeip` register for RV64
+
+[wavedrom, , ]
+....
+{reg: [
+  {bits: 64, name: 'Interrupts'},
+], config:{lanes: 1, hspace:1024}}
+....
+
+that indicates pending supervisor domain external interrupts for this hart. Each
+bit __i__ in the register summarizes the external interrupts pending in the
+supervisor domain interrupt controller numbered __i__.
+
+When the interrupt controller identified by __i__ is an APLIC, the bit __i__
+indicates the state of the S-level external interrupt pending signal provided by
+that APLIC.
+
+When the interrupt controller identified by __i__ is an IMSIC, the bit __i__
+indicates the logical OR of the S-level and all VS-level external interrupt
+pending signals provided by that IMSIC.
+
+=== Supervisor domain external interrupt enable (`msdeie/msdeieh`)
+The `msdeie` is a MXLEN-bit read-write register, formatted for MXLEN=64 as shown
+in <<MSDEIE>>. When MXLEN=32, `msdeieh` is a 32-bit read-only register which
+aliases bits 63:32 of `msdeie`. When MXLEN=64, `msdeieh` does not exist.
+
+[[MSDEIE]]
+.`msdeie` register for RV64
+
+[wavedrom, , ]
+....
+{reg: [
+  {bits: 64, name: 'Interrupts'},
+], config:{lanes: 1, hspace:1024}}
+....
+
+The `msdeie` CSR selects the subset of supervisor domain external interrupts
+that cause a M-level supervisor domain external interrupt. The enable bits in
+`msdeie` do not affect the S- and VS-level external interrupt pending signals
+from the interrupt controller selected by `msdcfg.SDICN`.
+
+=== Machine Interrupt registers (`mip` and `mie`)
+
+The `Smsdia` extension introduces the supervisor domain external
+interrupt-pending (`SDEIP` - bit 32) field in `mip` and the supervisor domain
+external interrupt-enable (`SDEIE` - bit 32) field in `mie`. The `SDEIP` bit is
+read-only, and is 1 if and only if the bitwise logical AND of CSRs `msdeip` and
+`msdeie` is nonzero in any bit.
+
+[NOTE]
+====
+The RDSM may use the supervisor domain external interrupt to determine if a
+supervisor domain has become ready to run since it was last descheduled. When a
+supervisor domain that has a supervisor domain interrupt controller directly
+assigned to it, the RDSM updates the `msdcfg.SDICN` to select that interrupt
+controller and may clear the bit corresponding to that interrupt controller in
+`msdeie` prior to resuming execution of the supervisor domain.
+====
