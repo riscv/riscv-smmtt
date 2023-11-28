@@ -21,9 +21,10 @@ an illegal instruction exception.
 [wavedrom, ,svg]
 ....
 {reg: [
-  {bits:  22, name: 'MTTPPN'},
-  {bits:  8, name: 'SDID'},
+  {bits:  6, name: 'SDID'},
+  {bits:  2, name: 'Zero'},
   {bits:  2, name: 'Mode'},
+  {bits:  22, name: 'MTTPPN'},
 ], config:{lanes: 1, hspace:1024}}
 ....
 
@@ -33,9 +34,11 @@ an illegal instruction exception.
 [wavedrom, ,svg]
 ....
 {reg: [
-  {bits:  44, name: 'MTTPPN'},
-  {bits:  16, name: 'SDID'},
+  {bits:  6, name: 'SDID'},
+  {bits:  2, name: 'Zero'},
   {bits:  4, name: 'Mode'},
+  {bits:  44, name: 'MTTPPN'},
+  {bits:  8, name: 'Zero'},
 ], config:{lanes: 1, hspace:1024}}
 ....
 
