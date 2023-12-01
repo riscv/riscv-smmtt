@@ -22,9 +22,9 @@ an illegal instruction exception.
 ....
 {reg: [
   {bits:  6, name: 'SDID'},
-  {bits:  2, name: 'Zero'},
+  {bits:  2, name: 'WPRI'},
   {bits:  2, name: 'Mode'},
-  {bits:  22, name: 'MTTPPN'},
+  {bits:  22, name: 'PPN'},
 ], config:{lanes: 1, hspace:1024}}
 ....
 
@@ -35,9 +35,9 @@ an illegal instruction exception.
 ....
 {reg: [
   {bits:  6, name: 'SDID'},
-  {bits:  2, name: 'Zero'},
+  {bits:  2, name: 'WPRI'},
   {bits:  4, name: 'Mode'},
-  {bits:  44, name: 'MTTPPN'},
+  {bits:  44, name: 'PPN'},
   {bits:  8, name: 'Zero'},
 ], config:{lanes: 1, hspace:1024}}
 ....
