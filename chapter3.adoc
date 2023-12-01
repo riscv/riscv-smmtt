@@ -38,7 +38,7 @@ an illegal instruction exception.
   {bits:  2, name: 'WPRI'},
   {bits:  4, name: 'Mode'},
   {bits:  44, name: 'PPN'},
-  {bits:  8, name: 'Zero'},
+  {bits:  8, name: 'WPRI'},
 ], config:{lanes: 1, hspace:1024}}
 ....
 
