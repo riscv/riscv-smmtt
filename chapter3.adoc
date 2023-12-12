@@ -16,7 +16,7 @@ Attempts to read or write `mttp` while executing in U, S or HS-mode will raise
 an illegal instruction exception.
 
 [caption="Register {counter:rimage}: ", reftext="Register {rimage}"]
-[title="M-mode MTTP register (`mttp`) when `XLEN=32`. All sub-fields are WARL."]
+[title="M-mode MTTP register (`mttp`) when `XLEN=32`."]
 [id=sdid-32]
 [wavedrom, ,svg]
 ....
@@ -29,7 +29,7 @@ an illegal instruction exception.
 ....
 
 [caption="Register {counter:rimage}: ", reftext="Register {rimage}"]
-[title="M-mode MTTP register (`mttp`) when `XLEN=64`. All sub-fields are WARL."]
+[title="M-mode MTTP register (`mttp`) when `XLEN=64`."]
 [id=sdid-64]
 [wavedrom, ,svg]
 ....
