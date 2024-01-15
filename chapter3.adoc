@@ -16,27 +16,29 @@ Attempts to read or write `mttp` while executing in U, S or HS-mode will raise
 an illegal instruction exception.
 
 [caption="Register {counter:rimage}: ", reftext="Register {rimage}"]
-[title="M-mode MTTP register (`mttp`) when `XLEN=32`. All sub-fields are WARL."]
+[title="M-mode MTTP register (`mttp`) when `XLEN=32`."]
 [id=sdid-32]
 [wavedrom, ,svg]
 ....
 {reg: [
-  {bits:  22, name: 'MTTPPN'},
-  {bits:  8, name: 'SDID'},
-  {bits:  2, name: 'Mode'},
-], config:{lanes: 1, hspace:1024}}
+  {bits:  22, name: 'PPN (WARL)'},
+  {bits:   2, name: 'WPRI'},
+  {bits:   6, name: 'SDID (WARL)'},
+  {bits:   2, name: 'Mode (WARL)'},
+], config:{lanes: 2, hspace:1024}}
 ....
 
 [caption="Register {counter:rimage}: ", reftext="Register {rimage}"]
-[title="M-mode MTTP register (`mttp`) when `XLEN=64`. All sub-fields are WARL."]
+[title="M-mode MTTP register (`mttp`) when `XLEN=64`."]
 [id=sdid-64]
 [wavedrom, ,svg]
 ....
 {reg: [
-  {bits:  44, name: 'MTTPPN'},
-  {bits:  16, name: 'SDID'},
-  {bits:  4, name: 'Mode'},
-], config:{lanes: 1, hspace:1024}}
+  {bits:  44, name: 'PPN (WARL)'},
+  {bits:  10, name: 'WPRI'},
+  {bits:   6, name: 'SDID (WARL)'},
+  {bits:   4, name: 'Mode (WARL)'},
+], config:{lanes: 2, hspace:1024}}
 ....
 
 <<mtt-32>> shows the encodings of the `MODE` field when `XLEN=32` and

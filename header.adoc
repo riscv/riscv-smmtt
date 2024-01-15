@@ -1,8 +1,8 @@
 [[header]]
 :description: RISC-V Supervisor Domains Access Protection
 :company: RISC-V.org
-:revdate: 7/2023
-:revnumber: 1.0
+:revdate: 12/2023
+:revnumber: 1.0.4
 :revremark: This document is in development. Assume everything can change. See http://riscv.org/spec-state for details.
 :url-riscv: http://riscv.org
 :doctype: book
