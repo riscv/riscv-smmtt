@@ -1,6 +1,6 @@
 [[chapter7]]
 [[Smsdia]]
-== `Smsdia`: Supervisor Domains Interrupt Assignment
+== `Smsdia`: Supervisor Domain Interrupt Assignment
 
 Interrupts that occur during the execution of a supervisor domain typically
 cause a trap to the RDSM in M-mode by default. The RDSM may redirect traps
@@ -104,9 +104,9 @@ S- or VS-level, is pending for any supervisor domains not currently active on a
 hart. The RDSM could leverage this notification to inform its scheduling
 decisions. To facilitate this functionality, the `Smsdia` extension introduces
 the `msdeip` and `msdeie` CSRs, along with an M-level supervisor domain external
-interrupt.
+interrupt (`MSDEI`).
 
-=== Supervisor domain configuration (`msdcfg`)
+=== Machine supervisor domain configuration (`msdcfg`)
 
 The `msdcfg` is a 32-bit read/write register, formatted as shown in <<MSDCFG>>.
 
@@ -131,22 +131,23 @@ and maximum implemented supervisor domain interrupt controller number,
 inclusive. If there are no supervisor domain interrupt controllers connected to
 the hart, then `SDICN` may be read-only zero.
 
-When `SDICN` is not the number of an implemented interrupt controller or is zero
-then the following rules apply:
+When `SDICN` is not the number of an implemented interrupt controller, or is
+zero then the following rules apply to all privilege modes:
 
 * The S-level external interrupt pending signal indicated in `mip.SEIP` is 0.
-* When `Ssaia` extension is implemented, then the implementation behaves as if
-  `mstateen0` bits 60, 59, and 58 were all 0.
-* The VS-level external interrupt pending signals indicated in `hegeip` are 0.
+* All `siselect` values that access IMSIC registers are reserved.
+* Access to CSR `stopei` raises an illegal instruction exception.
+* The `hstatus.vgein` field is read-only zero.
+* The VS-level external interrupt pending signals indicated in `hgeip` are 0.
 
 When the interrupt controller selected by `msdcfg.SDICN` is an implemented
-interrupt controller and not zero and the interrupt controller is an IMSIC, the
-following rules apply:
+interrupt controller, is not zero, and is an IMSIC, the following rules apply:
 
 * The S-level external interrupt pending signal of the selected IMSIC is
   indicated in `mip.SEIP`.
 * The `siselect` and `stopei` CSRs operate on the registers of the S-level
-  interrupt register file in the selected IMSIC.
+  interrupt register file in the selected IMSIC when `siselect` holds a value
+  that selects an IMSIC register.
 * The VS-level external interrupt pending signals of the selected IMSIC are
   indicated in the `hgeip` CSR.
 * The `hstatus.VGEIN` selects a guest interrupt file in the selected IMSIC and
@@ -154,8 +155,7 @@ following rules apply:
   guest interrupt file in the selected IMSIC.
 
 When the interrupt controller selected by `msdcfg.SDICN` is an implemented
-interrupt controller and not zero and the interrupt controller is an APLIC, the
-following rules apply:
+interrupt controller, is not zero, and is an APLIC, the following rules apply:
 
 * The S-level external interrupt pending signal of the selected APLIC is
   indicated in `mip.SEIP`.
@@ -169,7 +169,7 @@ domains. To emulate an IMSIC, the RDSM may use the illegal instruction trap on
 access to the associated CSRs for emulation purposes.
 ====
 
-=== Supervisor domain external interrupt pending (`msdeip/msdeiph`)
+=== Machine supervisor domain external interrupt pending (`msdeip/msdeiph`)
 
 The `msdeip` is a MXLEN-bit read-only register, formatted for MXLEN=64 as
 shown in <<MSDEIP>>. When MXLEN=32, `msdeiph` is a 32-bit read-only register
@@ -197,9 +197,13 @@ When the interrupt controller identified by __i__ is an IMSIC, the bit __i__
 indicates the logical OR of the S-level and all VS-level external interrupt
 pending signals provided by that IMSIC.
 
-=== Supervisor domain external interrupt enable (`msdeie/msdeieh`)
+The state of the supervisor domain interrupts is visible in the `msdeip`
+register even when `msdcfg.SDICN` is zero or is not the valid number of an
+implemented interrupt controller.
+
+=== Machine supervisor domain external interrupt enable (`msdeie/msdeieh`)
 The `msdeie` is a MXLEN-bit read-write register, formatted for MXLEN=64 as shown
-in <<MSDEIE>>. When MXLEN=32, `msdeieh` is a 32-bit read-only register which
+in <<MSDEIE>>. When MXLEN=32, `msdeieh` is a 32-bit read-write register which
 aliases bits 63:32 of `msdeie`. When MXLEN=64, `msdeieh` does not exist.
 
 [[MSDEIE]]
@@ -220,11 +224,14 @@ from the interrupt controller selected by `msdcfg.SDICN`.
 
 === Machine Interrupt registers (`mip` and `mie`)
 
-The `Smsdia` extension introduces the supervisor domain external
-interrupt-pending (`SDEIP` - bit 32) field in `mip` and the supervisor domain
-external interrupt-enable (`SDEIE` - bit 32) field in `mie`. The `SDEIP` bit is
-read-only, and is 1 if and only if the bitwise logical AND of CSRs `msdeip` and
-`msdeie` is nonzero in any bit.
+The `Smsdia` extension introduces the machine supervisor domain external
+interrupt-pending (`MSDEIP` - bit 32) field in `mip` and the machine supervisor
+domain external interrupt-enable (`MSDEIE` - bit 32) field in `mie`. The
+`MSDEIP` bit is read-only, and is 1 if and only if the bitwise logical AND of
+CSRs `msdeip` and `msdeie` is nonzero in any bit.
+
+Multiple simultaneous interrupts destined for M-mode are handled in the
+following decreasing priority order: MEI, MSI, MTI, MSDEI, SEI, SSI, STI.
 
 [NOTE]
 ====
