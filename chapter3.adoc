@@ -69,6 +69,8 @@ addresses with access allowed/disallowed per page
 
 |2 |`Smmtt34rw` |Page-based supervisor domain protection for 34 bit
 physical addresses with RW permissions per page
+
+|3 |- |`_Reserved_`
 |===
 
 .Encoding of `mttp` `MODE` field for `XLEN=64`.
