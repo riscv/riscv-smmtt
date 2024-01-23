@@ -127,3 +127,26 @@ Note that writing `mttp` does not imply any ordering constraints between
 If a supervisor domain's `MTT` structure has been modified, or if a `SDID` is
 reused, it may be necessary to execute a `FENCE.MTT` instruction before or
 after writing `mttp`.
+
+=== Machine supervisor domain configuration (`msdcfg`)
+
+The `msdcfg` is a 32-bit read/write register, formatted as shown in <<MSDCFG>>.
+This CSR is used by M-mode software to specify the active configuration for
+capabilities of the supervisor domain when associated with a hart. The
+extension `Smsdia` uses `msdcfg.SDICN` to specify the active configuration for
+the supervisor domain interrupt controller associated with the hart. Similarly
+the external debug allowed state for a supervisor domain is controlled via the
+`msdcfg.SDEDBALW` bit. Details of `Smsdia` and `Smsdedbg` are described in
+their respective sections in this specification.
+
+[[MSDCFG]]
+.`msdcfg` register
+
+[wavedrom, , ]
+....
+{reg: [
+  {bits:  6, name: 'SDICN'},
+  {bits: 25, name: 'WPRI'},
+  {bits:  1, name: 'SDEDBGALW'},
+], config:{lanes: 4, hspace:1024}}
+....
