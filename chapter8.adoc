@@ -28,10 +28,10 @@ configuration of the supervisoer domain and should be managed by the M-mode root
 security manager using secure memory.
 
 When `medbgen` is 1, there are no restrictions. When `medbgen` is 0 but
-`MSDCFG.sdedbgalw` is 1, then the external debug mode may be entered but has
-to have restrictions such as `M-mode` -privileged CSR accesses are prohibited
-and Memory accesses by instructions executed in external debug mode cannot
-use `M` privilege. When `medbgen` is 0 and `MSDCFG.sdedbgalw` is also 0, then
-the rules around triggers configured with action = 1 that may fire - such as
-always cause breakpoint exception. The external debug security extension TG
-will need to define the rules around what is allowed in external debug mode.
+`MSDCFG.sdedbgalw` is 1, then the external debug mode may be entered but is
+restricted by `M-mode` software to prevent privileged CSR accesses and memory
+accesses by instructions executed in external debug mode cannot use `M` privilege.
+When `medbgen` is 0 and `MSDCFG.sdedbgalw` is also 0, the M-mode root domain
+security manager must not configure triggers with `action=1`. Triggers for the
+supervisor domain are expected to be controlled by the root domain security
+manager to prevent any leakage of information.
