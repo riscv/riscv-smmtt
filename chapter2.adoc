@@ -59,6 +59,11 @@ S-interrupt file or an APLIC domain to a Supervisor Domain. The interface also
 describes CSRs to allow M-mode software to retain control on notification of
 interrupts when Supervisor domains are enabled.
 
+* `Smsdedbg` (<<Smsdedbg>>) - This extension provides the controls to indicate
+if external debug is allowed for a supervisor domain. Whether external debug is
+authorized or not is expected to be done via a RoT and is outside the scope
+of this specification.
+
 === Theory of operation (informative)
 Supervisor Domain Access Protection extensions are used by M-mode software to
 program if physically-addressed memory (or device-mapped region) is

@@ -81,7 +81,7 @@ The RDSM can employ the MTT and/or PMP to limit a supervisor domain's access to
 the memory-mapped register interface of the interrupt controller associated with
 it. The `Smsdia` supports the connection of multiple interrupt controllers to a
 hart, allowing a supervisor domain to be paired with one of these interrupt
-controllers. The `Smsdia` extension introduces the `msdcfg` CSRs to signify the
+controllers. The `Smsdia` extension uses the `msdcfg` CSR to signify the
 active interrupt controller for a supervisor domain. When CSRs are employed to
 interface with the interrupt controller state, they interact with the state
 corresponding to the active interrupt controller.
@@ -109,17 +109,6 @@ interrupt (`MSDEI`).
 === Machine supervisor domain configuration (`msdcfg`)
 
 The `msdcfg` is a 32-bit read/write register, formatted as shown in <<MSDCFG>>.
-
-[[MSDCFG]]
-.`msdcfg` register
-
-[wavedrom, , ]
-....
-{reg: [
-  {bits:  6, name: 'SDICN'},
-  {bits: 26, name: 'WPRI'},
-], config:{lanes: 1, hspace:1024}}
-....
 
 The `SDICN` field selects an interrupt controller among the plurality of
 supervisor domain interrupt controllers associated with a hart as the active
