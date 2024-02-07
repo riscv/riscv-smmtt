@@ -2,15 +2,15 @@
 [[Smsdedbg]]
 == `Smsdedbg`: Supervisor Domain External Debug
 
-[caption="Figure {counter:image}: ", reftext="Figure {image}"]
-[title= "External Debug for Supervisor Domain", id=Smsdedbg_img]
-image::Smsdedbg.png[]
-
 The <<MSDCFG>> CSR contains the `sdedbgalw` bit that controls whether the
 current scheduled SD is allowed to be external-debugged. This bit is context
 switched (along with rest of the `msdcfg`) per SD.
 
 === `Smsdedbg` interaction with external debug security controls (Informative)
+
+[caption="Figure {counter:image}: ", reftext="Figure {image}"]
+[title= "External Debug for Supervisor Domain", id=Smsdedbg_img]
+image::Smsdedbg.png[]
 
 This section will be moved into the non-ISA specification for external debug
 security. It is described here as informational.
@@ -18,9 +18,9 @@ security. It is described here as informational.
 The `medbgen` is an enable control for external debug for the M-mode driven by
 the debug module and is expected to be established by the RoT (following RISC-V
 Security Model recommendation SR_GEN_007 and SR_GEN_012). When privilege is `M`,
-the `medbgen` gates the `haltreq_i` from the debug module and if is 0 prevents
+the `medbgen` gates the `haltreq` from the debug module and if is 0 prevents
 the hart from entering external debug mode. When privilege is less than `M`, the
-OR of the `MSDCFG.sdedbgalw` and `medbgen` gates the `haltreq_i` from the debug
+OR of the `MSDCFG.sdedbgalw` and `medbgen` gates the `haltreq` from the debug
 module and the hart will enter external debug mode if either is 1.
 
 The configuration for `MSDCFG.sdedbgalw` may be obtained from the manifest/
