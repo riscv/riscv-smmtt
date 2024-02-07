@@ -36,17 +36,6 @@ MTT may be configured to be `Bare` if granular memory access control
 is not required. The SDID
 CSR defined by `Smsdid` is used as defined.
 
-* `Svpams` (<<Svpams>>) - Physical address metadata selector - When access to
-memory that is shared by one or more supervisor domains is allowed by the MTT,
-the access may need to be additionally qualified to enforce security-controls.
-`Svpams` enables specifying a physical address metadata selector as part of the
-access. The possible metadata are specified in (per-hart) CSRs managed by the
-RDSM. The metadata that is associated with the accessed physical address is
-selected via a physical address metadata selector (`PAMS`) field programmed into
-the page table entry (S-mode or G-stage) traversed as part of the address
-translation. The supervisor domain S/HS-mode software is expected to manage the
-S-mode/G-stage page table PAMS fields.
-
 * `IO-MTT` (<<IO-MTT>>) - This non-ISA interface enables programming of an IO
 interconnect to associate SDID to IOMMU ID (called the SD Classifier). The
 assignment of IOMMUs to supervisor domains is also expected to be under the
@@ -195,8 +184,7 @@ Additional protection/isolation for memory associated with a supervisor domain
 is orthogonal (and usage-specific). Such additional protection for memory may
 be derived by the use of cryptography and/or access-control mechanisms. The
 mechanisms chosen for these additional protection methods are independent of
-Smmtt and may be platform-specific, though they may utilize the physical
-address metadata selected (via the Svpams extension) during the access. The TCB
-of a particular supervisor domain (and devices that are bound to it) may be
-independently evaluated via attestation of the HW and SW TCB by a relying party
-using standard Public-Key Infrastructure-based mechanisms.
+Smmtt and may be platform-specific. The TCB of a particular supervisor domain
+(and devices that are bound to it) may be independently evaluated via
+attestation of the HW and SW TCB by a relying party using standard Public-Key
+Infrastructure-based mechanisms.
