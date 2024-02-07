@@ -13,7 +13,7 @@ instructions  - herewith called the `supervisor domain identifier` assigned to
 the hart. Supervisor domains are orthogonal to hart privilege levels and since
 Smmtt enables physical memory isolation, there is one CSR (per hart) managed by
 M-mode. `Smsdid` is expected to be used in conjunction with `Smmtt` for physical
-memory isolation along with mechanisms such as `e(PMP)`. Device side
+memory isolation along with mechanisms such as `PMP` and `Smepmp`. Device side
 accesses are addressed in the `IO-MTT` extension. Isolation of data within a
 device is out of scope of this specification.
 
@@ -31,11 +31,9 @@ the RDSM (except for when explicitly allowed by the RDSM). Privilege levels may
 affect changes in the MTT under purview of the Supervisor Domain Security
 Manager (SDSM) either through an SBI interface into M-mode (or may have the
 ability to edit MTT structures by virtue of how the MTT structure in memory is
-accessible to lower privilege levels). Other memory access control mechanisms
-may also be used to enforce supervisor domain isolation for use cases that do
-not require the full flexibility of MTT. For example, (e)PMP configurations
-controlled by M-mode during domain context switching. In this case the MTT-mode
-`Bare` may be used. When MTT mode is `Bare`, MTT is not enforced, but the SDID
+accessible to lower privilege levels). MTT and e(PMP) are always active.
+MTT may be configured to be `Bare` if granular memory access control
+is not required. The SDID
 CSR defined by `Smsdid` is used as defined.
 
 * `Svpams` (<<Svpams>>) - Physical address metadata selector - When access to
