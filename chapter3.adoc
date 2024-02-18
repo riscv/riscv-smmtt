@@ -148,7 +148,8 @@ their respective sections in this specification.
 ....
 {reg: [
   {bits:  6, name: 'SDICN'},
-  {bits: 25, name: 'WPRI'},
+  {bits:  1, name: 'WPRI'},
   {bits:  1, name: 'SDEDBGALW'},
+  {bits: 25, name: 'WPRI'},
 ], config:{lanes: 4, hspace:1024}}
 ....
