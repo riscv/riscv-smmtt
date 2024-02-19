@@ -48,6 +48,24 @@ To support this security objective, the following capabilities are required:
      to provide this capability.
 
 [[SMQOSID]]
+=======
+With supervisor domains, the resource accesses from a SD or the RDSM must not
+be observable using the resource usage monitors to entities that are not in
+their TCB.  The resource allocations for a SD or the RDSM must not be affected
+by entities that are not in their TCB.
+
+Supporting supervisor domains requires the following additional capabilities:
+
+* Multiple QoS register interfaces (QRI) in the capacity and bandwidth
+  controllers in the SoC. The RDSM may dedicate a QRI to an SD or may mediate
+  access to a QRI from multiple SDs.
+
+* Associating a QRI ID (QRID) with requests originating from SDs and RDSM. The
+  `QRID` along with the `RCID` and `AT` is used to identify the resource
+  allocation configurations in a capacity or bandwidth controller. The `QRID`
+  along with the `MCID` is used to identify the ID of the counter used to
+  monitor resource usage in a capacity or bandwidth controller.
+
 === Smqosid - Supervisor Domain Quality-of-Service Identifiers
 
 The Smqosid introduces a read/write M-mode register (`mrmcfg`) to configure
