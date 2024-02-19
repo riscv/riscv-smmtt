@@ -1,0 +1,346 @@
+[[chapter9]]
+[[Smsdqos]]
+== Capacity and Bandwidth QoS Register Interface for Supervisor Domains
+
+Quality of Service (QoS) is defined as the minimal end-to-end performance
+that is guaranteed in advance by a service level agreement (SLA) to a
+workload. A workload may be a single application, a group of applications,
+a virtual machine, a group of virtual machines, or a combination of those.
+
+The RISC-V Capacity and Bandwidth QoS Register Interface (CBQRI) cite:[CBQRI]
+specification specifies mechanisms to a) associate QoS identifiers with
+requests made by workloads to resources controlled by capacity and bandwidth
+controllers, b) memory-mapped register interface for capacity allocation and
+capacity usage monitoring in capacity controllers in shared resources such as
+shared caches, c) memory-mapped register interface for bandwidth allocation
+and bandwidth usage monitoring in bandwidth controllers in shared resources
+such as memory controllers.
+
+The Ssqosid extension cite:[SSQOSID] provides a read/write S/HS-mode register
+(`srmcfg`) to configure QoS Identifiers to be used with requests made by the
+hart to shared resources. The CBQRI specification specifies the IOMMU extension
+to associate QoS Identifiers with requests made by devices to shared resources.
+
+With supervisor domains, the resource accesses from a SD or the RDSM must not
+be observable using the resource usage monitors to entities that are not in
+their TCB.  The resource allocations for a SD or the RDSM must not be affected
+by entities that are not in their TCB.
+
+Supporting supervisor domains requires the following additional capabilities:
+
+* Multiple QoS register interfaces (QRI) in the capacity and bandwidth
+  controllers in the SoC. The RDSM may dedicate a QRI to an SD or may mediate
+  access to a QRI from multiple SDs.
+
+* Associating a QRI ID (QRID) with requests originating from SDs and RDSM. The
+  `QRID` along with the `RCID` and `AT` is used to identify the resource
+  allocation configurations in a capacity or bandwidth controller. The `QRID`
+  along with the `MCID` is used to identify the ID of the counter used to
+  monitor resource usage in a capacity or bandwidth controller.
+
+=== Smqosid - Supervisor Domain Quality-of-Service Identifiers
+
+The Smqosid introduces a read/write M-mode register (`mrmcfg`) to configure
+`MCID` and `RCID` for requests made by a hart at privilege mode M.
+
+The `mrmcfg` register is an MXLEN-bit read/write register used to configure a
+Resource Control ID (`RCID`) and a Monitoring Counter ID (`MCID`). Both `RCID`
+and `MCID` are WARL fields. The register is formatted as shown in <<MRMCFG64>>
+when MXLEN=64 and <<MRMCFG32>> when MXLEN=32. The CSR number is TBA.
+
+The `RCID` and `MCID` accompany each request made by the hart, with effective
+privilege mode equal to M, to shared resource controllers . The `RCID` is used to
+determine the resource allocations (e.g., cache occupancy limits, memory
+bandwidth limits, etc.) to enforce. The `MCID` is used to identify a counter to
+monitor resource usage.
+
+[NOTE]
+====
+A suggested reset value of 0 for the `RCID` field within the `mrmcfg` register
+aligns with the default operational behavior of resource controllers, which is
+to associate all capacity and resources with `RCID=0`. This setup ensures a
+seamless initial state that conforms to expected default resource allocation
+policies. The reset value for the `MCID` field, being potentially
+implementation-defined, does not directly impact core functionality and may
+vary based on specific system requirements.
+====
+
+When Smqosid is implemented, the configurations in the `srmcfg` register
+introduced by Ssqosid extension only apply to requests made with effective
+privilege modes less than M.
+
+[[MRMCFG64]]
+.Machine Resource Management Configuration (`mrmcfg`) register for MXLEN=64
+
+[wavedrom, , ]
+....
+{reg: [
+  {bits: 12, name: 'RCID'},
+  {bits:  4, name: 'WPRI'},
+  {bits: 12, name: 'MCID'},
+  {bits: 36, name: 'WPRI'},
+], config:{lanes: 2, hspace:1024}}
+....
+
+[[MRMCFG32]]
+.Machine Resource Management Configuration (`mrmcfg`) register for MXLEN=32
+
+[wavedrom, , ]
+....
+{reg: [
+  {bits: 12, name: 'RCID'},
+  {bits:  4, name: 'WPRI'},
+  {bits: 12, name: 'MCID'},
+  {bits:  4, name: 'WPRI'},
+], config:{lanes: 1, hspace:1024}}
+....
+
+The Smqosid extension introduces a supervisor-RCID-length (`SRL`) and a
+supervisor-MCID-length (`SML`) field in the `msdcfg` register. The `SRL` and
+`SML` fields are used to configure a range of `RCID` and `MCID` that may be used
+by a supervisor domain. The `SRL` and `SML` fields are WARL and their legal
+values range from 0 to 12. The Smqosid extension additionally introduces a
+supervisor-srmcfg-mode (`SSM`) field. The legal values of this mode field are 0
+and 1, which,  along with `SRL` and `SML` determine the range of `RCID` and
+`MCID` values that the SD is allowed to program into the `srmcfg` register.
+
+.`msdcfg` register
+
+[wavedrom, , ]
+....
+{reg: [
+  {bits:  6, name: 'SDICN'},
+  {bits:  1, name: 'SSM'},
+  {bits:  1, name: 'SDEDBGALW'},
+  {bits:  4, name: 'SRL'},
+  {bits:  4, name: 'SML'},
+  {bits:  4, name: 'SQRID'},
+  {bits:  4, name: 'MQRID'},
+  {bits:  8, name: 'WPRI'},
+], config:{lanes: 4, hspace:1024}}
+....
+
+When the `srmcfg` CSR is read at privilege modes less than M, the value returned
+for the `RCID` and `MCID` fields of the register is computed as follows:
+
+.`RCID` and `MCID` read value compuation
+[listing]
+----
+RCID-value = (SSM == 1) ? (srmcfg.RCID & ((1 << SRL) - 1)) : srmcfg.RCID
+MCID-value = (SSM == 1) ? (srmcfg.MCID & ((1 << SML) - 1)) : srmcfg.MCID
+----
+
+<<<
+
+On a write to the `srmcfg` CSR at privilege modes less than M, the value
+stored in the `RCID` and `MCID` fields of the register are computed as
+follows:
+
+.`RCID` and `MCID` write value processing
+[listing]
+----
+if SSM == 1
+    srmcfg.RCID = (srmcfg.RCID & ~((1 << SRL) - 1)) | (RCID-value & ((1 << SRL) - 1))
+else
+    if ((RCID-value & ~((1 << SRL) - 1)) | ((1 << SRL) - 1)) != MAX_RCID_VALUE
+        srmcfg.RCID = RCID-value
+    endif
+endif
+if SSM == 1
+    srmcfg.MCID = (srmcfg.MCID & ~((1 << SML) - 1)) | (MCID-value & ((1 << SML) - 1))
+else
+    if ((MCID-value & ~((1 << SML) - 1)) | ((1 << SML) - 1)) != MAX_MCID_VALUE
+        srmcfg.MCID = MCID-value
+    endif
+endif
+----
+
+When `SSM` is 0, the `SRL` configuration enables the RDSM to configure a `RCID`
+prefix value in the `srmcfg.RCID` field while allowing the supervisor domain to
+program the low order `(1 << SRL) - 1` bits of the field. When `SSM` is 1, 
+the supervisor domain may only program a `RCID` value in the range 0 through
+`MAX_RCID_VALUE - (1 << SRL) - 1` where `MAX_RCID_VALUE` is the maximum legal
+`RCID` value supported by the hart.
+
+[NOTE]
+====
+Consider a `QRI` that supports 32 RCIDs and is mediated by RDSM between two SDs.
+The RDSM may allocate 24 RCIDs to the first SD and 8 RCIDs to the second SD. The
+`SRL` and `SSM` configurations used by the RDSM to support this use case are as
+follows:
+
+* The RDSM configures `SRL` to 3 and `SSM` to 0 for first SD. This allows the
+  first SD to select `RCID` values 0 through 23 in `srmcfg`. 
+
+* The RDSM configures `SRL` to 3 and `SSM` to 1 for the second SD and programs
+  the `srmcfg` with a value of 24. The second SD is allowed to program the low
+  order 3 bits of `srmcfg.RCID`, thereby selecting `RCID` values between 24 and 31.
+  When this SD reads `srmcfg.RCID`, the value returned consist of the low 3 bits,
+  with all upper bits set to 0.
+====
+
+When `SSM` is 0, the `SML` configuration enables the RDSM to configure a `MCID`
+prefix value in the `srmcfg.MCID` field while allowing the supervisor domain to
+program the low order `(1 << SML) - 1` bits of the field. When `SSM` is 1, 
+the supervisor domain may only program a `MCID` value in the range 0 through
+`MAX_MCID_VALUE - (1 << SML) - 1` where `MAX_MCID_VALUE` is the maximum legal
+`MCID` value supported by the hart.
+
+The `RCID` and `MCID` values that accompany requests, when made with an effective
+privilege mode equal to M are stored in the `mrmcfg` register. Conversely, for
+requests made with effective privilege modes less than M, these values are
+stored in the `srmcfg` register.
+
+The Smqosid extension introduces a `MQRID` and a `SQRID` field in the `msdcfg`
+register to hold the `QRID` for requests made with effective privilege mode
+equal to M and for requests made with effective privilege mode less than M
+respectively. The corresponding QRID value accompanies such requests. The
+capacity and bandwidth controllers use the `QRID` along with `RCID` and `AT` to
+determine the resource allocation configurations. The capacity and bandwidth
+controllers use the `QRID` along with `MCID` to determine the ID of the
+counter used for resource usage monitoring.
+
+=== QoS Register interfaces (QRI)
+
+Capacity and bandwidth controllers that support supervisor domains provide one
+or more memory-mapped QoS register interfaces (QRI). A QRI may be made
+exclusively accessible to a supervisor domain or the RDSM may mediate access to
+the QRI using an SBI. The RDSM can control access to the QRI from supervisor
+domains using MTT and/or PMP. The RDSM controls access to the QRI from devices
+using IOMTT and/or IOPMP.
+
+The number of `RCID` and `MCID` supported by the controllers for each QRI need
+not be identical. For maximal flexibility in allocation of `RCID` and `MCID`
+values, it is recommended that the number of `RCID` and `MCID` supported for a
+given `QRID` be identical in all capacity and bandwidth controllers in the
+system. 
+
+The capacity and bandwidth controllers use the configurations that were
+established for the `RCID` and `AT` in the request through the QRI corresponding
+to the `QRID` in the request. Likewise the counters to count resource usage are
+selected using `MCID` and the `QRID` in the request and a QRI can be used to
+access counters associated with the corresponding `QRID`.
+
+By default all resources in the capacity and bandwidth controllers may be
+allocated using any of the QRI. The controllers may optionally support
+reservation of resources for use by a QRI. When such reservation is supported
+the capacity or bandwidth reserved for a QRI may only be used by requests that
+have the corresponding `QRID`. Supporting resource reservation capability allows
+effective partitioning of the shared resources among SDs sharing the resources.
+
+To optionally support capacity reservation to a QRI, the capacity controllers
+support a new operation called `CONFIG_QRI_LIMIT` (`OP=4`). The capacity to be
+reserved is specified using the `cc_block_mask` register. The `AT` and `RCID`
+fields of the `cc_alloc_ctl` register are ignored by this operation. The mask
+specified in `cc_block_mask` for this operation must have a contiguous run of 1s
+and an implementation may require the mask to reserve at least one capacity
+block; else the operation will fail with `STATUS=5`. The `CONFIG_QRI_LIMIT`
+operation may be requested once following reset. If the operation is requested
+again then the operation will fail with `STATUS=2`. On successful completion of
+the operation, the `cc_capabilities.NCBLKS` shall update to a value that is the
+number of 1 bits in value held in the `cc_block_mask` and only bits `NCBLKS-1:0`
+are writable in `cc_block_mask`. 
+
+[NOTE]
+====
+The `CONFIG_QRI_LIMIT` operation is a one time operation to allow the RDSM to
+configure the capacity limit for a QRI before passing through the QRI to the
+associated SD. An SD may then allocate capacity for RCIDs from within this limit
+established by the RDSM.
+====
+
+<<<
+
+[NOTE]
+====
+Let's consider a cache with `NCBLKS=8`. In this example, this cache supports two
+QRIs with `QRID` of 0 and 1. The `CONFIG_QRI_LIMIT` operation is used to reserve
+two capacity blocks numbered 7 and 6 for use by `QRID=0`. The `CONFIG_QRI_LIMIT`
+operation is used to reserve six capacity blocks numbered 0 through 5 for use by
+`QRID=1`. The SD that uses the `QRID=0` is thus limited to selecting a 2 bit
+capacity block mask where the bit 0 of the mask maps to capacity block 6 and bit
+1 to capacity block 7. The SD that uses `QRID=1` is limited to selecting a 6 bit
+capacity block mask where the mask bits 0 through 5 map to the correspondingly
+numbered capacity blocks. Both SDs in this example, have configured `RCID=5`
+with 1 capacity block for requests with access-type `AT=0`. The effective
+capacity block allocation in the controller is as follows:
+
+[width=100%]
+[%header, cols="6,^1,^1,^1,^1,^1,^1,^1,^1"]
+|===
+|                            |  7  |  6  |  5  |  4  |  3  |  2  |  1  |  0
+| `QRID=0`, `RCID=5`, `AT=0` | `0` | `1` | `0` | `0` | `0` | `0` | `0` | `0`
+| `QRID=1`, `RCID=5`, `AT=0` | `0` | `0` | `0` | `0` | `0` | `1` | `0` | `0`
+|===
+====
+
+To optionally support bandwidth reservation to a QRI, the bandwidth controllers
+support a new operation called `CONFIG_QRI_LIMIT` (`OP=4`). The `AT` and `RCID`
+fields of the `bc_alloc_ctl` register are ignored by this operation. Likewise,
+the `sharedAT` and `useShared` fields of the `bc_bw_alloc` register are ignored
+by this operation. The bandwidth to be reserved is specified using the `Rbwb`
+field of the `bc_bw_alloc` register and `Mweight`, when not equal to 0,
+represents a proportional share of non-reserved or unused bandwidth that may be
+used by the RCIDs associated with this QRI. When the `Mweight` is equal to 0,
+the `Rbwb` is a hart limit and the RCIDs associated with this QRI are not
+eligible to use unused or non-reserved bandwidth. The `CONFIG_QRI_LIMIT`
+operation may be requested once following reset. If the operation is requested
+again then the operation will fail with `STATUS=2`. On successful completion of
+the operation, the `bc_capabilities.MRBWB` shall update to a value specified in
+`Rbwb`. When `Mweight` for a QRI is not 0, then a two level weighted sharing of
+unused or non-reserved bandwidth occurs. When the `Mweight` parameter for a QRI
+is not set to 0, the amount of unused bandwidth allocated to `QRID=x` during
+contention with another `QRI` that is also permitted to use unused bandwidth is
+determined by dividing the `Mweight` of `QRID=q` by the sum of the `Mweight` of
+all other contending `QRIs`. This ratio `Pq` is determined by <<eq-1>>. This
+weight share of the unused bandwidth made available to a QRI is then shared
+among the contending RCIDs of that QRI using the weights configured for the
+RCIDs.
+
+[latexmath#eq-1,reftext="equation ({counter:eqs})"]
+++++
+\begin{equation}
+Pq = \frac{Mweight_{q}}{\sum_{q=1}^{q=n} Mweight_{q}}
+\end{equation}
+++++
+
+[NOTE]
+====
+Consider a bandwidth controller that supports two QRIs. For brevity, this
+example controller does not support bandwidth allocation by access-type `AT`. 
+In this example, the `QRID=0` has been configured with `Rbwb` of 100 bandwidth
+units and `QRID=1` has been configured with `Rbwb` of 50 bandwidth units. The
+`Mweight` configured for the two QRIs is 16, i.e., they equally share unused
+bandwidth.                                                                     +
+                                                                               +
+Each QRI in this example is used to configure bandwidth limits for `RCID=5` and
+`RCID=6` where each RCID has been allocated 10 units of reserved bandwidth and
+configured with weights 50 and 25, respectively.                               +
+                                                                               +
+With this configuration `RCID=5` receives 2/3 of the unused bandwidth made
+available to the QRI and `RCID=6` receives 1/3 of the unused bandwidth made
+available to the QRI when they both contend for the unused bandwidth.          +
+                                                                               +
+The effective configurations in the bandwidth controller are as follows:
+
+[width=100%]
+[%header, cols="4,^2,^2,^2,^2"]
+|===
+|                    | `RCID Rbwb` | `RCID Mweight` | `QRI Rbwb` |  `QRI Mweight`
+| `QRID=0`, `RCID=5` | `10`        |   `50`         |   `100`    |     `16`
+| `QRID=0`, `RCID=6` | `10`        |   `25`         |   `100`    |     `16`
+| `QRID=1`, `RCID=5` | `10`        |   `50`         |   `50`     |     `16`
+| `QRID=1`, `RCID=6` | `10`        |   `25`         |   `50`     |     `16`
+|===
+====
+
+[NOTE]
+====
+The bandwidth enforcement is typically work-conserving, meaning that it allows
+unused bandwidth to be used by QRIs enabled to use it even if they have consumed
+their `Rbwb`.
+
+When contending for unused bandwidth, the weighted share is typically
+computed among the `QRIs` that are actively generating requests in that
+accounting interval and have a non-zero weight programmed.
+====
