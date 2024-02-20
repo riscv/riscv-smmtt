@@ -81,7 +81,7 @@ per the use case requirements (see <<mtt-lookup>>).
 
 [caption="Figure {counter:image}: ", reftext="Figure {image}"]
 [title= "MTT lookup for Supervisor Domain Access", id=mtt-lookup]
-image::fig2.png[]
+image::images/fig2.png[]
 
 The MTT checker is a functional block that looks up the MTT using the physical
 address of the access as an index to retrieve the access permissions for the
