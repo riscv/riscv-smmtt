@@ -10,7 +10,7 @@ switched (along with rest of the `msdcfg`) per SD.
 
 [caption="Figure {counter:image}: ", reftext="Figure {image}"]
 [title= "External Debug for Supervisor Domain", id=Smsdedbg_img]
-image::Smsdedbg.png[]
+image::images/Smsdedbg.png[]
 
 This section will be moved into the non-ISA specification for external debug
 security. It is described here as informational.

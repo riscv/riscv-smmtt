@@ -33,7 +33,7 @@ elements, devices and interrupts) to perform their function.
 
 [caption="Figure {counter:image}: ", reftext="Figure {image}"]
 [title= "Supervisor Domains"]
-image::fig1.png[]
+image::images/fig1.png[]
 
 A supervisor domain is associated with a set of physical address regions that
 are isolated from other supervisor domains on the same platform, with only the

@@ -51,7 +51,7 @@ represented in the diagram <<fig:IOMTTCHK>>.
 
 [caption="Figure {counter:image}: ", reftext="Figure {image}"]
 [title= "I/O MTT checker placement", id=io-mtt-checker]
-image::IOMTTCHK.png[width=800]
+image::images/IOMTTCHK.png[width=800]
 [[fig:IOMTTCHK]]
 
 The IO Bridge invokes the SDCL function using the SDID request interface (SDR)

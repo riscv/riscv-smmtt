@@ -16,7 +16,7 @@ be sparsely populated.
 
 [caption="Figure {counter:image}: ", reftext="Figure {image}"]
 [title= "`MTT` Structures (overview)", id=mtt-map-rw]
-image::fig3.png[]
+image::images/fig3.png[]
 
 The following MTT L2/L3 entries accomodate a 56 bit PAW.
 
@@ -133,7 +133,7 @@ permission (1 bit) to allow for efficient caching.
 
 [caption="Figure {counter:image}: ", reftext="Figure {image}"]
 [title= "MTT Structures (overview)", id=mtt-map]
-image::fig4.png[]
+image::images/fig4.png[]
 
 [caption="Figure {counter:image}: ", reftext="Figure {image}"]
 [title="`MTTL3` entry"]
