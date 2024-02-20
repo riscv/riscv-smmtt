@@ -307,8 +307,9 @@ operations requested through `control.OP`.
   {bits:  2, name: 'SRC_IDM (WARL)'},
   {bits:  2, name: 'TEE_FLT (WARL)'},
   {bits: 24, name: 'SRC_ID'},
-  {bits: 16, name: 'IOMMU_ID (WARL)'},
-  {bits: 16, name: 'SDID (WARL)'}
+  {bits:  8, name: 'IOMMU_ID (WARL)'},
+  {bits:  8, name: 'SDID (WARL)'},
+  {bits: 16, name: 'WPRI'}
 ], config:{lanes: 8, hspace:1024}}
 ....
 
