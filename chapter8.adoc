@@ -6,22 +6,58 @@ The <<MSDCFG>> CSR contains the `sdedbgalw` bit that controls whether the
 current scheduled SD is allowed to be external-debugged. This bit is context
 switched (along with rest of the `msdcfg`) per SD.
 
+When M-mode external debug is enabled, all supervisor domains may also be
+debugged by an external debugger irrespective of the configuration held in
+`msdcfg.SDEDBGALW`.
+
+When M-mode external debug is disabled, whether execution at privilege modes
+less than `M-mode` may be debugged by an external debugger depends on the
+configuration held in `msdcfg.SDEDBGALW`.
+
+When `msdcfg.SDEDBGALW` = 0, external debug is disallowed. Abstract commands
+and halt request from the debug module are suppressed and stay pending.
+
+When `msdcfg.SDEDBGALW` = 1 then external debug of privilege modes less than
+`M-mode` is allowed, and:
+
+* A halt request may transition the hart to Debug Mode.
+* Abstract commands and program buffer execution can access state of privilege
+modes less than `M-mode`.
+* Read and Write of `Sdtrig` CSRs is allowed.
+* Debugger memory accesses occur with either `S-mode` or `U-mode` privilege (as
+if `aamvirtual` = 1 and `MPP` != `M-mode`).
+
 === `Smsdedbg` interaction with external debug security controls (Informative)
 
 [caption="Figure {counter:image}: ", reftext="Figure {image}"]
 [title= "External Debug for Supervisor Domain", id=Smsdedbg_img]
 image::images/Smsdedbg.png[]
 
-This section will be moved into the non-ISA specification for external debug
-security. It is described here as informational.
+This section will be moved into the specification for external debug security.
+It is described in this specification as informational.
 
 The `medbgen` is an enable control for external debug for the M-mode driven by
 the debug module and is expected to be established by the RoT (following RISC-V
 Security Model recommendation SR_GEN_007 and SR_GEN_012). When privilege is `M`,
 the `medbgen` gates the `haltreq` from the debug module and if is 0 prevents
-the hart from entering external debug mode. When privilege is less than `M`, the
-OR of the `MSDCFG.sdedbgalw` and `medbgen` gates the `haltreq` from the debug
-module and the hart will enter external debug mode if either is 1.
+the hart from entering external debug mode.
+
+The following change is proposed to behavior of `M-mode` access to triggers with
+`dmode` = 1. This change allows the RDSM to remain in control of external debug
+for supervisor domains (unless the RDSM is itself under external debug).
+
+When `medbgen` is 0 and privilege is `M-mode`:
+
+* M-mode can read and write triggers, *including triggers with `dmode` = 1
+without restrictions*.
+* Abstract commands and halt request from external debugger stay pending while
+privilege is `M-mode`.
+* All trigger-matching is suppressed (similar to how `MIE` or `MTE` would
+suppress them)
+
+When privilege is less than `M`, the OR of the `MSDCFG.sdedbgalw` and `medbgen`
+gates the `haltreq` from the debug module and the hart will enter external debug
+mode if either is 1.
 
 The configuration for `MSDCFG.sdedbgalw` may be obtained from the manifest/
 configuration of the supervisoer domain and should be managed by the M-mode root
@@ -30,8 +66,8 @@ security manager using secure memory.
 When `medbgen` is 1, there are no restrictions. When `medbgen` is 0 but
 `MSDCFG.sdedbgalw` is 1, then the external debug mode may be entered but is
 restricted by `M-mode` software to prevent privileged CSR accesses and memory
-accesses by instructions executed in external debug mode cannot use `M` privilege.
-When `medbgen` is 0 and `MSDCFG.sdedbgalw` is also 0, the M-mode root domain
-security manager must not configure triggers with `action=1`. Triggers for the
-supervisor domain are expected to be controlled by the root domain security
-manager to prevent any leakage of information.
+accesses by instructions executed in external debug mode cannot use `M-mode`
+privilege. When `medbgen` is 0 and `MSDCFG.sdedbgalw` is also 0, the `M-mode`
+root domain security manager must not configure triggers with `action=1`.
+Triggers for the supervisor domain are expected to be controlled by the root
+domain security manager to prevent any leakage of information.
