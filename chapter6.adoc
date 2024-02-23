@@ -10,7 +10,7 @@ and protection for DMA that originates from devices under its control.
 
 To uphold isolation properties, the DMA from the devices and the IOMMU
 linked with a supervisor domain must adhere strictly to the access protections
-encoded in the MTT of the respective supervisor domain. Additionally, Using the
+encoded in the MTT of the respective supervisor domain. Additionally, using the
 MTT, the RDSM enforces that the IOMMU memory-mapped programming regions are
 access-restricted to the supervisor domain the IOMMU is assigned to.
 
@@ -180,7 +180,7 @@ are supported.
 
 The `control` register is used to control classification of DMA requests using
 the identifiers associated with the DMA requests to determine the associated
-supervisor domain ID (`SDID`) and the MTT pointer (`MTTP).
+supervisor domain ID (`SDID`) and the MTT pointer (`MTTP`).
 
 [caption="Register {counter:rimage}: ", reftext="Register {rimage}", title="Control register (`control`)"]
 [wavedrom, , ]
