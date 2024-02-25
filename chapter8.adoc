@@ -3,8 +3,8 @@
 == `Smsdedbg`: Supervisor Domain External Debug
 
 The <<MSDCFG>> CSR contains the `sdedbgalw` bit that controls whether the
-current scheduled SD is allowed to be external-debugged. This bit is context
-switched (along with rest of the `msdcfg`) per SD.
+current scheduled SD is allowed to be external-debugged cite:[ExtDbg]. This bit
+is context switched (along with rest of the `msdcfg`) per SD.
 
 === `Smsdedbg` interaction with external debug security controls (Informative)
 
