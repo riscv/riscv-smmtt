@@ -2,7 +2,7 @@
 
 == Introduction
 
-RISC-V privileged architecture <<R1>> defines mode for execution of supervisor
+RISC-V privileged architecture cite:[ISA] defines execution mode for supervisor
 software called S-mode. S-mode software may optionally enable Hypervisor
 extension to host virtual machines. Typically, there is a single supervisor
 domain of execution with access to all physical memory. This document describes
@@ -48,7 +48,7 @@ supervisor domain, here referred to as the Supervisor Domain Security Manager
 (SDSM).
 
 A key goal of using multiple domains is to be able to reduce the common TCB
-across domains, and should enable the attestation <<R2>> of each domain
+across domains, and should enable the attestation cite:[CCC] of each domain
 independently from other domains. Sensitive data may be entrusted to a
 particular domain after verifying the trust properties statically (via boot) or
 dynamically (via attestation). These trust properties are established as part
@@ -62,7 +62,7 @@ be used are:
 
 * A trusted execution environment domain that isolates security
 services/applications.
-* A confidential computing <<R2>> domain which enforces confidentiality and
+* A confidential computing cite:[CCC] domain which enforces confidentiality and
 integrity for workload data-in-use from the host/untrusted hypervisor, along
 with attestation of the TCB.
 * A host (operator) domain that manages resources on the platform, and may

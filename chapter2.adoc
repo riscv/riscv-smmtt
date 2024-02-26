@@ -151,7 +151,7 @@ during the transition between domain assignment settings. This
 transitory state should not be visible to lower privilege levels (i.e.
 supervisor domains). There are also security aspects to be considered during
 (re)configuration, e.g., clearing memory used by the current SD before
-assigning it to another SD. Refer to the RISC-V CoVE <<R4>> ABI and threat
+assigning it to another SD. Refer to the RISC-V CoVE cite:[CoVE] ABI and threat
 model as a reference.
 
 A hart/device may perform accesses to memory exclusively accessible to it's
