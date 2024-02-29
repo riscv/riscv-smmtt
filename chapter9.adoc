@@ -1,12 +1,13 @@
 [[chapter9]]
 [[Smsdqos]]
-== Capacity and Bandwidth QoS Register Interface for Supervisor Domains
+== Capacity and Bandwidth QoS Register Interface (CBQRI) for Supervisor Domains
 
 Quality of Service (QoS) is defined as the minimal end-to-end performance
 that is guaranteed in advance by a service level agreement (SLA) to a
 workload. A workload may be a single application, a group of applications,
 a virtual machine, a group of virtual machines, or a combination of those.
 
+=== Introduction to CBQRI and Ssqosid
 The RISC-V Capacity and Bandwidth QoS Register Interface (CBQRI) cite:[CBQRI]
 specification specifies mechanisms to a) associate QoS identifiers with
 requests made by workloads to resources controlled by capacity and bandwidth
@@ -21,23 +22,32 @@ The Ssqosid extension cite:[SSQOSID] provides a read/write S/HS-mode register
 hart to shared resources. The CBQRI specification specifies the IOMMU extension
 to associate QoS Identifiers with requests made by devices to shared resources.
 
-With supervisor domains, the resource accesses from a SD or the RDSM must not
-be observable using the resource usage monitors to entities that are not in
-their TCB.  The resource allocations for a SD or the RDSM must not be affected
-by entities that are not in their TCB.
+=== Security objective
 
-Supporting supervisor domains requires the following additional capabilities:
+With supervisor domains, the resource accesses from an SD or the RDSM must not
+be observable by entities that are not within their TCB using the resource usage
+monitors. Similarly, the resource allocations for an SD or the RDSM must not be
+influenced by entities outside their TCB.
 
-* Multiple QoS register interfaces (QRI) in the capacity and bandwidth
-  controllers in the SoC. The RDSM may dedicate a QRI to an SD or may mediate
-  access to a QRI from multiple SDs.
+To support this security objective, the following capabilities are required:
 
-* Associating a QRI ID (QRID) with requests originating from SDs and RDSM. The
-  `QRID` along with the `RCID` and `AT` is used to identify the resource
-  allocation configurations in a capacity or bandwidth controller. The `QRID`
-  along with the `MCID` is used to identify the ID of the counter used to
-  monitor resource usage in a capacity or bandwidth controller.
+* *Multiple QoS register interfaces (QRIs) in the capacity and bandwidth
+  controllers within the SoC.*
 
+  ** The RDSM may allocate a QRI exclusively to an SD or may mediate access to a
+     QRI among multiple SDs. A non-ISA supervisor domain QRI extension is
+     specified in <<SDQRI>> to provide this capability.
+
+* *Associating a QRI ID (QRID) with requests originating from SDs and RDSM.*
+
+  ** The `QRID`, along with the `RCID` and `AT`, is used to identify the
+     resource allocation configurations in a capacity or bandwidth controller.
+     The `QRID`, along with the `MCID`, is used to identify the ID of the
+     counter used to monitor resource usage in a capacity or bandwidth
+     controller. An ISA extension named Smqosid is specified in <<SMQOSID>>
+     to provide this capability.
+
+[[SMQOSID]]
 === Smqosid - Supervisor Domain Quality-of-Service Identifiers
 
 The Smqosid introduces a read/write M-mode register (`mrmcfg`) to configure
@@ -95,14 +105,23 @@ privilege modes less than M.
 ], config:{lanes: 1, hspace:1024}}
 ....
 
-The Smqosid extension introduces a supervisor-RCID-length (`SRL`) and a
-supervisor-MCID-length (`SML`) field in the `msdcfg` register. The `SRL` and
-`SML` fields are used to configure a range of `RCID` and `MCID` that may be used
-by a supervisor domain. The `SRL` and `SML` fields are WARL and their legal
-values range from 0 to 12. The Smqosid extension additionally introduces a
-supervisor-srmcfg-mode (`SSM`) field. The legal values of this mode field are 0
-and 1, which,  along with `SRL` and `SML` determine the range of `RCID` and
-`MCID` values that the SD is allowed to program into the `srmcfg` register.
+The Smqosid extension enables the scenario where two or more security domains
+share a common set of capacity and bandwidth controllers. In this setup, access
+to the QRI of these controllers is restricted to RDSM, which then provides
+mediated access for these security domains to configure capacity or bandwidth
+allocation and read the corresponding monitoring counters. A common `QRID` is
+associated with requests from these domains, and the RDSM allocates sets of
+`RCID` and `MCID` for each domain's use. Supervisor domains are then restricted
+to selecting a `RCID` and `MCID` in `srmcfg` from the allocated range. Although
+the RDSM could limit access to `srmcfg` to prevent direct domain configuration,
+enabling domains to program `srmcfg` directly is preferred for performance
+reasons. To facilitate this, the Smqosid extension introduces `SRL`
+(supervisor-RCID-length) and `SML` (supervisor-MCID-length) fields in the
+`msdcfg` register to configure the usable range of `RCID` and `MCID`. These
+fields are WARL, with legal values from 0 to 12. Furthermore, a
+supervisor-srmcfg-mode (`SSM`) field is introduced, with legal values of 0 and
+1. These settings, along with `SRL` and `SML`, determine the range of `RCID` and
+`MCID` values an SD can program into the `srmcfg` register.
 
 .`msdcfg` register
 
@@ -200,7 +219,8 @@ determine the resource allocation configurations. The capacity and bandwidth
 controllers use the `QRID` along with `MCID` to determine the ID of the
 counter used for resource usage monitoring.
 
-=== QoS Register interfaces (QRI)
+[[SDQRI]]
+=== Supervisor Domain QoS Register interfaces (QRI)
 
 Capacity and bandwidth controllers that support supervisor domains provide one
 or more memory-mapped QoS register interfaces (QRI). A QRI may be made
