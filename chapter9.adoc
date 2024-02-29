@@ -139,6 +139,12 @@ supervisor-srmcfg-mode (`SSM`) field is introduced, with legal values of 0 and
 ], config:{lanes: 4, hspace:1024}}
 ....
 
+The `srmcfg` CSR is provided with a privilege mode dependent read and write
+logic which enables the RDSM to configure supervisor domain specific prefixes for
+`RCID` and `MCID` fields. These prefixes remain invisible to supervisor domains
+which can only configure `RCID` and `MCID` suffixes within the boundaries set by
+RDSM in `msdfg`.
+
 When the `srmcfg` CSR is read at privilege modes less than M, the value returned
 for the `RCID` and `MCID` fields of the register is computed as follows:
 
