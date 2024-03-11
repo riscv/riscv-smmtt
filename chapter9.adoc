@@ -261,6 +261,14 @@ determine the resource allocation configurations. The capacity and bandwidth
 controllers use the `QRID` along with `MCID` to determine the ID of the
 counter used for resource usage monitoring.
 
+[NOTE]
+====
+The `MQRID` is typically selected once at startup by the RDSM to designate the
+QRI utilized by the RDSM itself. Conversely, the `SQRID` may be updated during
+the process of switching SDs, to denote the QRI allocated to that specific SD by
+the RDSM."
+====
+
 [[SDQRI]]
 === Supervisor Domain QoS Register interfaces (QRI)
 
@@ -290,16 +298,16 @@ the capacity or bandwidth reserved for a QRI may only be used by requests that
 have the corresponding `QRID`. Supporting resource reservation capability allows
 effective partitioning of the shared resources among SDs sharing the resources.
 
-To optionally support capacity reservation to a QRI, the capacity controllers
-support a new operation called `CONFIG_QRI_LIMIT` (`OP=4`). The capacity to be
-reserved is specified using the `cc_block_mask` register. The `AT` and `RCID`
-fields of the `cc_alloc_ctl` register are ignored by this operation. The mask
-specified in `cc_block_mask` for this operation must have a contiguous run of 1s
-and an implementation may require the mask to reserve at least one capacity
-block; else the operation will fail with `STATUS=5`. The `CONFIG_QRI_LIMIT`
-operation may be requested once following reset. If the operation is requested
-again then the operation will fail with `STATUS=2`. On successful completion of
-the operation, the `cc_capabilities.NCBLKS` shall update to a value that is the
+To reserve capacity to a QRI, the capacity controllers support a new operation
+called `CONFIG_QRI_LIMIT` (`OP=4`). The capacity to be reserved is specified
+using the `cc_block_mask` register. The `AT` and `RCID` fields of the
+`cc_alloc_ctl` register are ignored by this operation. The mask specified in
+`cc_block_mask` for this operation must have a contiguous run of 1s and an
+implementation may require the mask to reserve at least one capacity block;
+else the operation will fail with `STATUS=5`. The `CONFIG_QRI_LIMIT` operation
+may be requested once following reset. If the operation is requested again then
+the operation will fail with `STATUS=2`. On successful completion of the
+operation, the `cc_capabilities.NCBLKS` shall update to a value that is the
 number of 1 bits in value held in the `cc_block_mask` and only bits `NCBLKS-1:0`
 are writable in `cc_block_mask`.
 
@@ -336,28 +344,27 @@ capacity block allocation in the controller is as follows:
 |===
 ====
 
-To optionally support bandwidth reservation to a QRI, the bandwidth controllers
-support a new operation called `CONFIG_QRI_LIMIT` (`OP=4`). The `AT` and `RCID`
-fields of the `bc_alloc_ctl` register are ignored by this operation. Likewise,
-the `sharedAT` and `useShared` fields of the `bc_bw_alloc` register are ignored
-by this operation. The bandwidth to be reserved is specified using the `Rbwb`
-field of the `bc_bw_alloc` register and `Mweight`, when not equal to 0,
-represents a proportional share of non-reserved or unused bandwidth that may be
-used by the RCIDs associated with this QRI. When the `Mweight` is equal to 0,
-the `Rbwb` is a hart limit and the RCIDs associated with this QRI are not
-eligible to use unused or non-reserved bandwidth. The `CONFIG_QRI_LIMIT`
-operation may be requested once following reset. If the operation is requested
-again then the operation will fail with `STATUS=2`. On successful completion of
-the operation, the `bc_capabilities.MRBWB` shall update to a value specified in
-`Rbwb`. When `Mweight` for a QRI is not 0, then a two level weighted sharing of
-unused or non-reserved bandwidth occurs. When the `Mweight` parameter for a QRI
-is not set to 0, the amount of unused bandwidth allocated to `QRID=x` during
-contention with another `QRI` that is also permitted to use unused bandwidth is
-determined by dividing the `Mweight` of `QRID=q` by the sum of the `Mweight` of
-all other contending `QRIs`. This ratio `Pq` is determined by <<eq-1>>. This
-weight share of the unused bandwidth made available to a QRI is then shared
-among the contending RCIDs of that QRI using the weights configured for the
-RCIDs.
+To reserve bandwidth to a QRI, the bandwidth controllers support a new operation
+called `CONFIG_QRI_LIMIT` (`OP=4`). The `AT` and `RCID` fields of the
+`bc_alloc_ctl` register are ignored by this operation. Likewise, the `sharedAT`
+and `useShared` fields of the `bc_bw_alloc` register are ignored by this
+operation. The bandwidth to be reserved is specified using the `Rbwb` field of
+the `bc_bw_alloc` register and `Mweight`, when not equal to 0, represents a
+proportional share of non-reserved or unused bandwidth that may be used by the
+RCIDs associated with this QRI. When the `Mweight` is equal to 0, the `Rbwb` is
+a hart limit and the RCIDs associated with this QRI are not eligible to use
+unused or non-reserved bandwidth. The `CONFIG_QRI_LIMIT` operation may be
+requested once following reset. If the operation is requested again then the
+operation will fail with `STATUS=2`. On successful completion of the operation,
+the `bc_capabilities.MRBWB` shall update to a value specified in `Rbwb`. When
+`Mweight` for a QRI is not 0, then a two level weighted sharing of unused or
+non-reserved bandwidth occurs. When the `Mweight` parameter for a QRI is not set
+to 0, the amount of unused bandwidth allocated to `QRID=x` during contention
+with another `QRI` that is also permitted to use unused bandwidth is determined
+by dividing the `Mweight` of `QRID=q` by the sum of the `Mweight` of all other
+contending `QRIs`. This ratio `Pq` is determined by <<eq-1>>. This weight share
+of the unused bandwidth made available to a QRI is then shared among the
+contending RCIDs of that QRI using the weights configured for the RCIDs.
 
 [latexmath#eq-1,reftext="equation ({counter:eqs})"]
 ++++
