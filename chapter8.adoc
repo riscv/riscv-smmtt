@@ -1,10 +1,13 @@
 [[chapter8]]
 [[Smsdedbg]]
-== `Smsdedbg`: Supervisor Domain External Debug
+== Supervisor Domain External Trace and Debug
 
-The <<MSDCFG>> CSR contains the `sdedbgalw` bit that controls whether the
-current scheduled SD is allowed to be external-debugged. This bit is context
-switched (along with rest of the `msdcfg`) per SD.
+The <<MSDCFG>> CSR contains the `sdedbgalw` and `sdetrcalw` bits that control
+whether the current scheduled SD is allowed to be external-debugged or to be
+external-traced (independently). These control bits are context switched (as
+part of the `msdcfg`) per SD.
+
+=== `Smsdedbg`: External Debug allowed control for Supervisor Domain
 
 When M-mode external debug is enabled, all supervisor domains may also be
 debugged by an external debugger irrespective of the configuration held in
@@ -14,11 +17,12 @@ When M-mode external debug is disabled, whether execution at privilege modes
 less than `M-mode` may be debugged by an external debugger depends on the
 configuration held in `msdcfg.SDEDBGALW`.
 
-When `msdcfg.SDEDBGALW` = 0, external debug is disallowed. Abstract commands
-and halt request from the debug module are suppressed and stay pending.
+When `msdcfg.SDEDBGALW` = 0, external debug is disallowed for the SD. Abstract
+commands and halt request from the debug module are suppressed and stay pending
+while the SD is active.
 
 When `msdcfg.SDEDBGALW` = 1 then external debug of privilege modes less than
-`M-mode` is allowed, and:
+`M-mode` is allowed for the SD, and:
 
 * A halt request may transition the hart to Debug Mode.
 * Abstract commands and program buffer execution can access state of privilege
@@ -27,7 +31,7 @@ modes less than `M-mode`.
 * Debugger memory accesses occur with either `S-mode` or `U-mode` privilege (as
 if `aamvirtual` = 1 and `MPP` != `M-mode`).
 
-=== `Smsdedbg` interaction with external debug security controls (Informative)
+==== `Smsdedbg` interaction with external debug security controls (Informative)
 
 [caption="Figure {counter:image}: ", reftext="Figure {image}"]
 [title= "External Debug for Supervisor Domain", id=Smsdedbg_img]
@@ -71,3 +75,40 @@ privilege. When `medbgen` is 0 and `MSDCFG.sdedbgalw` is also 0, the `M-mode`
 root domain security manager must not configure triggers with `action=1`.
 Triggers for the supervisor domain are expected to be controlled by the root
 domain security manager to prevent any leakage of information.
+
+=== `Smsdetrc`: External Trace allowed control for Supervisor Domain
+
+When M-mode external trace is enabled, all supervisor domains activity may also
+be traced by an external debugger irrespective of the configuration held in
+`msdcfg.SDETRCALW`.
+
+When M-mode external trace is disabled, whether execution at privilege modes
+less than `M-mode` may be traced by an external debugger depends on the
+configuration held in `msdcfg.SDETRCALW`.
+
+When `msdcfg.SDETRCALW` = 0, external trace is disallowed for the SD. All trace
+output from the trace encoder module are disabled while the SD is active (the
+trace encoder must behave per `trTeEnable`=0).
+
+When `msdcfg.SDEDBGALW` = 1 then external trace of privilege modes less than
+`M-mode` is allowed for the SD, and programming of `trTeActive` and `trTeEnable`
+to 1 may transition the hart to enable trace for all privilege modes less than
+`M-mode`.
+
+==== `Smsdetrc`: interaction with external trace security controls (Informative)
+
+This section will be moved into the specification for external debug security.
+It is described in this specification as informational.
+
+The `metrcen` is an enable control for external race for the `M-mode` driven by
+an external trace module and is expected to be established by the RoT (following
+RISC-V security model recommendations SR_GEN_007 and 012). When privilege is
+`M-mode`, the `medbgtrc` gates the `trTEActive` control into the hart trace
+encoder and if 0, prevents the hart from generating any trace output.
+
+When `metrcen` is 0 and privilege is `M-mode`, `M-mode` activity cannot be
+traced and `M-mode` software can enforce that `trTeEnable` is set to the state
+of `msdcfg.SDETRCALW` for the SD it context switches the hart into.
+
+When `metrcen` is 1, there are no restrictions and all privilege modes
+(inclusive of `M-mode` and any SDs managed by the RDSM) are traceable.
