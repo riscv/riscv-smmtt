@@ -60,8 +60,8 @@ privilege is `M-mode`.
 suppress them)
 
 When privilege is less than `M`, the OR of the `MSDCFG.sdedbgalw` and `medbgen`
-gates the `haltreq` from the debug module and the hart will enter external debug
-mode if either is 1.
+gates the `haltreq` from the debug module and the hart will enter Debug
+Mode if either is 1.
 
 The configuration for `MSDCFG.sdedbgalw` may be obtained from the manifest/
 configuration of the supervisoer domain and should be managed by the M-mode root
@@ -70,11 +70,11 @@ security manager using secure memory.
 When `medbgen` is 1, there are no restrictions. When `medbgen` is 0 but
 `MSDCFG.sdedbgalw` is 1, then the external debug mode may be entered but is
 restricted by `M-mode` software to prevent privileged CSR accesses and memory
-accesses by instructions executed in external debug mode cannot use `M-mode`
+accesses by instructions executed in Debug Mode cannot use `M-mode`
 privilege. When `medbgen` is 0 and `MSDCFG.sdedbgalw` is also 0, the `M-mode`
 root domain security manager must not configure triggers with `action=1`.
-Triggers for the supervisor domain are expected to be controlled by the root
-domain security manager to prevent any leakage of information.
+Triggers for the supervisor domain must be controlled by the root
+domain security manager to prevent any leakage of information across security domains.
 
 === `Smsdetrc`: External Trace allowed control for Supervisor Domain
 
