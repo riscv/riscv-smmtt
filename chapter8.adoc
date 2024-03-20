@@ -104,14 +104,17 @@ The `metrcen` is an enable control for external trace for the `M-mode` driven by
 an external trace module and is expected to be established by the RoT (following
 RISC-V security model recommendations SR_GEN_007 and 012). When privilege is
 `M-mode`, the `metrcen` gates the `halted` signal (from the hart) into the hart
-trace encoder. Per the specification <<R24>>, this side-band `halted` signal
-being asserted, prevents the hart from generating any trace output.
+trace encoder. Per the Efficient trace specification cite:[Etrc], this side-band
+`halted` signal being asserted, stops subsequent tracing from the hart. On this
+signal being deasserted, the encode can start tracing again.
 
 [NOTE]
 ====
 Implementation of the `halted` side-band signal is required to support external
 tracing with supervisor domains
 ====
+
+`Smsdetrc` specifies the following behavior for tracing with supervisor domains:
 
 When `metrcen` is 0:
 `halted` is asserted on:
