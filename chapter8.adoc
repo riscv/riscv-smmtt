@@ -27,7 +27,7 @@ When `msdcfg.SDEDBGALW` = 1 then external debug of privilege modes less than
 * A halt request may transition the hart to Debug Mode.
 * Abstract commands and program buffer execution can access state of privilege
 modes less than `M-mode`.
-* Read and Write of `Sdtrig` CSRs is allowed.
+* Read and Write of `Sdtrig` and `Sdext` CSRs are allowed.
 * Debugger memory accesses occur with either `S-mode` or `U-mode` privilege (as
 if `aamvirtual` = 1 and `MPP` != `M-mode`).
 
