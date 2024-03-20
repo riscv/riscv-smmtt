@@ -4,8 +4,7 @@
 
 The <<MSDCFG>> CSR contains the `sdedbgalw` and `sdetrcalw` bits that control
 whether the current scheduled SD is allowed to be external-debugged or to be
-external-traced (independently). These control bits are context switched (as
-part of the `msdcfg`) per SD.
+external-traced respectively.
 
 === `Smsdedbg`: External Debug allowed control for Supervisor Domain
 
