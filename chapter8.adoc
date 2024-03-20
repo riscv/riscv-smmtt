@@ -73,7 +73,8 @@ accesses by instructions executed in Debug Mode cannot use `M-mode`
 privilege. When `medbgen` is 0 and `MSDCFG.sdedbgalw` is also 0, the `M-mode`
 root domain security manager must not configure triggers with `action=1`.
 Triggers for the supervisor domain must be controlled by the root
-domain security manager to prevent any leakage of information across security domains.
+domain security manager to prevent any leakage of information across security
+domains.
 
 === `Smsdetrc`: External Trace allowed control for Supervisor Domain
 
@@ -102,12 +103,27 @@ It is described in this specification as informational.
 The `metrcen` is an enable control for external trace for the `M-mode` driven by
 an external trace module and is expected to be established by the RoT (following
 RISC-V security model recommendations SR_GEN_007 and 012). When privilege is
-`M-mode`, the `metrcen` gates the `trTEActive` control into the hart trace
-encoder and if 0, prevents the hart from generating any trace output.
+`M-mode`, the `metrcen` gates the `halted` signal (from the hart) into the hart
+trace encoder. Per the specification <<R24>>, this side-band `halted` signal
+being asserted, prevents the hart from generating any trace output.
 
-When `metrcen` is 0 and privilege is `M-mode`, `M-mode` activity cannot be
-traced and `M-mode` software can enforce that `trTeEnable` is set to the state
-of `msdcfg.SDETRCALW` for the SD it context switches the hart into.
+[NOTE]
+====
+Implementation of the `halted` side-band signal is required to support external
+tracing with supervisor domains
+====
 
-When `metrcen` is 1, there are no restrictions and all privilege modes
-(inclusive of `M-mode` and any SDs managed by the RDSM) are traceable.
+When `metrcen` is 0:
+`halted` is asserted on:
+
+* entry to Debug mode
+* entry to `M-mode` privilege
+* entry to privilege less than `M-mode` with `msdcfg.SDETRCALW` = 0.
+
+and, `halted` is deasserted on entry to privilege less than `M-mode` with
+`msdcfg.SDETRCALW` = 0
+
+When `metrcen` is 1:
+There are no restrictions and all privilege modes (inclusive of `M-mode` and any
+SDs managed by the RDSM) are traceable. In this case, `halted` is asserted on
+entry to Debug mode, and deasserted on resumption from Debug Mode.
