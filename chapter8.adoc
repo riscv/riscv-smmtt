@@ -118,7 +118,7 @@ The `metrcen` is an enable control for external trace for the `M-mode` driven by
 an external trace module and is expected to be established by the RoT (following
 RISC-V security model recommendations SR_GEN_007 and 012). When privilege is
 `M-mode`, the `metrcen` determines the state of the `halted` side band signal sent by the hart to the
-trace encoder. Per the Efficient trace specification cite:[Etrc], this side-band
+trace encoder. Per the Efficient trace specification cite:[ETrc], this side-band
 `halted` signal being asserted, stops subsequent tracing from the hart. On this
 signal being deasserted, the encoder can start tracing again.
 
