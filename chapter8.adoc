@@ -106,7 +106,7 @@ When `msdcfg.SDETRCALW` = 0, external trace is disallowed for the SD. All trace
 output from the trace encoder module are disabled while the SD is active on a
 per-hart basis.
 
-When `msdcfg.SDEDBGALW` = 1 then external trace of privilege modes less than
+When `msdcfg.SDETRCALW` = 1 then external trace of privilege modes less than
 `M-mode` shall be allowed for the SD on a per hart basis.
 
 ==== `Smsdetrc`: interaction with external trace security controls (Informative)
