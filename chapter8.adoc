@@ -69,7 +69,12 @@ without restrictions*.
 * Abstract commands and requests from an external debugger, that transition the
 hart into a halted state, stay pending while privilege is `M-mode` cite:[ExtDbg].
 * All trigger-matching is prevented from matching or firing, similar to how
-`MIE` or `MTE` would behave.
+`MIE` or `MTE` would behave. This behavior is specifically as stated in
+section 5.4 of cite:[ExtDbg]: While `MIE` in `mstatus` is 0, the hardware
+prevents triggers with `action`=0 from matching or firing while in `M-mode` .
+Also from section 5.7.6 of cite:[ExtDbg], M-mode trigger enable `mte`=0
+(disabled) specifies that triggers with `action`=0 do not match/fire
+while the hart is in M-mode.
 
 When privilege is less than `M`, the OR of the `MSDCFG.sdedbgalw` and `medbgen`
 gates the `haltreq` from the debug module and the hart will enter Debug
