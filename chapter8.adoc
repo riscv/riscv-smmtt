@@ -29,8 +29,11 @@ a hart.
 When `msdcfg.SDEDBGALW` = 1 then external debug of privilege modes less than
 `M-mode` is allowed for the SD on a per-hart basis, and:
 
-* A valid request e.g. `haltreq` may transition the hart to Debug Mode. See
-other cases in RISC-V Debug specification cite:[ExtDbg].
+* A valid request (e.g. `halt`) or a trigger matching/firing may transition the hart to
+Debug Mode. See other cases in RISC-V Debug specification cite:[ExtDbg]. 
+Note that the `resethaltreq` is not applicable since it can be done only
+following a reset and the hart cannot be at privilege mode less than
+`M-mode` with `msdcfg.SDEDBGALW`=1 at de-assertion of reset.
 * Abstract commands and program buffer execution can access state of privilege
 modes less than `M-mode`. In this context, "state" includes all resources
 accessible per the Debug specification cite:[ExtDbg].
