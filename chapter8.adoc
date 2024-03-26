@@ -39,7 +39,8 @@ modes less than `M-mode`. In this context, "state" includes all resources
 accessible per the Debug specification cite:[ExtDbg].
 * Read and Write of `Sdtrig` and `Sdext` CSRs are allowed.
 * Debugger memory accesses may occur with `S-mode` or `U-mode` privilege per
-software execution in the SD, and as if `aamvirtual` = 1 and `MPP` != `M-mode`.
+software execution in the SD, and as if `aamvirtual` = 1 and `MPP` != `M-mode`
+and `relaxedpriv`=0.
 
 ==== `Smsdedbg` interaction with external debug security controls (Informative)
 
