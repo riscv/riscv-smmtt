@@ -9,6 +9,11 @@ software running on a separate target RISC-V platform, via a trace control/data
 transport that provides external access to the trace encoder controls
 cite:[ETrc]. This extension only affects debug or trace orchestrated by an
 external actor. Self-hosted debug (and trace) are managed by the RDSM.
+This sub-specification refers to the Debug specification cite:[ExtDbg],
+Trace specification cite:[ETrc], and the External debug security extension
+cite:[ExtDbgSec] for the description and behavior of controls outside
+the scope of this specification, but which interact with controls
+specified in this specification when supervisor domains are used.
 
 === `Smsdedbg`: External Debug allowed control for Supervisor Domain
 
