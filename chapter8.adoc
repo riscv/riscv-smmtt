@@ -49,12 +49,14 @@ and `relaxedpriv`=0.
 
 ==== `Smsdedbg` interaction with external debug security controls (Informative)
 
+This section will be moved into the specification for external debug security.
+It is described in this specification as informational.
+
+
 [caption="Figure {counter:image}: ", reftext="Figure {image}"]
 [title= "External Debug for Supervisor Domain", id=Smsdedbg_img]
 image::images/Smsdedbg.png[]
 
-This section will be moved into the specification for external debug security.
-It is described in this specification as informational.
 
 The `medbgen` is an enable control for external debug for the M-mode driven by
 the debug module and is expected to be established by the RoT (following RISC-V
