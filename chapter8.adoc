@@ -3,8 +3,8 @@
 == Supervisor Domain External Trace and Debug
 
 The <<MSDCFG>> CSR contains the `sdedbgalw` and `sdetrcalw` bits that control
-if the current scheduled SD is allowed to be external-debugged cite:[ExtDbg]
-or to be external-traced, respectively. External trace refers to tracing
+if the current scheduled SD is allowed to be external-debugged or to be
+external-traced cite:[ExtDbg], respectively. External trace refers to tracing
 software running on a separate target RISC-V platform, via a trace control/data
 transport that provides external access to the trace encoder controls
 cite:[ETrc]. This extension only affects debug or trace orchestrated by an
