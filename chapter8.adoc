@@ -75,9 +75,7 @@ When M-mode external trace is disabled, whether execution at privilege modes
 less than `M-mode` may be traced by an external trace tool depends on the
 configuration held in `msdcfg.sdetrcalw`, as described below:
 
-When `msdcfg.sdetrcalw` = 0, external trace is disallowed for the SD. All trace
-output from the trace encoder module are disabled while the SD is active on a
-per-hart basis.
+When `msdcfg.sdetrcalw` = 0, external trace of the supervisor domain is disallowed.
 
 When `msdcfg.sdetrcalw` = 1 then external trace of privilege modes less than
 `M-mode` shall be allowed for the SD on a per hart basis.
@@ -89,12 +87,6 @@ isolation:
 
 . External trace of M-mode can be enabled only by the HW RoT of the RDSM
  (See RISC-V Security model requirements SR_GEN_007 and SR_GEN_012).
-. Per the Efficient trace specification cite:[ETrc], the side-band `halted`
-  signal being asserted, stops subsequent tracing from the hart. On this signal
-  being deasserted, the encoder can start tracing again. Implementation of this
-  `halted` side-band signal is required to support external tracing with
-  supervisor domains. The state of the `halted` side-band signal shall be gated
-  by the external tracing enable control for M-mode.
 . When external tracing is disabled, tracing should be stopped (via asserting
   `halted`) on:
 .. entry to Debug mode
