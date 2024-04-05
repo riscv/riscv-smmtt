@@ -47,7 +47,8 @@ When `msdcfg.sdedbgalw` is 0:
 
 
 When `msdcfg.sdedbgalw` = 1 then external debug of privilege modes less than
-`M-mode` is allowed for such a supervisor domain on a per-hart basis. +
+`M-mode` is allowed for such a supervisor domain on a per-hart basis, 
+with the additional requirements listed below. +
 
 To enforce the above controls specified by this extension, the following
 functional and security requirements must be met by the external secure debug
@@ -77,7 +78,8 @@ configuration held in `msdcfg.sdetrcalw`, as described below:
 When `msdcfg.sdetrcalw` = 0, external trace of the supervisor domain is disallowed.
 
 When `msdcfg.sdetrcalw` = 1 then external trace of privilege modes less than
-`M-mode` shall be allowed for the SD on a per hart basis.
+`M-mode` shall be allowed for the SD on a per hart basis, with the
+additional requirements listed below.
 
 To enforce the above controls specified by this extension, the following
 functional and security requirements must be met by the external secure debug
