@@ -56,11 +56,10 @@ isolation:
 
 . External debug of M-mode can be enabled only by the HW RoT of the RDSM
  (See RISC-V Security model requirements SR_GEN_007 and SR_GEN_012).
-. External debug must be able to transition the hart to Debug Mode and access
-  supervisor domain memory and state. In this context, "state" includes all
-  non-M-mode resources accessible per the Debug specification cite:[ExtDbg].
-. Triggers must match and fire on a hart only when a supervisor domain with this
-  configuration is active on a hart (and not in M-mode).
+. External debug must be able to access supervisor domain memory and/or state. 
+  In this context, "state" includes all supervisor domain resources accessible per the 
+  Debug specification cite:[ExtDbg].
+. Entry to Debug Mode from a supervisor domain is allowed.
 . The RDSM must be able to context switch all triggers even when `d-mode` = 1.
   This functional change allows the RDSM to remain in control of external debug
   for supervisor domains when it is not under external debug itself.
@@ -87,12 +86,10 @@ isolation:
 
 . External trace of M-mode can be enabled only by the HW RoT of the RDSM
  (See RISC-V Security model requirements SR_GEN_007 and SR_GEN_012).
-. When external tracing is disabled, tracing should be stopped (via asserting
-  `halted`) on:
+. When external tracing is disabled, tracing must be stopped on:
 .. entry to Debug mode
 .. entry to `M-mode` privilege
 .. entry to privilege less than `M-mode` with `msdcfg.sdetrcalw` = 0.
-. When extracing tracing is disabled, tracing should be started (via deasserting
-  `halted`) on:
-.. Entry to privilege less than `M-mode` with `msdcfg.sdetrcalw` = 0
+. When external tracing is disabled, tracing must be started on:
+.. Entry to privilege less than `M-mode` with `msdcfg.sdetrcalw` = 1
 
