@@ -140,10 +140,8 @@ configuration for supervisor domains:
 
 . `Smsdia` uses `msdcfg.SDICN` to specify the active configuration for
   the supervisor domain interrupt controller associated with the hart.
-. External-debug-allowed state for a supervisor domain is managed via the
-  `msdcfg.sdedbgalw` bit.
-. External-trace-allowed state for a supervisor domain is managed via the
-  `msdcfg.sdetrcalw` bit.
+. `Smsdedbg` specifies the `msdcfg.sdedbgalw` bit to manage external-debug for a supervisor domain.
+. `Smsdetrc` specifies the `msdcfg.sdetrcalw` bit to manage external-trace for a supervisor domain.
 . `Smqosid` specifies the control bits `SSM`, `SRL`, `SML` and `SQRID` to enable
   the RDSM to manage QoS controls for supervisor domains.
 

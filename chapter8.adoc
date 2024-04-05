@@ -40,13 +40,11 @@ When M-mode external debug is disabled, whether execution at privilege modes
 less than `M-mode` may be debugged by an external debugger depends on the
 configuration held in `msdcfg.sdedbgalw`, as described below:
 
-When `msdcfg.sdedbgalw` = 0, external debug is disallowed for the supervisor
-domain. Abstract commands and halt request from the debug module are suppressed
-and stay pending while the supervisor domain is active, on a per-hart basis.
-Other debug operations (current or defined in the future) must similarly be kept
-pending while the supervisor domain is active on a hart. Triggers for the
-supervisor domain must be controlled by the RDSM to prevent any leakage of
-information across security domains.
+When `msdcfg.sdedbgalw` is 0:
+
+* Access by external debuggers to the memory and/or state of the supervisor domain is disallowed.
+* Entry to Debug Mode from a supervisor domain is disallowed.
+
 
 When `msdcfg.sdedbgalw` = 1 then external debug of privilege modes less than
 `M-mode` is allowed for such a supervisor domain on a per-hart basis. +
@@ -56,10 +54,8 @@ functional and security requirements must be met by the external secure debug
 system cite:[ExtDbgSec] to meet the security objectives of supervisor domain
 isolation:
 
-. The enable control for external debug driven by the external debug module is
-  expected to be established by the platform root-of-trust following RISC-V
-  Security Model recommendations SR_GEN_007 and SR_GEN_012. When the control is
-  in cleared state, the hart should not be able to enter external debug.
+. External debug of M-mode can be enabled only by the HW RoT of the RDSM
+ (See RISC-V Security model requirements SR_GEN_007 and SR_GEN_012).
 . External debug must be able to transition the hart to Debug Mode and access
   supervisor domain memory and state. In this context, "state" includes all
   non-M-mode resources accessible per the Debug specification cite:[ExtDbg].
@@ -68,14 +64,6 @@ isolation:
 . The RDSM must be able to context switch all triggers even when `d-mode` = 1.
   This functional change allows the RDSM to remain in control of external debug
   for supervisor domains when it is not under external debug itself.
-
-The following figure is non-normative and is intended to illustrate the use of
-the `msdcfg.sdedbgalw` control - the normative specification will be in the
-specification for external debug security cite:[ExtDbgSec].
-
-[caption="Figure {counter:image}: ", reftext="Figure {image}"]
-[title= "External Debug opt-in for Supervisor Domain", id=Smsdedbg_img]
-image::images/Smsdedbg.png[]
 
 === `Smsdetrc`: External Trace allowed control for Supervisor Domain
 
@@ -99,10 +87,8 @@ functional and security requirements must be met by the external secure debug
 system cite:[ExtDbgSec] to meet the security objectives of supervisor domain
 isolation:
 
-. The enable control for external trace driven by the external trace module is
-  expected to be established by the platform root-of-trust following RISC-V
-  Security Model recommendations SR_GEN_007 and SR_GEN_012. When the control is
-  in cleared state, the hart should not be able to generate trace.
+. External trace of M-mode can be enabled only by the HW RoT of the RDSM
+ (See RISC-V Security model requirements SR_GEN_007 and SR_GEN_012).
 . Per the Efficient trace specification cite:[ETrc], the side-band `halted`
   signal being asserted, stops subsequent tracing from the hart. On this signal
   being deasserted, the encoder can start tracing again. Implementation of this
@@ -118,7 +104,3 @@ isolation:
   `halted`) on:
 .. Entry to privilege less than `M-mode` with `msdcfg.sdetrcalw` = 0
 
-When external tracing is enabled (and authorized), there are no restrictions and
-all privilege modes (inclusive of `M-mode` and any supervisor domains managed by
-the RDSM) are traceable. In this case, tracing shall be enabled (via asserting
-`halted`) on entry to Debug mode, and stopped on resumption from Debug Mode.
