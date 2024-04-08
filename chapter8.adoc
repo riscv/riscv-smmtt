@@ -92,8 +92,3 @@ system cite:[ExtDbgSec]:
 
 . External trace of M-mode can be enabled only by the HW RoT of the RDSM
  (See RISC-V Security model requirements SR_GEN_007 and SR_GEN_012).
-. When external tracing is disabled, tracing must be stopped on:
-.. entry to Debug mode
-.. entry to `M-mode` privilege
-.. entry to privilege less than `M-mode` with `msdcfg.sdetrcalw` = 0.
-
