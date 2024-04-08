@@ -47,11 +47,11 @@ When `msdcfg.sdedbgalw` is 0:
 
 
 When `msdcfg.sdedbgalw` = 1 then external debug of privilege modes less than
-`M-mode` is allowed for such a supervisor domain on a per-hart basis, 
+`M-mode` is allowed for such a supervisor domain on a per-hart basis,
 with the additional requirements listed below. +
 
-. External debug must be able to access supervisor domain memory and/or state. 
-  In this context, "state" includes all supervisor domain resources accessible per the 
+. External debug must be able to access supervisor domain memory and/or state.
+  In this context, "state" includes all supervisor domain resources accessible per the
   Debug specification cite:[ExtDbg].
 . Entry to Debug Mode from a supervisor domain is allowed.
 
@@ -92,3 +92,4 @@ system cite:[ExtDbgSec]:
 
 . External trace of M-mode can be enabled only by the HW RoT of the RDSM
  (See RISC-V Security model requirements SR_GEN_007 and SR_GEN_012).
+
