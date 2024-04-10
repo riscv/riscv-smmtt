@@ -58,7 +58,7 @@ Supervisor Domain Access Protection extensions are used by M-mode software to
 program if physically-addressed memory (or device-mapped region) is
 accessible (read/write) by a hart/device operating under the control of S-mode
 software within a domain. Associating a hart/device with a supervisor domain
-implies that any physical-addressable region accesses occurring in the context
+implies that any physical-addressable region access occurring in the context
 of the supervisor domain is subject to access-checks for that domain.
 Hence, software or hardware accesses that originate from other supervisor
 domains other than the owner supervisor domain can be explicitly
