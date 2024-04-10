@@ -50,8 +50,8 @@ interrupts when Supervisor domains are enabled.
 
 * `Smsdedbg` (<<Smsdedbg>>) - This extension provides the controls to indicate
 if external debug is allowed for a supervisor domain. Whether external debug is
-authorized or not is expected to be done via a RoT and is outside the scope
-of this specification.
+authorized or not is expected to be done via a root of trust (RoT) and is
+outside the scope of this specification.
 
 === Theory of operation (informative)
 Supervisor Domain Access Protection extensions are used by M-mode software to
