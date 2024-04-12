@@ -81,7 +81,7 @@ When `msdcfg.sdetrcalw` = 1 then external trace of privilege modes less than
 `M-mode` shall be allowed for the SD on a per hart basis, with the
 additional requirements listed below.
 
-. When external tracing is disabled, tracing must be stopped on:
+. When M-mode external tracing is disabled, tracing must be stopped on:
 .. entry to Debug mode
 .. entry to `M-mode` privilege
 .. entry to privilege less than `M-mode` with `msdcfg.sdetrcalw` = 0.
