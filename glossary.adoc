@@ -3,7 +3,7 @@
 
 |===
 
-| AIA | Advanced interrupt architecture (AIA) is an architecture for handling
+| AIA | RISC-V Advanced Interrupt Architecture (AIA) cite:[AIA]
 interrupts.
 
 | ABI | Application binary interface (ABI).
@@ -15,14 +15,14 @@ for interfacing with memory, accelerators, and other fixed-function logic.
 Multiple APs may be used within a logical system.
 
 | Attestation | The process by which a relying party can assess the
-security posture of the confidential workload based on verifying a set of
-HW-rooted cryptographically-protected evidence.
+trustworthiness of the confidential computing environment based on verifying a set of
+evidences that are cryptographically-protected by hardware root-of-trust.
 
 | Confidential Computing | A computing paradigm that protects data in use by
 performing computation in a hardware-based, attested TEE.
 
 | CoVE | Confidential VM extension (CoVE) is the set of RISC-V ABI extensions
-defined in this specification that enables confidential computing on RISC-V
+defined in cite:[COVE] that enables confidential computing on RISC-V
 platforms. In some deployment models, the CoVE ABI leverages the RISC-V ISA
 extensions specified in the RISC-V Supervisor Domains specification.
 CoVE is a Trusted Execution Environment (TEE) ABI for Application Processors.
@@ -40,7 +40,7 @@ that hosts multiple mutually distrusting software owned by different tenants.
 (VMs) by virtualizing hart, guest physical memory and input/output (IO)
 resources.
 
-| IMSIC | Incoming message signaled interrupt controller (IMSIC).
+| IMSIC | Incoming Message-signaled Interrupt Controller (IMSIC).
 
 | MMIO | Memory mapped I/O (MMIO).
 
@@ -48,14 +48,14 @@ resources.
 
 | MTT | Memory Tracking Table (MTT).
 
-| Relying party | An entity that depends on the validity of information about
-another entity, typically for purposes of attestation and authorization.
+| Relying party | An entity that An entity that uses the attestation process
+to assesses the trustworthiness of an attester.
 
 | RISC-V Supervisor Domains | RISC-V privileged architecture extension defined
 in this specification - Supervisor Domains is a RISC-V privileged architecture
 extension to support physical address space (memory and devices) isolation for
 more than one supervisor domain. Supervisor domains enable the reduction of the
-supervisor Trusted Computing Base (TCB), with differential access to memory and
+supervisor Trusted Computing Base (TCB), with differentiated access to memory and
 other platform resources.
 
 | RoT | Root of trust (RoT) is the isolated hardware/software subsystem with an
