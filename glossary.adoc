@@ -1,0 +1,95 @@
+[[glossary]]
+== Glossary
+
+|===
+
+| AIA | Advanced interrupt architecture (AIA) is an architecture for handling
+interrupts.
+
+| ABI | Application binary interface (ABI).
+
+| AP | Application processors (AP)s can support commodity operating systems,
+ hypervisors/VMMs and applications software workloads. The AP subsystem
+ may contain several processing units, on-chip caches, and other controllers
+for interfacing with memory, accelerators, and other fixed-function logic.
+Multiple APs may be used within a logical system.
+
+| Attestation | The process by which a relying party can assess the
+security posture of the confidential workload based on verifying a set of
+HW-rooted cryptographically-protected evidence.
+
+| Confidential Computing | A computing paradigm that protects data in use by
+performing computation in a hardware-based, attested TEE.
+
+| CoVE | Confidential VM extension (CoVE) is the set of RISC-V ABI extensions
+defined in this specification that enables confidential computing on RISC-V
+platforms. In some deployment models, the CoVE ABI leverages the RISC-V ISA
+extensions specified in the RISC-V Supervisor Domains specification.
+CoVE is a Trusted Execution Environment (TEE) ABI for Application Processors.
+A supervisor domain that provides HW-isolation for workload data assets when in
+use (user/supervisor code/data) and provides HW-attestable confidentiality and
+integrity protection against specific attack vectors per a specified
+adversary and threat model.
+
+| Host software | All software elements including type-1 or type-2 HS-mode VMM
+and OS; U-mode user-space VMM tools; ordinary VMs hosted by the VMM that
+emulate devices. The hosting platform is typically a multi-tenant platform
+that hosts multiple mutually distrusting software owned by different tenants.
+
+| Hypervisor | is software running in HS-mode that manages virtual machines
+(VMs) by virtualizing hart, guest physical memory and input/output (IO)
+resources.
+
+| IMSIC | Incoming message signaled interrupt controller (IMSIC).
+
+| MMIO | Memory mapped I/O (MMIO).
+
+| MMU | Memory management unit (MMU).
+
+| MTT | Memory Tracking Table (MTT).
+
+| Relying party | An entity that depends on the validity of information about
+another entity, typically for purposes of attestation and authorization.
+
+| RISC-V Supervisor Domains | RISC-V privileged architecture extension defined
+in this specification - Supervisor Domains is a RISC-V privileged architecture
+extension to support physical address space (memory and devices) isolation for
+more than one supervisor domain. Supervisor domains enable the reduction of the
+supervisor Trusted Computing Base (TCB), with differential access to memory and
+other platform resources.
+
+| RoT | Root of trust (RoT) is the isolated hardware/software subsystem with an
+immutable ROM firmware and isolated compute and memory elements that form the
+Trusted Compute Base (TCB) of a TEE system. The RoT manages cryptographic keys
+and other security critical functions such as system lifecycle and debug
+authorization. The RoT provides trusted services to other software on the
+platform such as verified boot, key provisioning, and management, security
+lifecycle management, sealed storage, device management, crypto services,
+attestation etc. The RoT may be an integrated or discrete element, and may be
+used to manage device identies for attestation.
+
+| Tenant workload | All software elements owned and deployed by a single
+organization that may be hosted by a platform operator e.g. cloud provider
+on a platform that can host more than one organizations workload simultaneously.
+For example, in a virtualizated environment, the tenant workload elements may
+include VS-mode guest kernel and VU-mode guest user-space applications.
+
+| TCB; Also, System/Platform TCB | Trusted computing base (TCB) is the hardware,
+software, and firmware elements that are trusted by a relying party to protect
+the confidentiality and integrity of the relying parties' workload data and
+execution against a defined adversary model. In a system with separate
+processing elements within a package on a socket, the TCB boundary is the
+package. In a multi-socket system the Hardware TCB extends across the
+socket-to-socket interface, and is managed as one system TCB. The software TCB
+may  also extends across multiple sockets.
+
+| TEE | Trusted execution environment (TEE) is a set of hardware and software
+mechanisms that allow creating attestable and isolated execution environment.
+
+| VM | Virtual Machine (VM) is a guest operating system hosted by a VMM.
+
+| VMM | Virtual machine monitor (VMM) is used interchangeably with the term
+hypervisor in this document.
+
+|===
+
