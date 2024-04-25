@@ -53,11 +53,12 @@ more than one supervisor domain. Supervisor domains enable the reduction of the
 supervisor Trusted Computing Base (TCB), with differentiated access to memory and
 other platform resources.
 
-| RoT | Root of trust (RoT) is the isolated hardware/software subsystem with an
+| HW RoT | Hardware Root of trust (RoT) is the isolated hardware/software subsystem with an
 immutable ROM firmware and isolated compute and memory elements that form the
 Trusted Compute Base (TCB) of a TEE system. The RoT manages cryptographic keys
 and other security critical functions such as system lifecycle and debug
-authorization. The RoT provides trusted services to other software on the
+authorization. The RoT provides trusted services to other software,
+for which it is the TCB, on the
 platform such as verified boot, key provisioning, and management, security
 lifecycle management, sealed storage, device management, crypto services,
 attestation etc. The RoT may be an integrated or discrete element, and may be
@@ -81,7 +82,10 @@ may  also extends across multiple sockets.
 | TEE | Trusted execution environment (TEE) is a set of hardware and software
 mechanisms that allow creating attestable and isolated execution environment.
 
-| VM | An efficient, isolated duplicate of a real computer system. In this specification it refers to the collection of resources and state that is accessible when a RISC-V hart supporting the hypervisor extension executes with the virtualization mode set to 1.
+| VM | An efficient, isolated duplicate of a real computer system. In this
+specification it refers to the collection of resources and state that is
+accessible when a RISC-V hart supporting the hypervisor extension
+executes with the virtualization mode set to 1.
 
 | VMM | Virtual Machine Monitor. Also referred to as hypervisor.
 
