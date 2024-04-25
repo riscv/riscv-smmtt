@@ -22,7 +22,7 @@ evidences that are cryptographically-protected by hardware root-of-trust.
 performing computation in a hardware-based, attested TEE.
 
 | CoVE | Confidential VM extension (CoVE) is the set of RISC-V ABI extensions
-defined in cite:[COVE] that enables confidential computing on RISC-V
+defined in cite:[CoVE] that enables confidential computing on RISC-V
 platforms. In some deployment models, the CoVE ABI leverages the RISC-V ISA
 extensions specified in the RISC-V Supervisor Domains specification.
 
