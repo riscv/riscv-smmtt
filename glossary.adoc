@@ -25,16 +25,11 @@ performing computation in a hardware-based, attested TEE.
 defined in cite:[COVE] that enables confidential computing on RISC-V
 platforms. In some deployment models, the CoVE ABI leverages the RISC-V ISA
 extensions specified in the RISC-V Supervisor Domains specification.
-CoVE is a Trusted Execution Environment (TEE) ABI for Application Processors.
-A supervisor domain that provides HW-isolation for workload data assets when in
-use (user/supervisor code/data) and provides HW-attestable confidentiality and
-integrity protection against specific attack vectors per a specified
-adversary and threat model.
 
-| Host software | All software elements including type-1 or type-2 HS-mode VMM
-and OS; U-mode user-space VMM tools; ordinary VMs hosted by the VMM that
-emulate devices. The hosting platform is typically a multi-tenant platform
-that hosts multiple mutually distrusting software owned by different tenants.
+| Host supervisor domain | All host software elements including OS and type-1 or
+type-2 VMM and hosted VMs operate in a hosting supervisor domain. The hosting
+supervisor domain hosts multiple distrusting supervisor domains, that may each
+host their own software and applications.
 
 | Hypervisor | is software running in HS-mode that manages virtual machines
 (VMs) by virtualizing hart, guest physical memory and input/output (IO)
@@ -52,8 +47,8 @@ resources.
 to assesses the trustworthiness of an attester.
 
 | RISC-V Supervisor Domains | RISC-V privileged architecture extension defined
-in this specification - Supervisor Domains is a RISC-V privileged architecture
-extension to support physical address space (memory and devices) isolation for
+Supervisor Domains is a RISC-V privileged architecture
+extension, define in this specification, to support physical address space (memory and devices) isolation for
 more than one supervisor domain. Supervisor domains enable the reduction of the
 supervisor Trusted Computing Base (TCB), with differentiated access to memory and
 other platform resources.
@@ -86,10 +81,9 @@ may  also extends across multiple sockets.
 | TEE | Trusted execution environment (TEE) is a set of hardware and software
 mechanisms that allow creating attestable and isolated execution environment.
 
-| VM | Virtual Machine (VM) is a guest operating system hosted by a VMM.
+| VM | An efficient, isolated duplicate of a real computer system. In this specification it refers to the collection of resources and state that is accessible when a RISC-V hart supporting the hypervisor extension executes with the virtualization mode set to 1.
 
-| VMM | Virtual machine monitor (VMM) is used interchangeably with the term
-hypervisor in this document.
+| VMM | Virtual Machine Monitor. Also referred to as hypervisor.
 
 |===
 
