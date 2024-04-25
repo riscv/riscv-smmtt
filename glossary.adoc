@@ -46,8 +46,9 @@ resources.
 | Relying party | An entity that An entity that uses the attestation process
 to assesses the trustworthiness of an attester.
 
-Supervisor Domains is a RISC-V privileged architecture
-extension, define in this specification, to support physical address space (memory and devices) isolation for
+| Supervisor Domains | This is a RISC-V privileged architecture
+extension, define in this specification, to support physical address
+space (memory and devices) isolation for
 more than one supervisor domain. Supervisor domains enable the reduction of the
 supervisor Trusted Computing Base (TCB), with differentiated access to memory and
 other platform resources.
