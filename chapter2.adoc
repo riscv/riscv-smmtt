@@ -1,49 +1,41 @@
 [[chapter2]]
 ==  Summary of extensions for Supervisor Domain Access Protection
 
-=== Architecture Extensions
+The following normative architecture extensions are defined.
 
-The following normative architecture extensions are defined. The following
-sub-section describes the (informative) theory of operation.
-
-* `Smsdid` (<<Smsdid>>) - An interface to signal the active supervisor domain
+* `Smsdid` (<<Smsdid>>) - An interface to program the active supervisor domain
 under which a hart is operating. This is a dynamic control state on the hart
 that can be held in an M-mode CSR and modifiable by the RDSM via CSR r/w
 instructions  - herewith called the `supervisor domain identifier` assigned to
-the hart. Supervisor domains are orthogonal to hart privilege levels and since
-Smmtt enables physical memory isolation, there is one CSR (per hart) managed by
-M-mode. `Smsdid` is expected to be used in conjunction with `Smmtt` for physical
-memory isolation along with mechanisms such as `PMP` and `Smepmp`. Device side
-accesses are addressed in the `IO-MTT` extension. Isolation of data within a
-device is out of scope of this specification.
+the hart. The SDID is a local identifier for the hart and may be used to tag
+hart-local resources to access-control data associated with the supervisor
+domain. The supervisor domain identifier is independent from the hart privilege
+levels and there is one CSR (per hart) managed by M-mode. This extension may be
+used independently or may be combined with other extensions in this
+specification.
 
 * `Smmtt` (<<Smmtt>>) - An interface to set the access permissions for a memory
-region or page associated with a supervisor domain. This interface allows
-dynamic changes of association (which may require appropriate flushing of any
-state cached in harts). The association mapping is programmed via an Memory
+region or page associated with a supervisor domain. This interface allows for
+dynamic changes of access permission (which may require appropriate flushing of
+state cached in harts). The access properties are programmed via an Memory
 Tracking Table (MTT) structure, accessed via per-hart M-mode CSRs and which may
 be backed by additional in-memory structures. The M-mode CSR interface is
 expected to program the root physical page (MTTPPN) - for when the MTT is a
 memory-based structure, the MTTPPN would hold the physical address of the root
 page of the MTT structure in memory - the MTT is expected to be memory resident
-at time of access. Write access to MTT structures must be restricted by and to
-the RDSM (except for when explicitly allowed by the RDSM). Privilege levels may
-affect changes in the MTT under purview of the Supervisor Domain Security
-Manager (SDSM) either through an SBI interface into M-mode (or may have the
-ability to edit MTT structures by virtue of how the MTT structure in memory is
-accessible to lower privilege levels). MTT and e(PMP) are always active.
-MTT may be configured to be `Bare` if granular memory access control
-is not required. The SDID
-CSR defined by `Smsdid` is used as defined.
+at time of access. When `Smmtt` is active, MTT and e(PMP) remain in use (always
+active). Additionally, MTT may be configured in `Bare` mode if granular memory
+access control is not required.
 
-* `IO-MTT` (<<IO-MTT>>) - This non-ISA interface enables programming of an IO
+* `IO-MTT` (<<IO-MTT>>) - A non-ISA interface enables programming of an IO
 interconnect to associate SDID to IOMMU ID (called the SD Classifier). The
 assignment of IOMMUs to supervisor domains is also expected to be under the
 purview of the RDSM. IO-MTT interface specifies the memory access interface for
 physical-addresses encountered during IOMMU address translation as well for the
-final physical address of access.
+final physical address of access. Note that isolation of data within a device is
+out of scope of this specification.
 
-* `Smsdia` (<<Smsdia>>) - This M-mode CSR interface enables assignment of IMSIC
+* `Smsdia` (<<Smsdia>>) - A M-mode CSR interface enables assignment of IMSIC
 S-interrupt file or an APLIC domain to a Supervisor Domain. The interface also
 describes CSRs to allow M-mode software to retain control on notification of
 interrupts when Supervisor domains are enabled.
@@ -53,138 +45,15 @@ if external debug is allowed for a supervisor domain. Whether external debug is
 authorized or not is expected to be done via a root of trust (RoT) and is
 outside the scope of this specification.
 
-=== Theory of operation (informative)
-Supervisor Domain Access Protection extensions are used by M-mode software to
-program if physically-addressed memory (or device-mapped region) is
-accessible (read/write) by a hart/device operating under the control of S-mode
-software within a domain. Associating a hart/device with a supervisor domain
-implies that any physical-addressable region access occurring in the context
-of the supervisor domain is subject to access-checks for that domain.
-Hence, software or hardware accesses that originate from other supervisor
-domains other than the owner supervisor domain can be explicitly
-prevented/allowed by using the Smmtt extension. The RDSM has access to physical
-memory for all supervisor domains.
+* `Smsdetrc` (<<Smsdetrc>>) - This extension provides the controls to indicate
+if external trace is allowed for a supervisor domain. Whether external trace is
+authorized or not is expected to be done via a root of trust (RoT) and is
+outside the scope of this specification.
 
-Memory regions may be accessed by harts or by other devices on the platform.
-When harts and devices are assigned to a supervisor domain, the hart/device is
-said to perform memory accesses in the context of that supervisor domain. For
-all accesses using a physical address, the SDID is the supervisor domain
-identifier programmed into a CSR.  This CSR is programmed on the hart by the
-Root Domain Security Manager (RDSM). The assignment of the hart/device to a
-supervisor domain may be static (e.g. device assignment to a VM) or dynamic
-(e.g. scheduling a VM virtual cpu within a domain). The MTT for the supervisor
-domain active on the hart is programmed on the hart along with the supervisor
-domain identifier. The MTT does not perform any address translation; it simply
-provides access permissions for the physically addressed region/page (post any
-S-mode and/or G-stage address translation) to enforce the isolation properties
-per the use case requirements (see <<mtt-lookup>>).
+* `Smsqosid` and CBQRI for Supervisor Domains (<<Smsdqos>>) - This extension
+provides an interface for the RDSM to enforce that resource accesses from a
+supervisor domain or the RDSM must not be observable by entities that are not
+within their TCB using the resource usage monitors. Similarly, the resource
+allocations for a supervisor domain or the RDSM must not be influenced by
+entities outside their TCB.
 
-[caption="Figure {counter:image}: ", reftext="Figure {image}"]
-[title= "MTT lookup for Supervisor Domain Access", id=mtt-lookup]
-image::images/fig2.png[]
-
-The MTT checker is a functional block that looks up the MTT using the physical
-address of the access as an index to retrieve the access permissions for the
-supervisor domain. This checker thus enforces that for a load initiated by the
-hart, the physical address is readable, and for a store initiated by the hart,
-the physical address is also writable, else reports a fault. An access
-violation is reported as a trap to the supervisor domain and may be handled by
-the M-mode Root domain security manager. Such disallowed accesses are ideally
-handled with no data divulged. This MTT checker may be implemented
-as an MMU extension in the hart, and/or in the IO interconnect to check device
-accesses. The MTT checker is designed to work together with the page-based
-virtual memory (MMU, IOMMU) systems and Physical Memory Protection
-(PMP, IOPMP) mechanisms. Read and Write permissions for memory are derived from
-the page table, the PMP and the MTT - an access is allowed only when all
-protection mechanisms allow the access. When paging is enabled, instructions
-that access virtual memory may result in multiple physical-memory accesses,
-including (implicit S-mode) accesses to the page tables. MTT checks also apply
-to these implicit accesses - those accesses will be treated as reads for
-translation and as writes when A/D bits are updated in page table entries when
-`Svadu` is implemented.
-
-MTTs are checked by the MTT checker for all accesses to eligible
-physical memory, including accesses that have undergone virtual to
-physical memory translation, but excluding MTT structure accesses. The
-MTT checker indexes the MTT using the physical address of the access to
-retrieve the access permissions, and checks that the hart or device is allowed
-to access the physical memory accessed. A mismatch of the access type and
-the access permissions specified in the MTT entry that applies to the
-accessed region is reported as a trap to the supervisor domain software or
-to the RDSM and the access is
-disallowed with no data divulged. As described above, to support
-architectural virtual address page sizes, the MTT allows configuration
-at those supported architectural page sizes. MTT violations manifest as
-instruction, load, or store access-fault exceptions. The exception
-conditions for MTT are checked when the access to memory is performed.
-
-MTT may be used to provide permissions for physical memory addresses
-that hold regular main memory or IO memory. Memory may be assigned to
-the RDSM to bootstrap the subsequent run-time lookup structures for MTT.
-All memory should be covered by the MTT, though some memory may not be
-eligible to be qualified for assignment to a specific supervisor domain.
-This limitation may arise due to platform configuration and security
-policies - for example, if the platform security policy requires memory
-for a domain to be encrypted and some memory access paths are not
-enforced via an inline memory encryption engine. It is expected that the
-RDSM can use trusted platform-specific methods to enumerate which
-regions can be designated as access-controlled via the MTT.
-
-MTT must support both static and run-time configurability. A memory
-region (consisting of one or more pages) may be (re)assigned from one
-domain to another at run-time e.g. this is done by revoking the
-permission for one domain and assigning permissions to another domain.
-Run-time configuration may be performed via M-mode CSRs and/or in-memory
-structures. The in-memory structures used for MTT must themselves be
-access-limited to the RDSM by use of the MTT structures to disallow any
-supervisor domain from accessing the structures unless explicitly
-delegated by the Root Domain Security Manager (RDSM) to a particular
-domain (per use case policies). To support MTT dynamic reconfiguration,
-an interface is expected to be provided to set the attributes by passing
-requests to a trusted driver (in the RDSM) that can reconfigure the
-memory region assignment. Converting memory regions assignment from one
-domain to another might involve platform-specific operations based on
-the enforcement mechanism, such as TLB/cache flushes, that must be
-enforced by the RDSM and hardware. The RDSM is expected to change the
-settings and flush caches if necessary, so the system is only incoherent
-during the transition between domain assignment settings. This
-transitory state should not be visible to lower privilege levels (i.e.
-supervisor domains). There are also security aspects to be considered during
-(re)configuration, e.g., clearing memory used by the current SD before
-assigning it to another SD. Refer to the RISC-V CoVE cite:[CoVE] ABI and threat
-model as a reference.
-
-A hart/device may perform accesses to memory exclusively accessible to it's
-supervisor domain, or to memory shared globally with one or more supervisor
-domains. Memory sharing between supervisor domains is achieved by simply making
-the physical memory region accessible to the supervisor domains via the MTT
-structure associated with the hart or device. Access to physical addresses
-initiated from a hart or a device assigned a supervisor domain identifier may be
-denied by virtue of the permissions in the MTT lookup - such disallowed accesses
-cause a trap which may be reported to the supervisor domain software or to the
-RDSM to report a fault.
-
-The intra-domain isolation of memory between two harts/devices belonging
-to the same supervisor domain, but different tenant workloads, is
-achieved via the use of MMU, (S)PMP, IOMMU and IOPMP depending on the
-type of platform and the type of access. To successfully achieve this
-isolation, the page table structures for a domain's workloads must be
-managed by the Supervisor Domain Security Manager (SDSM) and the paging
-structures must be located in memory exclusively-accessible only to the
-Supervisor Domain. Additional security properties may be enforced based
-on type (data fetch, instruction fetch, etc.) and locality (hart
-supervisor domain identifier) of memory accesses as required for the
-security policy specific to usages. An example policy may be to require
-certain accesses to target only exclusively-owned domain memory. The MTT
-checker may utilize the supervisor domain identifier or additional metadata
-for the access to enforce such policies. The description of different types
-of Supervisor Domain policies possible is outside the scope of this document.
-
-Additional protection/isolation for memory associated with a supervisor domain
-is orthogonal (and usage-specific). Such additional protection for memory may
-be derived by the use of cryptography and/or access-control mechanisms. The
-mechanisms chosen for these additional protection methods are independent of
-Smmtt and may be platform-specific. The TCB of a particular supervisor domain
-(and devices that are bound to it) may be independently evaluated via
-attestation of the HW and SW TCB by a relying party using standard Public-Key
-Infrastructure-based mechanisms.

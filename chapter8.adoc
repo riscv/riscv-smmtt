@@ -1,5 +1,6 @@
 [[chapter8]]
 [[Smsdedbg]]
+[[Smsdetrc]]
 == Supervisor Domain External Trace and Debug
 
 This chapter describes two extensions `Smsdedbg` and `Smsdetrc` that enable a
@@ -42,7 +43,8 @@ configuration held in `msdcfg.sdedbgalw`, as described below:
 
 When `msdcfg.sdedbgalw` is 0:
 
-* Access by external debuggers to the memory and/or state of the supervisor domain is disallowed.
+* Access by external debuggers to the memory and/or state of the supervisor
+  domain is disallowed.
 * Entry to Debug Mode from a supervisor domain is disallowed.
 
 
@@ -51,8 +53,8 @@ When `msdcfg.sdedbgalw` = 1 then external debug of privilege modes less than
 with the additional requirements listed below. +
 
 . External debug must be able to access supervisor domain memory and/or state.
-  In this context, "state" includes all supervisor domain resources accessible per the
-  Debug specification cite:[ExtDbg].
+  In this context, "state" includes all supervisor domain resources accessible
+  per the Debug specification cite:[ExtDbg].
 . Entry to Debug Mode from a supervisor domain is allowed.
 
 To enforce the above controls specified by this extension, the following
@@ -75,7 +77,8 @@ When M-mode external trace is disabled, whether execution at privilege modes
 less than `M-mode` may be traced by an external trace tool depends on the
 configuration held in `msdcfg.sdetrcalw`, as described below:
 
-When `msdcfg.sdetrcalw` = 0, external trace of the supervisor domain is disallowed.
+When `msdcfg.sdetrcalw` = 0, external trace of the supervisor domain is
+disallowed.
 
 When `msdcfg.sdetrcalw` = 1 then external trace of privilege modes less than
 `M-mode` shall be allowed for the SD on a per hart basis, with the
