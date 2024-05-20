@@ -10,33 +10,27 @@ instructions  - herewith called the `supervisor domain identifier` assigned to
 the hart. The SDID is a local identifier for the hart and may be used to tag
 hart-local resources to access-control data associated with the supervisor
 domain. The supervisor domain identifier is independent from the hart privilege
-levels and there is one CSR (per hart) managed by M-mode. This extension may be
+levels and is held in a M-mode CSR. This extension may be
 used independently or may be combined with other extensions in this
 specification.
 
-* `Smmtt` (<<Smmtt>>) - An interface to set the access permissions for a memory
-region or page associated with a supervisor domain. This interface allows for
-dynamic changes of access permission (which may require appropriate flushing of
-state cached in harts). The access properties are programmed via an Memory
-Tracking Table (MTT) structure, accessed via per-hart M-mode CSRs and which may
-be backed by additional in-memory structures. The M-mode CSR interface is
-expected to program the root physical page (MTTPPN) - for when the MTT is a
-memory-based structure, the MTTPPN would hold the physical address of the root
-page of the MTT structure in memory - the MTT is expected to be memory resident
-at time of access. When `Smmtt` is active, MTT and e(PMP) remain in use (always
-active). Additionally, MTT may be configured in `Bare` mode if granular memory
-access control is not required.
+* `Smmtt` (<<Smmtt>>) - An extension to set the access permissions for a memory
+region or page associated with a supervisor domain. This extension allows for
+dynamic changes of access permission. Such dynamic changes may require flushing of appropriate 
+state cached in harts. The access properties are programmed via an Memory
+Tracking Table (MTT) structure. The physical page number (PPN) of the root table of the MTT is programmed into a M-mode CSR.
+When `Smmtt` is implemented, MTT and e(PMP) are always active. Although there is no option to disable MTT, it can be effectively disabled if granular memory access control is not required by configuring its mode to be `Bare`.
 
-* `IO-MTT` (<<IO-MTT>>) - A non-ISA interface enables programming of an IO
-interconnect to associate SDID to IOMMU ID (called the SD Classifier). The
+* `IO-MTT` (<<IO-MTT>>) - A non-ISA extension that enables programming of an IO
+interconnect to associate an IOMMU and devices in scope of that IOMMU with an SDID. The
 assignment of IOMMUs to supervisor domains is also expected to be under the
-purview of the RDSM. IO-MTT interface specifies the memory access interface for
-physical-addresses encountered during IOMMU address translation as well for the
-final physical address of access. Note that isolation of data within a device is
+purview of the RDSM. IO-MTT extension specifies the memory access control mechanisms for
+memory accesses performed by the IOMMU as well as by the devices associated with that SD.
+Note that isolation of data within a device is
 out of scope of this specification.
 
-* `Smsdia` (<<Smsdia>>) - A M-mode CSR interface enables assignment of IMSIC
-S-interrupt file or an APLIC domain to a Supervisor Domain. The interface also
+* `Smsdia` (<<Smsdia>>) - This extension enables assignment of IMSIC
+interrupt file(s) or an APLIC domain to a Supervisor Domain. The interface also
 describes CSRs to allow M-mode software to retain control on notification of
 interrupts when Supervisor domains are enabled.
 
