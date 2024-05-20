@@ -183,20 +183,11 @@ This is accomplished by executing an `SFENCE.VMA` instruction with `rs1=x0` and
 access-permissions are modified. If page-based virtual memory is not
 implemented, memory accesses check the `PMP` settings synchronously, but may
 check cached access-permissions for the supervisor domain, so a supervisor
-domain scope invalidation (`MFENCE.SD`) instruction is specified. When Svinval
-is implemented, `MFENCE.SD` is only ordered against `SFENCE.W.INVAL` and
-`SFENCE.INVAL.IR` instructions. As part of the update to the SD
-access-permissions, the RDSM must ensure that it uses `SFENCE.W.INVAL` to
-guarantee that any previous stores to structures that hold supervisor domain
-access-permissions (e.g. `MTT`) are made visible before invoking the
-`MFENCE.SD`. The RDSM must then use `SFENCE.INVAL.IR` to guarantee that all
-subsequent implicit references to supervisor domain access-permission structures
-(e.g. `MTT`) are ordered to be after the SD access-permissions cache
-invalidation.
+domain scope invalidation (`MFENCE.SPA`) instruction is specified.
 
 [caption="Figure {counter:image}: ", reftext="Figure {image}"]
-[title="MFENCE.SD instruction"]
-[id=fence-sd]
+[title="MFENCE.SPA instruction"]
+[id=mfence-spa]
 [wavedrom, ,svg]
 ....
 {reg: [
@@ -205,19 +196,19 @@ invalidation.
   {bits:  3, name: 'func3 (PRIV)'},
   {bits:  5, name: 'rs1 (PADDR)'},
   {bits:  5, name: 'rs2 (SDID'},
-  {bits:  7, name: 'func7 (MFENCE.SD)'},
+  {bits:  7, name: 'func7 (MFENCE.SPA)'},
 ], config:{lanes: 1, hspace:1024}}
 ....
 
-The `MFENCE.SD` fence instruction is used to synchronize updates to supervisor
-domain access-permissions with current execution. `MFENCE.SD` applies only to
+The `MFENCE.SPA` fence instruction is used to synchronize updates to supervisor
+domain access-permissions with current execution. `MFENCE.SPA` applies only to
 the caches associated with access-permissions for supervisor domains.
-`MFENCE.SD` is only valid in M-mode. If operand rs1 is not equal to x0, it
+`MFENCE.SPA` is only valid in M-mode. If operand rs1 is not equal to x0, it
 specifies a single physical address, and if rs2 is not equal to 0, it specifies
-a single SDID. Executing a `MFENCE.SD` guarantees that any previous stores
+a single SDID. Executing a `MFENCE.SPA` guarantees that any previous stores
 already visible to the current hart are ordered before all implicit reads by
 that hart done for supervisor domain access-permission structures for
-non-M-mode instructions that follow the `MFENCE.SD`.
+non-M-mode instructions that follow the `MFENCE.SPA`.
 
 When SDID is specified in rs2, bits XLEN-1:SDIDMAX held in rs2 are reserved for
 future standard use. Until their use is specified, they should be zeroed by
@@ -226,6 +217,50 @@ implementation shall ignore bits SDIDMAX-1:SDIDLEN of the value held in rs2.
 
 [NOTE]
 ====
-A simpler implementation of MFENCE.SD may ignore the physical address in rs1,
+A simpler implementation of MFENCE.SPA may ignore the physical address in rs1,
 and/or the SDID value in rs2, and always perform a global fence for all SDs.
 ====
+
+=== M-mode Supervisor Domain Fine-Grain Invalidation Instruction
+
+In some high-performance implementations, a finer-granular invalidation and
+fencing is required that allows for synchrnonization operations to be more
+efficiently batched. When `Sinval` is implemented with `Smsdid`, the
+`MINVAL.SPA` instruction must be implemented to support such fine-granular
+invalidation of phyical memory access-permission caches.
+
+[caption="Figure {counter:image}: ", reftext="Figure {image}"]
+[title="MINVAL.SPA instruction"]
+[id=minval-spa]
+[wavedrom, ,svg]
+....
+{reg: [
+  {bits:  7, name: 'opcode (SYSTEM)'},
+  {bits:  5, name: 'rd (0)'},
+  {bits:  3, name: 'func3 (PRIV)'},
+  {bits:  5, name: 'rs1 (PADDR)'},
+  {bits:  5, name: 'rs2 (SDID'},
+  {bits:  7, name: 'func7 (MINVAL.SPA)'},
+], config:{lanes: 1, hspace:1024}}
+....
+
+`MINVAL.SPA` is only ordered against `SFENCE.W.INVAL` and `SFENCE.INVAL.IR`
+instructions. As part of the update to the SD access-permissions, the RDSM must
+ensure that it uses `SFENCE.W.INVAL` to guarantee that any previous stores to
+structures that hold supervisor domain access-permissions (e.g. `MTT`) are made
+visible before invoking the `MINVAL.SPA`. The RDSM must then use
+`SFENCE.INVAL.IR` to guarantee that all subsequent implicit references to
+supervisor domain access-permission structures (e.g. `MTT`) are ordered to be
+after the SD access-permissions cache invalidation. When executed in order (but
+not necessarily consecutively) by a single hart, the sequence `SFENCE.W.INVAL`,
+`MINVAL.SPA` and `SFENCE.INVAL.IR` has the same effect as a hypothetical
+`MFENCE.SPA` in which:
+
+* the values of rs1 and rs2 for the `MFENCE.SPA` are the same as those used in
+the `MINVAL.SPA`,
+* reads and writes prior to the `SFENCE.W.INVAL` are considered to be those
+prior to the `MINVAL.SPA`, and
+* reads and writes following the `SFENCE.INVAL.IR` are considered to be those
+subsequent to the `MFENCE.SPA`
+
+`MINVAL.SPA` is only valid in M-mode.
