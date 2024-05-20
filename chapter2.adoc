@@ -16,10 +16,13 @@ specification.
 
 * `Smmtt` (<<Smmtt>>) - An extension to set the access permissions for a memory
 region or page associated with a supervisor domain. This extension allows for
-dynamic changes of access permission. Such dynamic changes may require flushing of appropriate 
-state cached in harts. The access properties are programmed via an Memory
-Tracking Table (MTT) structure. The physical page number (PPN) of the root table of the MTT is programmed into a M-mode CSR.
-When `Smmtt` is implemented, MTT and e(PMP) are always active. Although there is no option to disable MTT, it can be effectively disabled if granular memory access control is not required by configuring its mode to be `Bare`.
+dynamic changes of access permission. Such dynamic changes may require flushing of
+appropriate state cached in harts. The access properties are programmed via an Memory
+Tracking Table (MTT) structure. The physical page number (PPN) of the root table of
+the MTT is programmed into a M-mode CSR. When `Smmtt` is implemented, MTT
+and e(PMP) are always active. Although there is no option to disable MTT, it can be
+effectively disabled if granular memory access control is not required by configuring
+MTT mode to be `Bare`.
 
 * `IO-MTT` (<<IO-MTT>>) - A non-ISA extension that enables programming of an IO
 interconnect to associate an IOMMU and devices in scope of that IOMMU with an SDID. The
