@@ -232,7 +232,7 @@ S-mode accesses - those accesses will be treated as reads for translation and as
 writes when A/D bits are updated in page table entries when `Svadu` is
 implemented.
 
-MTT is checked for all accesses to physical memory, including accesses that have
+MTT is checked for all accesses to physical memory, unless the effective privilege mode is M, including accesses that have
 undergone virtual to physical memory translation, but excluding MTT structure
 accesses. MTT structure accesses are subject to PMP/Smepmp/IOPMP checks. The MTT
 checker indexes the MTT using the physical address of the access to lookup and
