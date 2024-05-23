@@ -33,7 +33,7 @@ Note that isolation of data within a device is
 out of scope of this specification.
 
 * `Smsdia` (<<Smsdia>>) - This extension enables assignment of IMSIC
-interrupt file(s) or an APLIC domain to a Supervisor Domain. The interface also
+interrupt file(s) or an APLIC domain to a supervisor domain. The interface also
 describes CSRs to allow M-mode software to retain control on notification of
 interrupts when Supervisor domains are enabled.
 

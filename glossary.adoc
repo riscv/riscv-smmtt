@@ -50,9 +50,9 @@ by virtualizing hart, guest physical memory and input/output (IO) resources.
 | Relying party | An entity that An entity that uses the attestation process
 to assesses the trustworthiness of an attester.
 
-| Supervisor Domains | A RISC-V privileged architecture extension defined in
+| Supervisor Domain (SD) | A RISC-V privileged architecture extension defined in
 this specification, to support isolation across more than one supervisor
-execution contexts. Supervisor domains enable the reduction of the supervisor
+execution context. Supervisor domains enable the reduction of the supervisor
 Trusted Computing Base (TCB), with differentiated access to memory and other
 platform resources. All host software elements including OS and type-1 or
 type-2 VMM and hosted VMs operate in a "hosting" supervisor domain. The hosting
@@ -75,7 +75,7 @@ mechanisms that allow creating attestable and isolated execution environment.
 | Tenant workload | All software elements owned and deployed by a single
 organization that may be hosted by a platform operator e.g. cloud provider
 on a platform that can host more than one organizations workload simultaneously.
-For example, in a virtualizated environment, the tenant workload elements may
+For example, in a virtualized environment, the tenant workload elements may
 include VS-mode guest kernel and VU-mode guest user-space applications. Tenant
 workloads may also operate in the context of one of more supervisor domains.
 

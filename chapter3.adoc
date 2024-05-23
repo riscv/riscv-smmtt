@@ -224,10 +224,10 @@ and/or the SDID value in rs2, and always perform a global fence for all SDs.
 === M-mode Supervisor Domain Fine-Grain Invalidation Instruction
 
 In some high-performance implementations, a finer-granular invalidation and
-fencing is required that allows for synchrnonization operations to be more
+fencing is required that allows for synchronization operations to be more
 efficiently batched. When `Sinval` is implemented with `Smsdid`, the
 `MINVAL.SPA` instruction must be implemented to support such fine-granular
-invalidation of phyical memory access-permission caches.
+invalidation of physical memory access-permission caches.
 
 [caption="Figure {counter:image}: ", reftext="Figure {image}"]
 [title="MINVAL.SPA instruction"]

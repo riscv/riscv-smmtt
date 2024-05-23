@@ -75,7 +75,7 @@ assign resources to other domains.
 
 In order to avoid re-factoring of deployed software, workloads and
 applications, new hardware primitives are required to support flexible isolation
-of data in caches and memory. The new primitives are also require to isolate
+of data in caches and memory. The new primitives are also required to isolate
 resources such as interrupts, IO, QoS mechanisms and debug/trace mechanisms for
 robust isolation of supervisor domains. The hardware primitives must support
 performant and scalable physical memory isolation at a page-level to support
@@ -92,7 +92,7 @@ device-mapped regions) by a hart/device operating within a supervisor domain.
 Associating a hart/device with a supervisor domain implies that any
 physical-addressable region access occurring in the context of the supervisor
 domain is subject to access-checks for that domain. Hence, software or hardware
-accesses that originate from other supervisor domains other than the allowed
+accesses that originate from supervisor domains other than the allowed
 supervisor domain can be explicitly prevented/allowed. The RDSM has access to
 physical memory for all supervisor domains. In typical security usages, write
 accesses to the MTT structures must be restricted and managed by the RDSM.
@@ -164,7 +164,7 @@ supervisor domains). There are also security aspects to be considered during
 assigning it to another SD. Refer to the RISC-V CoVE cite:[CoVE] ABI and threat
 model as a reference.
 
-A hart/device may perform accesses to memory exclusively accessible to it's
+A hart/device may perform accesses to memory exclusively accessible to its
 supervisor domain, or to memory shared globally with one or more supervisor
 domains. Memory sharing between supervisor domains is achieved by simply making
 the physical memory region accessible to the supervisor domains via the MTT
@@ -176,20 +176,20 @@ access disallowed by the MTT, the IO sub-system may log an error for the RDSM
 which may delegeate it to a supervisor domain.
 
 The intra-domain isolation of memory between two harts/devices belonging
-to the same supervisor domain, but different tenant workloads, is
-achieved via the use of MMU, PMP Smepmp, IOMMU and IOPMP depending on the
+to the same supervisor domain, but different tenant workloads, may be
+achieved via the use of MMU, PMP/Smepmp, SPMP, IOMMU and IOPMP depending on the
 type of platform and the type of access. To successfully achieve this
 isolation, the page table structures for a domain's workloads must be
 managed by the Supervisor Domain Security Manager (SDSM) and the paging
 structures must be located in memory exclusively-accessible only to the
-Supervisor Domain. Additional security properties may be enforced based
+supervisor domain. Additional security properties may be enforced based
 on type (data fetch, instruction fetch, etc.) and locality (hart
 supervisor domain identifier) of memory accesses as required for the
 security policy specific to usages. An example policy may be to require
 certain accesses to target only exclusively-owned domain memory. The MTT
 checker may utilize the supervisor domain identifier or additional metadata
 for the access to enforce such policies. The description of different types
-of Supervisor Domain policies possible is outside the scope of this document.
+of supervisor domain policies possible is outside the scope of this document.
 
 Additional protection/isolation for memory associated with a supervisor domain
 is orthogonal (and usage-specific). Such additional protection for memory may

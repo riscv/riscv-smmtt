@@ -282,6 +282,6 @@ instruction must be used to ensure that updates to the `MTT` data structures are
 observed by subsequent implicit reads to those structures by a hart.
 ====
 
-if `mttp.MODE` is changed for a given SDID, a `MFENCE.SPA` with rs1=x0 and rs2
+If `mttp.MODE` is changed for a given SDID, a `MFENCE.SPA` with rs1=x0 and rs2
 set either to x0 or the given SDID, must be executed to order subsequent PA
 access checks with the `MODE` change, even if the old or new `MODE` is `Bare`.
