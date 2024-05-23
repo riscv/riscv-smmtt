@@ -232,17 +232,20 @@ S-mode accesses - those accesses will be treated as reads for translation and as
 writes when A/D bits are updated in page table entries when `Svadu` is
 implemented.
 
-MTT is checked for all accesses to physical memory, unless the effective privilege mode is M, including accesses that have
-undergone virtual to physical memory translation, but excluding MTT structure
-accesses. MTT structure accesses are subject to PMP/Smepmp/IOPMP checks. The MTT
-checker indexes the MTT using the physical address of the access to lookup and
-enforce the access permissions. A mismatch of the access type and the access
-permissions specified in the MTT entry that applies to the accessed region is
-reported as a trap to the RDSM which may report it to a supervisor domain. To
-enable composing with Sv modes, the MTT supports configuration at supported
-architectural page sizes. MTT violations manifest as instruction, load, or
-store access-fault exceptions. The exception conditions for MTT are checked when
-the access to memory is performed.
+MTT is checked for all accesses to physical memory, unless the effective privilege
+mode is M, including accesses that have undergone virtual to physical memory
+translation, but excluding MTT structure accesses. Data accesses in M-mode
+when the MPRV bit in mstatus is set and the MPP field in mstatus contains S
+or U are subject to MTT checks. MTT structure accesses are subject to PMP/
+Smepmp and IOPMP checks. The MTT checker indexes the MTT using the
+physical address of the access to lookup and enforce the access permissions.
+A mismatch of the access type and the access permissions specified in the
+MTT entry that applies to the accessed region is reported as a trap to the
+RDSM which may report it to a supervisor domain. To enable composing
+with Sv modes, the MTT supports configuration at supported architectural
+page sizes. MTT violations manifest as instruction, load, or store access-fault
+exceptions. The exception conditions for MTT are checked when the access
+to memory is performed.
 
 === Caching of MTT and Supervisor Domain Fence Instruction
 
