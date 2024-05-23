@@ -51,11 +51,11 @@ an illegal instruction exception.
 <<mtt-64>> shows the encodings of the `MODE` field when `XLEN=64`. When `mttp`
 `MODE=Bare`, supervisor physical addresses have no MTT-based protection across
 supervisor domains beyond the physical memory protection scheme described in
-Section 3.7 of the RISC-V privileged architecture specification [1]. In this
-case, the remaining fields (`SDID`, `MTTPPN`) in `mttp` must be set to zeros,
-else generate a fault. When `XLEN=32`, the other valid settings for `MODE` are
-`Smmtt34` and `Smmtt34rw`, to support allow/disallow and read-write access
-permissions for 34-bit system physical addresses.
+Section 3.7 of the RISC-V privileged architecture specification cite:[ISA]. In
+this case, the remaining fields (`SDID`, `MTTPPN`) in `mttp` must be set to
+zeros, else generate a fault. When `XLEN=32`, the other valid settings for
+`MODE` are `Smmtt34` and `Smmtt34rw`, to support allow/disallow and read-write
+access permissions for 34-bit system physical addresses.
 
 When `XLEN=64`, other than `BARE`, the other valid settings for `MODE` are
 `Smmtt[46, 56][rw]` to support read-write/access permissions for 46-bit and
@@ -68,7 +68,9 @@ may define different interpretations of the other fields in `mttp`.
 [width="100%",cols="10%,14%,76%", options="header", id=mtt-32]
 |===
 |Value |Name |Description
-|0 |`Bare` |No inter-supervisor domain protection
+|0 |`Bare` | No supervisor domain protection across beyond the physical memory
+protection scheme described in Section 3.7 of the RISC-V privileged architecture
+specification cite:[ISA]
 
 |1 |`Smmtt34` |Page-based supervisor domain protection for 34 bit physical
 addresses with access allowed/disallowed per page
@@ -83,7 +85,9 @@ physical addresses with RW permissions per page
 [width="100%",cols="10%,14%,76%", options="header", id=mtt-64]
 |===
 |Value |Name |Description
-|0 |`Bare` |No inter-supervisor domain protection
+|0 |`Bare` | No supervisor domain protection across beyond the physical memory
+protection scheme described in Section 3.7 of the RISC-V privileged architecture
+specification cite:[ISA]
 
 |1 |`Smmtt46` |Page-based supervisor domain protection for 46 bit physical
 addresses
