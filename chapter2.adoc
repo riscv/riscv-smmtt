@@ -25,7 +25,7 @@ effectively disabled if granular memory access control is not required by config
 MTT mode to be `Bare`.
 
 * `IO-MTT` (<<IO-MTT>>) - A non-ISA extension that enables programming of an IO
-interconnect to associate an IOMMU and devices in scope of that IOMMU with an SDID. The
+interconnect to associate an IOMMU and devices in scope of that IOMMU with an SD. The
 assignment of IOMMUs to supervisor domains is also expected to be under the
 purview of the RDSM. IO-MTT extension specifies the memory access control mechanisms for
 memory accesses performed by the IOMMU as well as by the devices associated with that SD.
@@ -33,8 +33,8 @@ Note that isolation of data within a device is
 out of scope of this specification.
 
 * `Smsdia` (<<Smsdia>>) - This extension enables assignment of IMSIC
-interrupt file(s) or an APLIC domain to a supervisor domain. The interface also
-describes CSRs to allow M-mode software to retain control on notification of
+interrupt file(s) or an APLIC domain to a supervisor domain. The extension also
+provides CSRs to allow M-mode software to retain control on notification of
 interrupts when Supervisor domains are enabled.
 
 * `Smsdedbg` (<<Smsdedbg>>) - This extension provides the controls to indicate
