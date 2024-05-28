@@ -236,8 +236,9 @@ MTT is checked for all accesses to physical memory, unless the effective privile
 mode is M, including accesses that have undergone virtual to physical memory
 translation, but excluding MTT structure accesses. Data accesses in M-mode
 when the MPRV bit in mstatus is set and the MPP field in mstatus contains S
-or U are subject to MTT checks. MTT structure accesses are subject to PMP/
-Smepmp and IOPMP checks. The MTT checker indexes the MTT using the
+or U are subject to MTT checks. MTT structure accesses are to be treated
+as implicit M-mode accesses and are subject to PMP/Smepmp and
+IOPMP checks. The MTT checker indexes the MTT using the
 physical address of the access to lookup and enforce the access permissions.
 A mismatch of the access type and the access permissions specified in the
 MTT entry that applies to the accessed region is reported as a trap to the

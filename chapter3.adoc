@@ -172,22 +172,6 @@ respective sections in this specification.
 
 === M-mode Supervisor Domain Fence Instruction
 
-Implementations with virtual memory are permitted to cache translations and
-access-permissions in address translation cache structures. Similarly,
-access-permissions for physical memory for a supervisor domain may also be
-cached. The supervisor domain physical memory access-permissions may be derived
-from `PMP`, `MTT`, or other methods. The access-permissions settings for the
-accessed physical address may be checked (and possibly cached) at any point
-between the address translation and the explicit memory access. If
-access-permission caching is occuring, when the access-permissions are modified,
-`M-mode` software must synchronize the cached access-permissions along with the
-virtual memory system and any `PMP`, `MTT` caches or address-translation caches.
-This is accomplished by executing an `SFENCE.VMA` instruction with `rs1=x0` and
-`rs2=x0`, or `HFENCE.GVMA` as needed, after the physical memory
-access-permissions are modified. If page-based virtual memory is not
-implemented, memory accesses check the `PMP` settings synchronously, but may
-check cached access-permissions for the supervisor domain, so a supervisor
-domain scope invalidation (`MFENCE.SPA`) instruction is specified.
 
 [caption="Figure {counter:image}: ", reftext="Figure {image}"]
 [title="MFENCE.SPA instruction"]
@@ -205,8 +189,7 @@ domain scope invalidation (`MFENCE.SPA`) instruction is specified.
 ....
 
 The `MFENCE.SPA` fence instruction is used to synchronize updates to supervisor
-domain access-permissions with current execution. `MFENCE.SPA` applies only to
-the caches associated with access-permissions for supervisor domains.
+domain access-permissions with current execution.
 `MFENCE.SPA` is only valid in M-mode. If operand rs1 is not equal to x0, it
 specifies a single physical address, and if rs2 is not equal to 0, it specifies
 a single SDID. Executing a `MFENCE.SPA` guarantees that any previous stores
