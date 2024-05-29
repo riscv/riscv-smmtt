@@ -1,39 +1,43 @@
 [[glossary]]
 == Glossary
 
+[cols="1,4"]
 |===
-
-| AIA | RISC-V Advanced Interrupt Architecture (AIA) cite:[AIA]
-interrupts.
 
 | ABI | Application binary interface (ABI).
 
+| AIA | RISC-V Advanced Interrupt Architecture (AIA) cite:[AIA] interrupts.
+
 | AP | Application processors (AP)s can support commodity operating systems,
- hypervisors/VMMs and applications software workloads. The AP subsystem
- may contain several processing units, on-chip caches, and other controllers
+hypervisors/VMMs and applications software workloads. The AP subsystem
+may contain several processing units, on-chip caches, and other controllers
 for interfacing with memory, accelerators, and other fixed-function logic.
 Multiple APs may be used within a logical system.
 
 | Attestation | The process by which a relying party can assess the
-trustworthiness of the confidential computing environment based on verifying a set of
-evidences that are cryptographically-protected by hardware root-of-trust.
+trustworthiness of the confidential computing environment based on verifying a
+set of evidences that are cryptographically endorsed by a hardware
+root-of-trust.
 
-| Confidential Computing | A computing paradigm that protects data in use by
-performing computation in a hardware-based, attested TEE.
+| Confidential Computing | A computing paradigm that protects data-in-use by
+performing computation in a hardware-based, attested, execution environment.
 
-| CoVE | Confidential VM extension (CoVE) is the set of RISC-V ABI extensions
-defined in cite:[CoVE] that enables confidential computing on RISC-V
-platforms. In some deployment models, the CoVE ABI leverages the RISC-V ISA
-extensions specified in the RISC-V Supervisor Domains specification.
+| CoVE | **Co**nfidential **V**M **E**xtension is the set of RISC-V ABI
+extensions defined in cite:[CoVE] that enables confidential computing for
+hardware virtual machines (VMs) on RISC-V platforms.
 
-| Host supervisor domain | All host software elements including OS and type-1 or
-type-2 VMM and hosted VMs operate in a hosting supervisor domain. The hosting
-supervisor domain hosts multiple distrusting supervisor domains, that may each
-host their own software and applications.
+| HW RoT | Hardware (HW) Root of trust (RoT) is the isolated hardware/software
+subsystem with an immutable ROM firmware and isolated compute and memory
+elements that form the Trusted Compute Base (TCB) of a TEE system. The RoT
+manages cryptographic keys and other security critical functions such as system
+lifecycle and debug authorization. The RoT provides trusted services to other
+software, for which it is the TCB, such as verified boot, key management,
+security lifecycle management, sealed storage, device management, crypto
+services,attestation etc. The RoT may be an integrated or discrete element, and
+may be used to manage device identies for attestation.
 
-| Hypervisor | is software running in HS-mode that manages virtual machines
-(VMs) by virtualizing hart, guest physical memory and input/output (IO)
-resources.
+| Hypervisor | Software running in HS-mode that manages virtual machines (VMs)
+by virtualizing hart, guest physical memory and input/output (IO) resources.
 
 | IMSIC | Incoming Message-signaled Interrupt Controller (IMSIC).
 
@@ -46,29 +50,15 @@ resources.
 | Relying party | An entity that An entity that uses the attestation process
 to assesses the trustworthiness of an attester.
 
-| Supervisor Domains | This is a RISC-V privileged architecture
-extension, define in this specification, to support physical address
-space (memory and devices) isolation for
-more than one supervisor domain. Supervisor domains enable the reduction of the
-supervisor Trusted Computing Base (TCB), with differentiated access to memory and
-other platform resources.
-
-| HW RoT | Hardware Root of trust (RoT) is the isolated hardware/software subsystem with an
-immutable ROM firmware and isolated compute and memory elements that form the
-Trusted Compute Base (TCB) of a TEE system. The RoT manages cryptographic keys
-and other security critical functions such as system lifecycle and debug
-authorization. The RoT provides trusted services to other software,
-for which it is the TCB, on the
-platform such as verified boot, key provisioning, and management, security
-lifecycle management, sealed storage, device management, crypto services,
-attestation etc. The RoT may be an integrated or discrete element, and may be
-used to manage device identies for attestation.
-
-| Tenant workload | All software elements owned and deployed by a single
-organization that may be hosted by a platform operator e.g. cloud provider
-on a platform that can host more than one organizations workload simultaneously.
-For example, in a virtualizated environment, the tenant workload elements may
-include VS-mode guest kernel and VU-mode guest user-space applications.
+| Supervisor Domain (SD) | A RISC-V privileged architecture extension defined in
+this specification, to support isolation across more than one supervisor
+execution context. Supervisor domains enable the reduction of the supervisor
+Trusted Computing Base (TCB), with differentiated access to memory and other
+platform resources. All host software elements including OS and type-1 or
+type-2 VMM and hosted VMs operate in a "hosting" supervisor domain. The hosting
+supervisor domain may interact with multiple distrusting supervisor domains via
+the support of a root domain security manager. The alternate supervisor domains
+may each host their own software and applications.
 
 | TCB; Also, System/Platform TCB | Trusted computing base (TCB) is the hardware,
 software, and firmware elements that are trusted by a relying party to protect
@@ -77,10 +67,17 @@ execution against a defined adversary model. In a system with separate
 processing elements within a package on a socket, the TCB boundary is the
 package. In a multi-socket system the Hardware TCB extends across the
 socket-to-socket interface, and is managed as one system TCB. The software TCB
-may  also extends across multiple sockets.
+may also extends across multiple sockets.
 
 | TEE | Trusted execution environment (TEE) is a set of hardware and software
 mechanisms that allow creating attestable and isolated execution environment.
+
+| Tenant workload | All software elements owned and deployed by a single
+organization that may be hosted by a platform operator e.g. cloud provider
+on a platform that can host more than one organizations workload simultaneously.
+For example, in a virtualized environment, the tenant workload elements may
+include VS-mode guest kernel and VU-mode guest user-space applications. Tenant
+workloads may also operate in the context of one of more supervisor domains.
 
 | VM | An efficient, isolated duplicate of a real computer system. In this
 specification it refers to the collection of resources and state that is

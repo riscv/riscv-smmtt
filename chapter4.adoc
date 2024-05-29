@@ -221,28 +221,71 @@ follows:
 ], config:{lanes: 1, hspace:1024}}
 ....
 
-=== Caching
+=== Access Enforcement and Fault Reporting
 
-Implementations with virtual memory are permitted to cache translations and
-permissions in address translation cache structures. Similarly, access
-permissions from the `MTT` lookup may be cached. The `PMP` and `MTT` settings
-for the resulting physical address may be checked (and possibly cached) at any
-point between the address translation and the explicit memory access. If
-caching is occuring, when the `MTT` settings are modified, `M-mode` software
-must synchronize the cached `MTT` state with the virtual memory system and any
-`PMP`, `MTT` or address-translation caches. This is accomplished by executing
-an `SFENCE.VMA` instruction with `rs1=x0` and `rs2=x0`, or `HFENCE.GVMA` as
-needed, after the `MTT` is modified. If page-based virtual memory is not
-implemented, memory accesses check the `PMP` settings synchronously, but may
-check `MTT` settings that are cached, so a `MTT` invalidation (`MTTINVAL`)
-instruction is needed. When Svinval is implemented, `MTTINVAL` is only ordered
-against `SFENCE.W.INVAL` and `SFENCE.INVAL.IR` instructions. As part of the
-`MTT` update, the RDSM must ensure that it uses `SFENCE.W.INVAL` to guarantee
-that any previous stores to `MTT` are made visible before invoking the
-`MTTINVAL`. The RDSM must then use `SFENCE.INVAL.IR` to guarantee that all
-subsequent implicit references to `MTT` are ordered to be after the `MTT` cache
-invalidation.
+As shown in <<mtt-lookup>>, MTT lookup composes with, but does not require,
+page-based virtual memory (MMU, IOMMU) and physical memory protection mechanisms
+(PMP, Smepmp, IOPMP). When paging is enabled, instructions that access virtual
+memory may result in multiple physical-memory accesses, including (implicit
+S-mode) accesses to the page tables. MTT checks also apply to these implicit
+S-mode accesses - those accesses will be treated as reads for translation and as
+writes when A/D bits are updated in page table entries when `Svadu` is
+implemented.
 
-_[TBD - register interface for flushing all MTT cached entries, vs specific
-physical address at page size granularity]._
+MTT is checked for all accesses to physical memory, unless the effective privilege
+mode is M, including accesses that have undergone virtual to physical memory
+translation, but excluding MTT structure accesses. Data accesses in M-mode
+when the MPRV bit in mstatus is set and the MPP field in mstatus contains S
+or U are subject to MTT checks. MTT structure accesses are to be treated
+as implicit M-mode accesses and are subject to PMP/Smepmp and
+IOPMP checks. The MTT checker indexes the MTT using the
+physical address of the access to lookup and enforce the access permissions.
+A mismatch of the access type and the access permissions specified in the
+MTT entry that applies to the accessed region is reported as a trap to the
+RDSM which may report it to a supervisor domain. To enable composing
+with Sv modes, the MTT supports configuration at supported architectural
+page sizes. MTT violations manifest as instruction, load, or store access-fault
+exceptions. The exception conditions for MTT are checked when the access
+to memory is performed.
 
+=== Caching of MTT and Supervisor Domain Fence Instruction
+
+<<mfence-spa>> describes the canonical behavior of the `MFENCE.SPA` instruction
+to invalidate cached access-permissions for all supervisor domains, a specific
+supervisor domain, or a specific physical address for a supervisor domain.
+
+<<minval-spa>> implemented with `Sinval` describes a finer granular invalidation
+of access-permission caches.
+
+When `Smmtt` is implemented, an `MTT` structure is used to specify
+access-permissions for physical memory for a supervisor domain, the `MTT`
+settings for the resulting physical address (after any address translation) may
+be checked (and possibly cached) at any point between the address translation
+and the explicit memory access. If caching is occuring, when the `MTT` settings
+are modified, `M-mode` software must synchronize the cached `MTT` state with the
+virtual memory system and any `PMP`, `MTT` or address-translation caches, as
+described via <<mfence-spa>> or in a batched manner via <<minval-spa>>.
+
+When used with the `MTT`, the `MFENCE.SPA` is used to synchronize updates to
+in-memory MTT structures with current execution. `MFENCE.SPA` in this case,
+applies only to the memory tracking table data structures controlled by the
+CSR `mttp`. Executing a `MFENCE.SPA` guarantees that any previous stores already
+visible to the current hart are ordered before all implicit reads by that hart
+done for the `MTT` for non-M-mode instructions that follow the `MFENCE.SPA`.
+
+When `MINVAL.SPA` is used, access-permission cache synchronization may be
+batch optimized via the use of the sequence `SFENCE.W.INVAL`, `MINVAL.SPA` and
+`SFENCE.INVAL.IR`.
+
+[NOTE]
+====
+MTT lookups that began while `mttp` was active are not required to complete or
+terminate when `mttp` is no longer active, unless a `MFENCE.SPA` instruction
+matches the `SDID` (and optionally, `PADDR`) is executed. The `MFENCE.SPA`
+instruction must be used to ensure that updates to the `MTT` data structures are
+observed by subsequent implicit reads to those structures by a hart.
+====
+
+If `mttp.MODE` is changed for a given SDID, a `MFENCE.SPA` with rs1=x0 and rs2
+set either to x0 or the given SDID, must be executed to order subsequent PA
+access checks with the `MODE` change, even if the old or new `MODE` is `Bare`.
