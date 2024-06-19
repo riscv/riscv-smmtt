@@ -109,12 +109,12 @@ Implementations are not required to support all defined `MODE` settings when
 Instead, the fields of `mttp` are `WARL` in the normal way, when so indicated.
 
 The `MTTPPN` refers to an `MTTL3` table or an `MTTL2` table based on physical
-address width (`PAW`). For 56 \<= `PAW` < 46, `MTTL3` table must be of size
+address width (`PAW`). For 56 >= `PAW` > 46, `MTTL3` table must be of size
 `2^(PAW-43)` bytes and naturally aligned to that sized byte boundary. For 46
-\<= `PAW` < 32 the `MTTL2` table must be of size 2^(`PAW`-23) or 2^(`PAW`-22)
-bytes (depending on the Smmtt `MODE` selected) and must be naturally aligned to
-that sized byte boundary. In these modes, the lowest two bits of the physical
-page number (`MTTPPN`) in `mttp` always read as zeros.
+>= `PAW` > 32 the `MTTL2` table must be of size 2^(`PAW`-23) bytes for `Smmtt46`
+and `Smmtt34`, 2^(`PAW`-22) bytes for `Smmtt46rw` and `Smmtt34rw`, and must be
+naturally aligned to that sized byte boundary. In these modes, the lowest two
+bits of the physical page number (`MTTPPN`) in `mttp` always read as zeros.
 
 The number of `SDID` bits is `UNSPECIFIED` and may be zero. The number of
 implemented `SDID` bits, termed `SDIDLEN`, may be determined by writing one to
