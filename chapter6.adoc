@@ -47,7 +47,7 @@ IO devices can initiate DMA transactions utilizing IO Virtual Addresses (IOVA).
 Notably, an IOVA could be in the form of a Virtual Address (VA), Guest Virtual
 Address (GVA), or Guest Physical Address (GPA). The configuration and
 interfacing of the I/O MTT Checker with respect to the IO Bridge is graphically
-represented in the diagram <<fig:IOMTTCHK>>.
+represented in <<io-mtt-checker>>.
 
 [caption="Figure {counter:image}: ", reftext="Figure {image}"]
 [title= "I/O MTT checker placement", id=io-mtt-checker]
