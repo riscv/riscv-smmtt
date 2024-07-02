@@ -47,8 +47,8 @@ by virtualizing hart, guest physical memory and input/output (IO) resources.
 
 | MTT | Memory Tracking Table (MTT).
 
-| Relying party | An entity that An entity that uses the attestation process
-to assesses the trustworthiness of an attester.
+| Relying party | An entity that uses the attestation process
+to assess the trustworthiness of an attester.
 
 | Supervisor Domain (SD) | A RISC-V privileged architecture extension defined in
 this specification, to support isolation across more than one supervisor
@@ -67,7 +67,7 @@ execution against a defined adversary model. In a system with separate
 processing elements within a package on a socket, the TCB boundary is the
 package. In a multi-socket system the Hardware TCB extends across the
 socket-to-socket interface, and is managed as one system TCB. The software TCB
-may also extends across multiple sockets.
+may also extend across multiple sockets.
 
 | TEE | Trusted execution environment (TEE) is a set of hardware and software
 mechanisms that allow creating attestable and isolated execution environment.
