@@ -4,7 +4,7 @@
 
 === Smmtt[34, 46, 56]rw
 
-The `MTTPPN` rooted structure for the MTT is shown below. The structure
+The `PPN` rooted structure for the MTT is shown below. The structure
 below shows a 56 bit physical address lookup; for lower physical address
 widths e.g. 46 bits, the `MTTL3` table is not applicable. In this mode of the
 Smmtt[34, 46, 56]rw, each page is associated with a read and a write access
@@ -125,10 +125,10 @@ domain
 
 === Smmtt[34, 46, 56]
 
-The MTTPPN rooted structure for the MTT is shown below. The structure
+The PPN rooted structure for the MTT is shown below. The structure
 below shows a 56 bit physical address lookup; for lower physical address
 widths e.g. 46 bits, the L3 table is not applicable. In this mode of the
-SmmttX, each page is associated with an access allowed/disallowed
+Smmtt[34, 46, 56], each page is associated with an access allowed/disallowed
 permission (1 bit) to allow for efficient caching.
 
 [caption="Figure {counter:image}: ", reftext="Figure {image}"]

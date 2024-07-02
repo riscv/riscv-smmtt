@@ -11,7 +11,7 @@ associated with the supervisor domain.
 The `mttp` register is an `XLEN`-bit read/write register, formatted as shown in
 <<sdid-32>> for `XLEN=32` and <<sdid-64>> for `XLEN=64`, which controls
 physical address protection for supervisor domains. This register holds the
-physical page number (`MTTPPN`) of the root page of the memory tracking table
+physical page number (`PPN`) of the root page of the memory tracking table
 (`MTT`), a supervisor domain identifier (`SDID`), which facilitates address
 protection fences on a per-supervisor-domain basis; and the `MODE` field, which
 selects the address protection scheme (MTT Mode to be enforced) for physical
@@ -52,7 +52,7 @@ an illegal instruction exception.
 `MODE=Bare`, supervisor physical addresses have no MTT-based protection across
 supervisor domains beyond the physical memory protection scheme described in
 Section 3.7 of the RISC-V privileged architecture specification cite:[ISA]. In
-this case, the remaining fields (`SDID`, `MTTPPN`) in `mttp` must be set to
+this case, the remaining fields (`SDID`, `PPN`) in `mttp` must be set to
 zeros, else generate a fault. When `XLEN=32`, the other valid settings for
 `MODE` are `Smmtt34` and `Smmtt34rw`, to support allow/disallow and read-write
 access permissions for 34-bit system physical addresses.
@@ -122,7 +122,7 @@ every bit position in the `SDID` field, then reading back the value in `mttp`
 to see which bit positions in the `SDID` field hold a one. The
 least-significant bits of `SDID` are implemented first: that is, if `SDIDLEN` >
 0, `SDID`[`SDIDLEN`-1:0] is writable. The maximal value of `SDIDLEN`, termed
-`SDIDMAX`, is 8 for `Smmtt34[rw]` or 16 for `Smmtt46[rw]`, `Smmtt56[rw]`.
+`SDIDMAX`, is 6 for `Smmtt34[rw]`, `Smmtt46[rw]`, and `Smmtt56[rw]`.
 
 The `mttp` register is considered active for the purposes of the physical
 address protection algorithm unless the effective privilege mode is `M`.
@@ -130,7 +130,7 @@ address protection algorithm unless the effective privilege mode is `M`.
 Note that writing `mttp` does not imply any ordering constraints between
 `S-mode` and `G-stage` page-table updates and subsequent address translations.
 If a supervisor domain's `MTT` structure has been modified, or if a `SDID` is
-reused, it may be necessary to execute a `FENCE.MTT` instruction before or
+reused, it may be necessary to execute a `MFENCE.SPA` instruction before or
 after writing `mttp`.
 
 === Machine supervisor domain configuration (`msdcfg`)
@@ -183,15 +183,15 @@ respective sections in this specification.
   {bits:  5, name: 'rd (0)'},
   {bits:  3, name: 'func3 (PRIV)'},
   {bits:  5, name: 'rs1 (PADDR)'},
-  {bits:  5, name: 'rs2 (SDID'},
+  {bits:  5, name: 'rs2 (SDID)'},
   {bits:  7, name: 'func7 (MFENCE.SPA)'},
 ], config:{lanes: 1, hspace:1024}}
 ....
 
 The `MFENCE.SPA` fence instruction is used to synchronize updates to supervisor
 domain access-permissions with current execution.
-`MFENCE.SPA` is only valid in M-mode. If operand rs1 is not equal to x0, it
-specifies a single physical address, and if rs2 is not equal to 0, it specifies
+`MFENCE.SPA` is only valid in M-mode. If operand rs1≠x0, it
+specifies a single physical address, and if rs2≠x0, it specifies
 a single SDID. Executing a `MFENCE.SPA` guarantees that any previous stores
 already visible to the current hart are ordered before all implicit reads by
 that hart done for supervisor domain access-permission structures for
@@ -226,7 +226,7 @@ invalidation of physical memory access-permission caches.
   {bits:  5, name: 'rd (0)'},
   {bits:  3, name: 'func3 (PRIV)'},
   {bits:  5, name: 'rs1 (PADDR)'},
-  {bits:  5, name: 'rs2 (SDID'},
+  {bits:  5, name: 'rs2 (SDID)'},
   {bits:  7, name: 'func7 (MINVAL.SPA)'},
 ], config:{lanes: 1, hspace:1024}}
 ....
