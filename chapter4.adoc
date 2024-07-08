@@ -221,9 +221,54 @@ follows:
 ], config:{lanes: 1, hspace:1024}}
 ....
 
+=== MTT access permissions lookup process
+
+MTT access permissions for a physical address PA in the context of a
+supervisor domain is ascertained as follows:
+
+1. Let a be `mttp.ppn`x`PAGESIZE`, and let i = LEVELS, where for mode
+Smmtt[34][*], LEVELS = 2 and for Smmtt[46, 56][*rw*] LEVELS = 3; PAGESIZE is
+2^12; MTT NON_LEAF_PTE_SIZE = 8 bytes. The `mttp` register must be active,
+i.e., the effective privilege mode must be HS-mode, S-mode or U-mode.
+
+2. Let mpte be the value of the MTT PTE at address a + pa.ppn[i] x
+NON_LEAF_PTE_SIZE. If accessing pte violates a PMA or PMP check, raise
+an access-fault exception corresponding to the original access type.
+
+3. If any bits or encodings that are reserved for future standard use are
+set within mpte, stop and raise a page-fault exception corresponding to
+the original access type.
+
+4. Otherwise, the mpte is valid. If (i=0) or (i=1 and mpte.type is not
+`MTT_L1_DIR`), go to step 5. Otherwise, the mpte is a pointer to the next
+level of the MTT. Let i = i - 1. If i < 0, stop and raise a page-fault
+exception corresponding to the original access type. Otherwise, let
+a = mpte.ppn x PAGESIZE and go to step 2. Note that when mpte.type =
+MTT_L1_DIR, the mpte.ppn field is the value of the mpte.info field.
+
+5. A leaf mpte has been found. Determine if the requested physical memory
+access is allowed per the access permission encoding, AND'ing the MTT
+permissions with the cumulative read, write, execute permissions derived from
+1st-stage and G-stage translation (if active). If access is not permitted,
+stop and raise a page-fault exception corresponding to the original access
+type. If i=1, the mpte.type field (for 1GB pages) and the mpte.info field
+(for 2MB pages) holds the access permissions for superpages(also shown in
+Tables 3 and 4). If i=0, the mpte contains 2 bit access permission encodings
+(or 4 bit for mode `Smmtt[*]rw`) for 4KB pages. The 2/4-bit access permission
+encoding for the PA is held in the ppn referenced by mpte.info and
+indexed via pa.ppn[i]. For modes `Smmtt[*]`, access allowed implies read,
+write and execute. For modes `Smmtt[*]rw`, read access implies read and
+execute, and read-write permission implies read and write (but no execute).
+
+6. The access is allowed per the MTT lookup.
+
+All implicit accesses to the non-leaf memory tracking table data structures in this
+algorithm are performed using width NON_LEAF_PTE_SIZE.
+
 === Access Enforcement and Fault Reporting
 
-As shown in <<mtt-lookup>>, MTT lookup composes with, but does not require,
+As shown in <<mtt-lookup>>, and described in the MTT lookup process,
+MTT lookup composes with, but does not require,
 page-based virtual memory (MMU, IOMMU) and physical memory protection mechanisms
 (PMP, Smepmp, IOPMP). When paging is enabled, instructions that access virtual
 memory may result in multiple physical-memory accesses, including (implicit
