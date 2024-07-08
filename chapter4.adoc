@@ -74,7 +74,6 @@ _The 1G range of address is allowed (read only) for the domain._
 The `INFO` field must be 0.
 When configuring 1G ranges, RDSM ensures that 32 `MTTL2` entries, each
 corresponding to 32M of address space, have identical `TYPE` field values.
-The INFO field must be 0.
 
 |`1G_allow_rw` a|
 _The 1G range of address is allowed (read/write) for the domain._
