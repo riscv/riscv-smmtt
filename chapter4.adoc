@@ -225,22 +225,22 @@ follows:
 MTT access permissions for a physical address PA in the context of a
 supervisor domain is ascertained as follows:
 
-1. Let a be `mttp.ppn`x`PAGESIZE`, and let i = LEVELS, where for mode
-Smmtt[34][*], LEVELS = 2 and for Smmtt[46, 56][*rw*] LEVELS = 3; PAGESIZE is
+1. Let _a_ be `mttp.ppn`x`PAGESIZE`, and let _i_ = LEVELS, where for mode
+Smmtt34, LEVELS = 2 and for Smmtt[46 | 56][rw] LEVELS = 3; PAGESIZE is
 2^12; MTT NON_LEAF_PTE_SIZE = 8 bytes. The `mttp` register must be active,
-i.e., the effective privilege mode must be HS-mode, S-mode or U-mode.
+i.e., the effective privilege mode must be not-M-mode.
 
 2. Let mpte be the value of the MTT PTE at address a + pa.ppn[i] x
 NON_LEAF_PTE_SIZE. If accessing pte violates a PMA or PMP check, raise
 an access-fault exception corresponding to the original access type.
 
 3. If any bits or encodings that are reserved for future standard use are
-set within mpte, stop and raise a page-fault exception corresponding to
+set within _mpte_, stop and raise an access-fault exception corresponding to
 the original access type.
 
-4. Otherwise, the mpte is valid. If (i=0) or (i=1 and mpte.type is not
-`MTT_L1_DIR`), go to step 5. Otherwise, the mpte is a pointer to the next
-level of the MTT. Let i = i - 1. If i < 0, stop and raise a page-fault
+4. Otherwise, the _mpte_ is valid. If (_i_=0) or (_i_=1 and _mpte.type_ is not
+`MTT_L1_DIR`), go to step 5. Otherwise, the _mpte_ is a pointer to the next
+level of the `MTT`. Let _i_ = _i_ - 1. If _i_ < 0, stop and raise an access-fault
 exception corresponding to the original access type. Otherwise, let
 a = mpte.ppn x PAGESIZE and go to step 2. Note that when mpte.type =
 MTT_L1_DIR, the mpte.ppn field is the value of the mpte.info field.
