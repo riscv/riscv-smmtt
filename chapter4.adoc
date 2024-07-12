@@ -2,7 +2,8 @@
 [[Smmtt]]
 == `Smmtt`: Hart MTT Extension
 
-=== Smmtt[34, 46, 56]rw
+[[Smmtt-rw]]
+=== Smmtt[34 | 46 | 56]rw
 
 The `PPN` rooted structure for the MTT is shown below. The structure
 below shows a 56 bit physical address lookup; for lower physical address
@@ -59,6 +60,7 @@ for the supervisor domain
 The `INFO` field depends on the `TYPE` field and is formatted as per the
 following table:
 
+[[Smmtt-rw-l2-encoding]]
 .`MTTL2` Entry Type for Smmtt
 [width="100%",cols="25%,75%",options="header",]
 |===
@@ -122,12 +124,13 @@ domain
 ], config:{lanes: 1, hspace:1024}}
 ....
 
-=== Smmtt[34, 46, 56]
+[[Smmtt-ad]]
+=== Smmtt[34 | 46 | 56]
 
 The PPN rooted structure for the MTT is shown below. The structure
 below shows a 56 bit physical address lookup; for lower physical address
 widths e.g. 46 bits, the L3 table is not applicable. In this mode of the
-Smmtt[34, 46, 56], each page is associated with an access allowed/disallowed
+Smmtt[34 | 46 | 56], each page is associated with an access allowed/disallowed
 permission (1 bit) to allow for efficient caching.
 
 [caption="Figure {counter:image}: ", reftext="Figure {image}"]
@@ -167,7 +170,8 @@ The `TYPE` field determines the interpretation of the `MTTL2` entry. The
 
 The `INFO` field depends on the `TYPE` field and is formatted as per the table:
 
-.`MTTL2` Entry for Smmtt[34, 46, 56]
+[[Smmtt-ad-l2-encoding]]
+.`MTTL2` Entry for Smmtt[34 | 46 | 56]
 [width="100%",cols="25%,75%",options="header",]
 |===
 |*`MTTL2` Entry Type* |*Description, `INFO` and `TYPE` field encoding*
@@ -226,8 +230,8 @@ MTT access-permissions for a physical address PA in the context of a
 supervisor domain is ascertained as follows:
 
 1. Let _a_ be `mttp.ppn` x _PAGESIZE_, and let _i_ = LEVELS, where for mode
-`Smmtt34`, _LEVELS_ = 2 and for `Smmtt[46 | 56][rw]` LEVELS = 3; _PAGESIZE_ is
-2^12; MTT _NON_LEAF_PTE_SIZE_ = 8 bytes. The `mttp` register must be active,
+`Smmtt34[rw]`, _LEVELS_ = 2 and for `Smmtt[46 | 56][rw]` LEVELS = 3; _PAGESIZE_
+is 2^12; MTT _NON_LEAF_PTE_SIZE_ = 8 bytes. The `mttp` register must be active,
 i.e., the effective privilege mode must be not-M-mode.
 
 2. Let _mpte_ be the value of the `MTT` table entry at address _a_ + _pa.pn[i]_
@@ -246,30 +250,40 @@ _a_ = _mpte.ppn_ x _PAGESIZE_ and go to step 2. Note that when _mpte.type_ =
 `MTT_L1_DIR`, the _mpte.ppn_ field is the value of the _mpte.info_ field.
 
 5. A leaf _mpte_ has been found. If any bits or encodings within _mpte.type_
-and _mpte.info_ that are reserved for future standard use, per Table 3 and 4,
-are set within _mpte_, stop and raise an access-fault exception corresponding
-to the access type.
+and _mpte.info_ that are reserved for future standard use, per
+<<Smmtt-rw-l2-encoding>> and <<Smmtt-ad-l2-encoding>>, are set within _mpte_,
+stop and raise an access-fault exception corresponding to the access type.
 
 6. The _mpte_ is a valid leaf _mpte_. Fetch the access-permissions for the
 physical address per the steps described below:
 
 * if _i_=1, and the _mpte.type_ field specifies it holds the access-permission
-encoding for 1GB pages per Table 3 and 4 - go to step 7, else
-* the _mpte.type_ field specifies it holds the access-permission encoding for
-2MB pages and the _mpte.info_ field holds the access-permission encoding per
-Tables 3 and 4 - go to step 7, else
-* If _i_=0, the _mpte_ contains a 2-bit entry that holds the access-permission
-encodings (or 4-bit entry for mode `Smmtt[*]rw`) for 4KB pages. The 2/4-bit
-access-permission encoding for the PA is held in the ppn referenced by
-_mpte.info_ and indexed via _pa.pn[i]_. The encodings are specified in Sections
-4.1 and 4.2 for the `Smmtt[*]` and `Smmtt[*][rw]` modes.
+encoding for 1GB pages per <<Smmtt-rw-l2-encoding>> and <<Smmtt-ad-l2-encoding>>
+; go to step 7, else
+
+* if _i_=1, and the _mpte.type_ field specifies it holds the access-permission
+encoding for 2MB pages; the _mpte.info_ field contains the access-permission
+encoding per <<Smmtt-rw-l2-encoding>> and <<Smmtt-ad-l2-encoding>>; go to
+step 7, else
+
+* If _i_=0, the _mpte_ contains a 2-bit entry for mode `Smmtt[34 | 46 | 56]`
+that holds the access-permission encodings (or 4-bit entry for mode
+`Smmtt[34 | 46 | 56]rw`) for 4KB pages. The 2/4-bit access-permission encoding
+for the PA is held in the ppn referenced by _mpte.info_ and indexed via
+_pa.pn[i]_. The encodings are specified in <<Smmtt-rw>> and <<Smmtt-ad>> for the
+`Smmtt[34 | 46 | 56]` and `Smmtt[34 | 46 | 56]rw` modes respectively.
 
 7. Determine if the requested physical memory access is allowed per the
-access-permissions. If access is not permitted, stop and raise a
-page-fault exception corresponding to the original access type. For modes
-`Smmtt[*]`, access-allowed implies read, write and execute permissions. For
-modes `Smmtt[*]rw`, read access implies read and execute, and read-write
-permission implies read and write (but no execute).
+access-permissions. If access is not permitted, stop and raise a page-fault
+exception corresponding to the original access type. For modes
+`Smmtt[34 | 46 | 56]`, access-allowed implies read, write and execute
+permissions. For modes `Smmtt[34 | 46 | 56]rw`, read access implies read and
+execute, and read-write permission implies read and write (but no execute).
+
+8. The access is allowed per the `MTT` lookup.
+
+All implicit accesses to the non-leaf memory tracking table data structures in
+this algorithm are performed using width _NON_LEAF_PTE_SIZE_.
 
 [NOTE]
 ====
@@ -280,11 +294,6 @@ AND'ed to accumulate the effective read, write, and execute permissions. Thus,
 MTT access-permissions can only further restrict access, and never grant
 permission denied by 1st-stage or G-stage translations.
 ====
-
-8. The access is allowed per the `MTT` lookup.
-
-All implicit accesses to the non-leaf memory tracking table data structures in
-this algorithm are performed using width _NON_LEAF_PTE_SIZE_.
 
 === Access Enforcement and Fault Reporting
 
