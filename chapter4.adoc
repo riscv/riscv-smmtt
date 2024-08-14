@@ -7,13 +7,12 @@
 
 The `PPN` rooted structure for the MTT is shown below. The structure
 below shows a 56 bit physical address lookup; for lower physical address
-widths e.g. 46 bits, the `MTTL3` table is not applicable. In this mode of the
-Smmtt[34, 46, 56]rw, each page is associated with a read and a write access
-permission (2 bits). <<mtt-map-rw>> shows the Physical address (PA) being
-used to index into the `MTT` structure in memory to lookup access
-permissions for the supervisor domain specified in the `MTTL1` entry.
-Intermediate `MTTL3` and `MTTL2` entries are used to allow this structure to
-be sparsely populated.
+widths e.g. 46 bits, the `MTTL3` table is not applicable. Each
+physical-addressable page is associated with an access-permission encoding.
+<<mtt-map-rw>> shows the Physical address (PA) being used to index into the
+`MTT` structure in memory to lookup access permissions for the supervisor domain
+specified in the `MTTL1` entry. Intermediate `MTTL3` and `MTTL2` entries are
+used to allow this structure to be sparsely populated.
 
 [caption="Figure {counter:image}: ", reftext="Figure {image}"]
 [title= "`MTT` Structures (overview)", id=mtt-map-rw]
@@ -47,14 +46,16 @@ The `ZERO` field must always be 0.
 The `TYPE` field determines the interpretation of the `MTTL2` entry. The
 `TYPE` field encoding is as follows:
 
-* 0000b - `1G_disallow` - read and write access is not allowed for the 1G
-range for this supervisor domain
-* 0001b - `1G_allow_r` - read access for the 1G range is allowed for the
-supervisor domain
-* 0011b - `1G_allow_rw` - read and write access for the 1G range is allowed
-for the supervisor domain
-* 0100b - `MTT_L1_DIR` - The 32M range is composed of 8192x4K pages
-* 0111b - `2M_PAGES` - The 32M range is composed of 16x2M pages
+* 0000b - `1G_disallow` - read, write or execute access is not allowed for the
+           1G range for the supervisor domain.
+* 0001b - `1G_allow_rx` - read and execute access for the 1G range is allowed
+          for the supervisor domain.
+* 0010b - `1G_allow_rw` - read and write access for the 1G range is allowed
+          for the supervisor domain
+* 0011b - `1G_allow_rwx` - read, write and execute access for the 1G range is
+          allowed for the supervisor domain
+* 0100b - `MTT_L1_DIR` - The 32M range is composed of 8192 x 4K pages
+* 0111b - `2M_PAGES` - The 32M range is composed of 16 x 2M pages
 * All other encodings are `reserved` and cause an access violation
 
 The `INFO` field depends on the `TYPE` field and is formatted as per the
@@ -66,37 +67,43 @@ following table:
 |===
 |*`MTTL2` Entry `TYPE`* |*Description, `INFO` and `TYPE` field encoding*
 |`1G_disallow` a|
-_The 1G range of address is not allowed for the domain._
+_read, write or execute is not allowed to this 1G address range for the domain._
 The `INFO` field must be 0.
-When configuring 1G ranges, RDSM ensures that 32 `MTTL2` entries, each
-corresponding to 32M of address space, have identical `TYPE` field values.
+When configuring 1G ranges, RDSM ensures that 16 `MTTL2` entries, each
+corresponding to 64M of address space, have identical `TYPE` field values.
 
-|`1G_allow_r` a|
-_The 1G range of address is allowed (read only) for the domain._
+|`1G_allow_rx` a|
+_read and execute (but no write) are allowed to this 1G address range for the
+domain._
 The `INFO` field must be 0.
 When configuring 1G ranges, RDSM ensures that 32 `MTTL2` entries, each
 corresponding to 32M of address space, have identical `TYPE` field values.
 
 |`1G_allow_rw` a|
-_The 1G range of address is allowed (read/write) for the domain._
+_read and write (but no execute) are allowed to this 1G address range for the
+domain._
+The `INFO` field must be 0.
+When configuring 1G ranges, RDSM ensures that 32 `MTTL2` entries, each
+corresponding to 32M of address space, have identical `TYPE` field values.
+
+|`1G_allow_rwx` a|
+_read, write and execute are allowed to this 1G address range for the domain._
 The `INFO` field must be 0.
 When configuring 1G ranges, RDSM ensures that 32 `MTTL2` entries, each
 corresponding to 32M of address space, have identical `TYPE` field values.
 
 |`MTT_L1_DIR` a|
 The `INFO` field provides the PPN of the `MTTL1` page.
-Entries of the `MTTL1` page hold a 4-bit `PERM` (permissions) field to indicate
-the access for the supervisor domain (described in the `MTTL1` entry
-<<mtt-l1-rw>>).
+Entries of the `MTTL1` page hold a 4-bit `PERM` field to indicate the access
+for the supervisor domain (described in the `MTTL1` entry <<mtt-l1-rw>>).
 
 |`2M_PAGES` a|
 _The 32M range of address space is partitioned into 2M pages where each
 page has read/write access allowed/not._
 The `INFO` field 31:0 holds 2 `PERM` bits per 2M address range to indicate
-`access_disallowed` (00b), `read_allowed` (01b), `read_write_allowed` (11b);
-(10b is `reserved`). Bits 32:43 are reserved and must be zero.
+`rwx_disallowed` (00b), `rx_allowed` (01b), `rw_allowed` (10b), `rwx_allowed`
+(11b). Bits 32:43 are reserved and must be zero.
 |===
-
 
 `MTTL1` table is populated if protection granularity of the 4KiB page is
 desired for the supervisor domain.
@@ -107,11 +114,25 @@ in the page and bits 15:12 are used to select a 4 bit `PERM` field in those 64
 bits. Thus, there are 4 `PERM` bits for each 4 KiB page. The encoding of `PERM`
 is as follows:
 
-* 0000b - the 4K page specifies access is *not allowed* for the domain
-* 0001b - the 4K page specifies *read* access is allowed for the domain
-* 0011b - the 4K page specifies *read* and *write* access is allowed for the
+[[Smmtt-rw-l1-encoding]]
+.`MTTL1` Entry permission encoding
+[width="100%",cols="25%,75%",options="header",]
+|===
+|*`MTTL1` Access-permission encoding* |*Description*
+|0000b a|
+the 4K page specifies access is *not allowed* for the domain
+|0001b a|
+the 4K page specifies *read* and *execute* (but *no write*) access is allowed
+for the domain
+|0010b a|
+the 4K page specifies *read* and *write* (but *no execute*) access is allowed
+for the domain
+|0011b a|
+the 4K page specifies *read*, *write* and *execute* access is allowed for the
 domain
-* Remaining encodings are *reserved* and cause an access violation.
+|Remaining a|
+Remaining encodings are *reserved* and cause an access violation.
+|===
 
 [caption="Figure {counter:image}: ", reftext="Figure {image}"]
 [title="`MTTL1` entry", id=mtt-l1-rw]
@@ -124,113 +145,13 @@ domain
 ], config:{lanes: 1, hspace:1024}}
 ....
 
-[[Smmtt-ad]]
-=== Smmtt[34 | 46 | 56]
-
-The PPN rooted structure for the MTT is shown below. The structure
-below shows a 56 bit physical address lookup; for lower physical address
-widths e.g. 46 bits, the L3 table is not applicable. In this mode of the
-Smmtt[34 | 46 | 56], each page is associated with an access allowed/disallowed
-permission (1 bit) to allow for efficient caching.
-
-[caption="Figure {counter:image}: ", reftext="Figure {image}"]
-[title= "MTT Structures (overview)", id=mtt-map]
-image::images/fig4.png[]
-
-[caption="Figure {counter:image}: ", reftext="Figure {image}"]
-[title="`MTTL3` entry"]
-[wavedrom, ,svg]
-....
-{reg: [
-  {bits:  44, name: 'MTTL2 PPN'},
-  {bits:  20, name: 'ZERO'},
-], config:{lanes: 1, hspace:1024}}
-....
-
-[caption="Figure {counter:image}: ", reftext="Figure {image}"]
-[title="`MTTL2` entry"]
-[wavedrom, ,svg]
-....
-{reg: [
-  {bits:  44, name: 'INFO'},
-  {bits:  2, name: 'TYPE'},
-  {bits:  18, name: 'ZERO'},
-], config:{lanes: 1, hspace:1024}}
-....
-
-The `ZERO` field must always be 0.
-
-The `TYPE` field determines the interpretation of the `MTTL2` entry. The
-`TYPE` field encoding is as follows:
-
-* 00b - `1G_disallow` - access to the 1G range is disallowed
-* 01b - `1G_allow` - access to the 1G range is allowed
-* 10b - `MTT_L1_DIR` - The 64M range is composed of 16384x4K pages
-* 11b - `2M_PAGES` - The 64M range is composed of 32x2M pages
-
-The `INFO` field depends on the `TYPE` field and is formatted as per the table:
-
-[[Smmtt-ad-l2-encoding]]
-.`MTTL2` Entry for Smmtt[34 | 46 | 56]
-[width="100%",cols="25%,75%",options="header",]
-|===
-|*`MTTL2` Entry Type* |*Description, `INFO` and `TYPE` field encoding*
-|`1G_allow` a|
-_The 1G range of address is allowed for the domain._
-The `INFO` field must be 0.
-When configuring 1G ranges, RDSM ensures that 16 `MTTL2` entries, each
-corresponding to 64M of address space, have identical `TYPE` field values.
-
-|`1G_disallow` a|
-_The 1G range of address is not allowed for the domain._
-The `INFO` field must be 0.
-When configuring 1G ranges, RDSM ensures that 16 `MTTL2` entries, each
-corresponding to 64M of address space, have identical `TYPE` field values.
-
-|`MTT_L1_DIR` a|
-The `INFO` field provides the PPN of the `MTTL1` page.
-Entries of the `MTTL1` page hold a 2-bit `PERM` field to indicate the access
-for the supervisor domain (described in the `MTTL1` entry <<mtt-l1>>).
-
-|`2M_PAGES` a|
-_The 64M range of address space is partitioned into 2M pages where each
-page has access allowed/not._
-The `INFO` field bits 31:0 holds 1 bit per 2M address range to indicate
-access disallowed(0b) or allowed (1b). `INFO` field bits 43:32 are
-reserved (must be zero).
-|===
-
-`MTTL1` table is populated if 4KiB page confidential pages are required
-for the supervisor domain.
-
-`MTTL1` entry is indexed using PA[25:12] and each entry is a 2-bit `PERM` field
-in the referenced page. The bits 25:16 are used to select a 64-bit field
-in the page and bits 16:12 are used to select a 2 bit `PERM` field in those 64
-bits. Thus, there are 2 `PERM` bits for each 4 KiB page. The encoding is as
-follows:
-
-* 00b - the 4K page specifies access is *not allowed* for the domain
-* 01b - the 4K page specifies access is *allowed* for the domain
-* 1xb - *reserved* (access causes access violation).
-
-[caption="Figure {counter:image}: ", reftext="Figure {image}"]
-[title="`MTTL1` entry", id=mtt-l1]
-[wavedrom, ,svg]
-....
-{reg: [
-  {bits:  2, name: 'PERM'},
-  {bits:  60, name: '...'},
-  {bits:  2, name: 'PERM'},
-], config:{lanes: 1, hspace:1024}}
-....
-
 === MTT access permissions lookup process
 
 MTT access-permissions for a physical address PA in the context of a
 supervisor domain is ascertained as follows:
 
 1. Let _a_ be `mttp.ppn` x PAGESIZE, and let _i_ = LEVELS, where for mode
-`Smmtt34[rw]`, LEVELS = 2 and for `Smmtt[46 | 56][rw]`, LEVELS = 3; PAGESIZE
+`Smmtt34`, LEVELS = 2 and for `Smmtt[46 | 56]`, LEVELS = 3; PAGESIZE
 is 2^12^; MTT NON_LEAF_PTE_SIZE = 8 bytes. The `mttp` register must be active,
 i.e., the effective privilege mode must be not-M-mode.
 
@@ -251,34 +172,28 @@ _a_ = _mpte.ppn_ x PAGESIZE and go to step 2. Note that when _mpte.type_ =
 
 5. A leaf _mpte_ has been found. If any bits or encodings within _mpte.type_
 and _mpte.info_ that are reserved for future standard use, per
-<<Smmtt-rw-l2-encoding>> and <<Smmtt-ad-l2-encoding>>, are set within _mpte_,
-stop and raise an access-fault exception corresponding to the access type.
+<<Smmtt-rw-l2-encoding>>, are set within _mpte_, stop and raise an access-fault
+exception corresponding to the access type.
 
 6. The _mpte_ is a valid leaf _mpte_. Fetch the access-permissions for the
 physical address per the steps described below:
 
-* if _i_=1, and the _mpte.type_ field specifies the access-permission
-encoding for 1GB pages per <<Smmtt-rw-l2-encoding>> and <<Smmtt-ad-l2-encoding>>
-; go to step 7, else
+* if _i_=1, and the _mpte.type_ field directly specifies the access-permissions
+for 1GB page regions (via 32 MTTL2 entries with identical _mpte.type_ values -
+see <<Smmtt-rw-l2-encoding>>); go to step 7, else
 
-* if _i_=1, and the _mpte.type_ field specifies the access-permission
-encoding for 2MB pages; the _mpte.info_ field contains the access-permission
-encoding per <<Smmtt-rw-l2-encoding>> and <<Smmtt-ad-l2-encoding>>; go to
-step 7, else
+* if _i_=1, and the _mpte.type_ field value is `2M_PAGES`, then the
+_mpte.info_[31:0] field contains 16 entries of 2-bit access-permissions encoding
+for 16 2M address regions (see <<Smmtt-rw-l2-encoding>>); go to step 7, else
 
-* If _i_=0, the _mpte_ contains a 2-bit entry for mode `Smmtt[34 | 46 | 56]`
-that holds the access-permission encodings (or 4-bit entry for mode
-`Smmtt[34 | 46 | 56]rw`) for 4KB pages. The 2/4-bit access-permission encoding
-for the _pa_ is held in the ppn referenced by _mpte.info_ and indexed via
-_pa.pn[i]_. The encodings are specified in <<Smmtt-rw>> and <<Smmtt-ad>> for the
-`Smmtt[34 | 46 | 56]` and `Smmtt[34 | 46 | 56]rw` modes respectively.
+* If _i_=0, the _mpte_ contains a 4-bit entry that holds the access-permission
+encodings for 4KB pages. The 4-bit access-permission encoding for the _pa_ is
+held in _mpte_ and indexed via _pa.pn[i]_. The encodings are specified in
+<<Smmtt-rw-l1-encoding>> table.
 
 7. Determine if the requested physical memory access is allowed per the
 access-permissions. If access is not permitted, stop and raise a page-fault
-exception corresponding to the original access type. For modes
-`Smmtt[34 | 46 | 56]`, access-allowed implies read, write and execute
-permissions. For modes `Smmtt[34 | 46 | 56]rw`, read access implies read and
-execute, and read-write permission implies read and write (but no execute).
+exception corresponding to the original access type.
 
 8. The access is allowed per the `MTT` lookup.
 
@@ -342,7 +257,7 @@ in-memory MTT structures with current execution. `MFENCE.SPA` in this case,
 applies only to the memory tracking table data structures controlled by the
 CSR `mttp`. Executing a `MFENCE.SPA` guarantees that any previous stores already
 visible to the current hart are ordered before all implicit reads by that hart
-done for the `MTT` for non-M-mode instructions that follow the `MFENCE.SPA`.
+done for the `MTT` for non- `M-mode` instructions that follow the `MFENCE.SPA`.
 
 When `MINVAL.SPA` is used, access-permission cache synchronization may be
 batch optimized via the use of the sequence `SFENCE.W.INVAL`, `MINVAL.SPA` and
