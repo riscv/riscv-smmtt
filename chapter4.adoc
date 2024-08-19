@@ -9,7 +9,7 @@ The `PPN` rooted structure for the MTT is shown below. The structure
 below shows a 56 bit physical address lookup; for lower physical address
 widths e.g. 46 bits, the `MTTL3` table is not applicable. Each
 physical-addressable page is associated with an access-permission encoding.
-<<mtt-map-rw>> shows the Physical address (PA) being used to index into the
+<<mtt-map-rw>> shows the Supervisor Physical address (SPA) being used to index into the
 `MTT` structure in memory to lookup access permissions for the supervisor domain
 specified in the `MTTL1` entry. Intermediate `MTTL3` and `MTTL2` entries are
 used to allow this structure to be sparsely populated.
@@ -69,8 +69,8 @@ following table:
 |`1G_disallow` a|
 _read, write or execute is not allowed to this 1G address range for the domain._
 The `INFO` field must be 0.
-When configuring 1G ranges, RDSM ensures that 16 `MTTL2` entries, each
-corresponding to 64M of address space, have identical `TYPE` field values.
+When configuring 1G ranges, RDSM must ensure that 32 `MTTL2` entries, each
+corresponding to 32M of address space, have identical `TYPE` field values.
 
 |`1G_allow_rx` a|
 _read and execute (but no write) are allowed to this 1G address range for the
@@ -99,7 +99,7 @@ for the supervisor domain (described in the `MTTL1` entry <<mtt-l1-rw>>).
 
 |`2M_PAGES` a|
 _The 32M range of address space is partitioned into 2M pages where each
-page has read/write access allowed/not._
+page has read/write/execute access allowed/not._
 The `INFO` field 31:0 holds 2 `PERM` bits per 2M address range to indicate
 `rwx_disallowed` (00b), `rx_allowed` (01b), `rw_allowed` (10b), `rwx_allowed`
 (11b). Bits 32:43 are reserved and must be zero.
@@ -189,10 +189,10 @@ for 16 2M address regions (see <<Smmtt-rw-l2-encoding>>); go to step 7, else
 * If _i_=0, the _mpte_ contains a 4-bit entry that holds the access-permission
 encodings for 4KB pages. The 4-bit access-permission encoding for the _pa_ is
 held in _mpte_ and indexed via _pa.pn[i]_. The encodings are specified in
-<<Smmtt-rw-l1-encoding>> table.
+<<Smmtt-rw-l1-encoding>>.
 
 7. Determine if the requested physical memory access is allowed per the
-access-permissions. If access is not permitted, stop and raise a page-fault
+access-permissions. If access is not permitted, stop and raise an access-fault
 exception corresponding to the original access type.
 
 8. The access is allowed per the `MTT` lookup.
