@@ -3,25 +3,58 @@
 == `Smmtt`: Hart MTT Extension
 
 [[Smmtt-rw]]
-=== Smmtt[34 | 46 | 56]rw
+=== Smmtt[34 | 46 | 56]
 
-The `PPN` rooted structure for the MTT is shown below. The structure
-below shows a 56 bit physical address lookup; for lower physical address
-widths e.g. 46 bits, the `MTTL3` table is not applicable. Each
-physical-addressable page is associated with an access-permission encoding.
-<<mtt-map-rw>> shows the Supervisor Physical address (SPA) being used to index into the
-`MTT` structure in memory to lookup access permissions for the supervisor domain
-specified in the `MTTL1` entry. Intermediate `MTTL3` and `MTTL2` entries are
-used to allow this structure to be sparsely populated.
+The Supervisor Physical Address (SPA) for RV32 and RV64 is shown below.
+The MTT maps the SPA to read-write-execute access permissions.
 
 [caption="Figure {counter:image}: ", reftext="Figure {image}"]
-[title= "`MTT` Structures (overview)", id=mtt-map-rw]
+[title="RV32 Supervisor Physical Address", id=rv32-spa]
+[wavedrom, ,svg]
+....
+{reg: [
+  {bits:  12, name: 'page offset', attr: '12'},
+  {bits:  3,  name: 'pn[0]',       attr: '3' },
+  {bits:  9,  name: 'pn[1]',       attr: '9' },
+  {bits:  10, name: 'pn[2]',       attr: '10'},
+], config:{lanes: 1, hspace:1024}}
+....
+
+[caption="Figure {counter:image}: ", reftext="Figure {image}"]
+[title="RV64 Supervisor Physical Address", id=rv64-spa]
+[wavedrom, ,svg]
+....
+{reg: [
+  {bits:  12, name: 'page offset', attr: '12'},
+  {bits:  4,  name: 'pn[0]',       attr: '4' },
+  {bits:  9,  name: 'pn[1]',       attr: '9' },
+  {bits:  21, name: 'pn[2]',       attr: '21'},
+  {bits:  10, name: 'pn[3]',       attr: '10'},
+], config:{lanes: 1, hspace:1024}}
+....
+
+The `PPN` rooted structure for the MTT is shown below. <<mtt-map-rv64>>
+shows an RV64 supervisor physical address lookup; for lower physical
+address widths e.g. 34 or 46 bits, the `MTTL3` table is not applicable as shown
+in <<mtt-map-rv32>>. Each physical-addressable page is associated with an
+access-permission encoding. The Supervisor Physical address (SPA) is used to
+index into the `MTT` structure in memory to lookup access permissions for the
+supervisor domain specified in the `MTTL2` or `MTTL1` entries. Intermediate
+`MTTL3` and `MTTL2` non-leaf entries are used to allow this structure to be
+sparsely populated.
+
+[caption="Figure {counter:image}: ", reftext="Figure {image}"]
+[title= "`MTT` walk for RV64", id=mtt-map-rv64]
 image::images/fig3.png[]
 
-The following MTT L2/L3 entries accomodate a 56 bit PAW.
+[caption="Figure {counter:image}: ", reftext="Figure {image}"]
+[title= "`MTT` walk for RV32", id=mtt-map-rv32]
+image::images/fig3b.png[]
+
+The following MTT L3 entry accomodates a 56 bit PAW:
 
 [caption="Figure {counter:image}: ", reftext="Figure {image}"]
-[title="`MTTL3` entry"]
+[title="`MTTL3` entry (XLEN=64 only)"]
 [wavedrom, ,svg]
 ....
 {reg: [
@@ -30,14 +63,28 @@ The following MTT L2/L3 entries accomodate a 56 bit PAW.
 ], config:{lanes: 1, hspace:1024}}
 ....
 
+The following are the `MTTL2` entry by XLEN:
+
 [caption="Figure {counter:image}: ", reftext="Figure {image}"]
-[title="`MTTL2` entry"]
+[title="`MTTL2` entry (XLEN=64)"]
 [wavedrom, ,svg]
 ....
 {reg: [
   {bits:  44, name: 'INFO'},
   {bits:  4, name: 'TYPE'},
   {bits:  16, name: 'ZERO'},
+], config:{lanes: 1, hspace:1024}}
+....
+
+[caption="Figure {counter:image}: ", reftext="Figure {image}"]
+[title="`MTTL2` entry (XLEN=32)"]
+[wavedrom, ,svg]
+....
+{reg: [
+  {bits:  22, name: 'INFO'},
+  {bits:  4,  name: 'TYPE'},
+  {bits:  1,  name: 'L/H'},
+  {bits:  6,  name: 'ZERO'},
 ], config:{lanes: 1, hspace:1024}}
 ....
 
@@ -54,7 +101,9 @@ The `TYPE` field determines the interpretation of the `MTTL2` entry. The
           for the supervisor domain
 * 0011b - `1G_allow_rwx` - read, write and execute access for the 1G range is
           allowed for the supervisor domain
-* 0100b - `MTT_L1_DIR` - The 32M range is composed of 8192 x 4K pages
+* 0100b - `MTT_L1_DIR` - The 32M range is composed of 8192 x 4K pages.
+          For XLEN = 32, the `L/H` field specifies lower or higher 2K entries
+          in the L1 PTE page.
 * 0111b - `2M_PAGES` - The 32M range is composed of 16 x 2M pages
 * All other encodings are `reserved` and cause an access violation
 
@@ -99,20 +148,24 @@ for the supervisor domain (described in the `MTTL1` entry <<mtt-l1-rw>>).
 
 |`2M_PAGES` a|
 _The 32M range of address space is partitioned into 2M pages where each
-page has read/write/execute access allowed/not._
-The `INFO` field 31:0 holds 2 `PERM` bits per 2M address range to indicate
-`rwx_disallowed` (00b), `rx_allowed` (01b), `rw_allowed` (10b), `rwx_allowed`
-(11b). Bits 32:43 are reserved and must be zero.
+page has read/write/execute access allowed/not specified via the `INFO` field._
+The `INFO` field holds multiple 2-bit `PERM` access-encoding for each 2M address
+range to indicate: `not_allowed` (00b), `read-execute-allowed` (01b),
+`read-write-allowed` (10b), `read-write-execute-allowed` (11b).
+For XLEN=64, bits _mpte.info[31:0]_ holds the permissions, and bits 32:43 are
+reserved and must be zero. For XLEN=32, bits _mpte.info[15:0]_ holds the
+permissions, and bits 16:21 are reserved and must be zero.
 |===
 
 `MTTL1` table is populated if protection granularity of the 4KiB page is
 desired for the supervisor domain.
 
-`MTTL1` entry is indexed using PA[24:12] and each entry is a 4-bit `PERM` field
-in the referenced page. The bits 24:16 are used to select a 64-bit field
-in the page and bits 15:12 are used to select a 4 bit `PERM` field in those 64
-bits. Thus, there are 4 `PERM` bits for each 4 KiB page. The encoding of `PERM`
-is as follows:
+Each `MTTL1` entry is XLEN wide and holds XLEN/4 number of PERM fields where
+each field specifies access-permissions for a 4KiB page. The entry is selected
+by page.pn[1] (and the L/H bit for XLEN = 32), and the PERM field in the entry
+is selected using page.pn[0]. See <<mtt-l1-rv64>> for XLEN = 64 and
+<<mtt-l1-rv32>> for XLEN = 32. Thus, there are 4 `PERM` bits for each 4 KiB
+page. The encoding of `PERM` is as follows:
 
 [[Smmtt-rw-l1-encoding]]
 .`MTTL1` Entry permission encoding
@@ -135,12 +188,23 @@ Remaining encodings are *reserved* and cause an access violation.
 |===
 
 [caption="Figure {counter:image}: ", reftext="Figure {image}"]
-[title="`MTTL1` entry", id=mtt-l1-rw]
+[title="`MTTL1` entry (XLEN=64)", id=mtt-l1-rv64]
 [wavedrom, ,svg]
 ....
 {reg: [
   {bits:  4, name: 'PERM'},
   {bits:  56, name: '...'},
+  {bits:  4, name: 'PERM'},
+], config:{lanes: 1, hspace:1024}}
+....
+
+[caption="Figure {counter:image}: ", reftext="Figure {image}"]
+[title="`MTTL1` entry (XLEN=32)", id=mtt-l1-rv32]
+[wavedrom, ,svg]
+....
+{reg: [
+  {bits:  4, name: 'PERM'},
+  {bits:  24, name: '...'},
   {bits:  4, name: 'PERM'},
 ], config:{lanes: 1, hspace:1024}}
 ....
@@ -152,8 +216,9 @@ supervisor domain is ascertained as follows:
 
 1. Let _a_ be `mttp.ppn` x PAGESIZE, and let _i_ = LEVELS, where for mode
 `Smmtt34`, LEVELS = 2 and for `Smmtt[46 | 56]`, LEVELS = 3; PAGESIZE
-is 2^12^; MTT NON_LEAF_PTE_SIZE = 8 bytes. The `mttp` register must be active,
-i.e., the effective privilege mode must be not-M-mode.
+is 2^12^; MTT NON_LEAF_PTE_SIZE = 8 bytes (for RV32, MTT NON_LEAF_PTE_SIZE =
+4 bytes). The `mttp` register must be active, i.e., the effective privilege mode
+must be not-M-mode.
 
 2. Let _mpte_ be the value of the `MTT` table entry at address _a_ + _pa.pn[i]_
  x NON_LEAF_PTE_SIZE. If accessing _mpte_ violates a PMA or PMP check, raise
@@ -168,7 +233,9 @@ the original access type.
 level of the `MTT`. Let _i_ = _i_-1. If _i_ < 0, stop and raise an access-fault
 exception corresponding to the original access type. Otherwise, let
 _a_ = _mpte.ppn_ x PAGESIZE and go to step 2. Note that when _mpte.type_ =
-`MTT_L1_DIR`, the _mpte.ppn_ field is the value of the _mpte.info_ field.
+`MTT_L1_DIR`, the _mpte.ppn_ is the value of the _mpte.info_ field. For
+XLEN = 32, the _mpte.l/h_ bit is used as msb of the offset in step 2 to access
+the lower or upper half of the leaf entries on the 4 KiB L1 entry page.
 
 5. A leaf _mpte_ has been found. If any bits or encodings within _mpte.type_
 and _mpte.info_ that are reserved for future standard use, per
@@ -182,13 +249,15 @@ physical address per the steps described below:
 for 1GB page regions (via 32 MTTL2 entries with identical _mpte.type_ values -
 see <<Smmtt-rw-l2-encoding>>); go to step 7, else
 
-* if _i_=1, and the _mpte.type_ field value is `2M_PAGES`, then the
+* if _i_=1, and the _mpte.type_ field value is `2M_PAGES`, then for XLEN=64, the
 _mpte.info_[31:0] field contains 16 entries of 2-bit access-permissions encoding
-for 16 2M address regions (see <<Smmtt-rw-l2-encoding>>); go to step 7, else
+for 16 2M address regions; For XLEN=32, the _mpte.info_[16:0] field contains
+8 entries of 2-bit access-permission encodings for 8 2M regions - see
+<<Smmtt-rw-l2-encoding>>); go to step 7, else
 
-* If _i_=0, the _mpte_ contains a 4-bit entry that holds the access-permission
-encodings for 4KB pages. The 4-bit access-permission encoding for the _pa_ is
-held in _mpte_ and indexed via _pa.pn[i]_. The encodings are specified in
+* If _i_=0, the _mpte_ contains XLEN/4 entries that holds access-permission
+encodings for 4KB pages. The 4-bit access-permission encoding for the _pa_ in
+the _mpte_ is indexed via _pa.pn[i]_. The encodings are specified in
 <<Smmtt-rw-l1-encoding>>.
 
 7. Determine if the requested physical memory access is allowed per the
