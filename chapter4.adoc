@@ -125,20 +125,20 @@ corresponding to 32M of address space, have identical `TYPE` field values.
 _read and execute (but no write) are allowed to this 1G address range for the
 domain._
 The `INFO` field must be 0.
-When configuring 1G ranges, RDSM ensures that 32 `MTTL2` entries, each
+When configuring 1G ranges, RDSM must ensure that 32 `MTTL2` entries, each
 corresponding to 32M of address space, have identical `TYPE` field values.
 
 |`1G_allow_rw` a|
 _read and write (but no execute) are allowed to this 1G address range for the
 domain._
 The `INFO` field must be 0.
-When configuring 1G ranges, RDSM ensures that 32 `MTTL2` entries, each
+When configuring 1G ranges, RDSM must ensure that 32 `MTTL2` entries, each
 corresponding to 32M of address space, have identical `TYPE` field values.
 
 |`1G_allow_rwx` a|
 _read, write and execute are allowed to this 1G address range for the domain._
 The `INFO` field must be 0.
-When configuring 1G ranges, RDSM ensures that 32 `MTTL2` entries, each
+When configuring 1G ranges, RDSM must ensure that 32 `MTTL2` entries, each
 corresponding to 32M of address space, have identical `TYPE` field values.
 
 |`MTT_L1_DIR` a|
