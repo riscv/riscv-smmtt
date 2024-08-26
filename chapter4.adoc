@@ -108,7 +108,7 @@ The `TYPE` field determines the interpretation of the `MTTL2` entry. The
 * 111b - `Reserved` for future use and causes an access violation if used.
 
 The `INFO` field depends on the `TYPE` field and is formatted as per the
-following table for RV64:
+following table:
 
 [[Smmtt-rw-l2-encoding]]
 .`MTTL2` Entry Type for Smmtt
@@ -170,7 +170,7 @@ reserved and must be zero.
 The `MTTL1` table is populated if protection granularity of the 4 KiB page is
 desired for the supervisor domain.
 
-The `MTTL1` entry is XLEN wide and holds XLEN/4 number of 4-bit fields whee
+The `MTTL1` entry is XLEN wide and holds XLEN/4 number of 4-bit fields where
 each field specifies 2-bit access-permissions for a 4 KiB page (with 2 bits
 reserved for future uses). The entry is selected by page.pn[1], and the 4-bit
 field in the entry is selected using page.pn[0], with lsb bits 1:0 holding the
@@ -247,9 +247,7 @@ the original access type.
 level of the `MTT`. Let _i_ = _i_-1. If _i_ < 0, stop and raise an access-fault
 exception corresponding to the original access type. Otherwise, let
 _a_ = _mpte.ppn_ x PAGESIZE and go to step 2. Note that when _mpte.type_ =
-`MTT_L1_DIR`, the _mpte.ppn_ is the value of the _mpte.info_ field. For
-XLEN = 32, the _mpte.l/h_ bit is used as msb of the offset in step 2 to access
-the lower or upper half of the leaf entries on the 4 KiB L1 entry page.
+`MTT_L1_DIR`, the _mpte.ppn_ is the value of the _mpte.info_ field.
 
 5. A leaf _mpte_ has been found. If any bits or encodings within _mpte.type_
 and _mpte.info_ that are reserved for future standard use, per
@@ -264,10 +262,10 @@ for 1 GiB page regions (via 32 MTTL2 entries with identical _mpte.type_ values -
 see <<Smmtt-rw-l2-encoding>>); go to step 7, else
 
 * if _i_=1, and for XLEN = 64 and the _mpte.type_ field value `2M_PAGES`, the
-_mpte.info_[31:0] field contains 16 entries of 2-bit access-permissions encoding
+_mpte.info_[31:0] field contains 16 entries of 2-bit access-permission encodings
 for 16 2 MiB address regions; For XLEN=32 and _mpte.type_ field value of
 `4M_PAGES`, the _mpte.info_[16:0] field contains 8 entries of 2-bit
-access-permission encodings for 8 2 MiB regions - see <<Smmtt-rw-l2-encoding>>;
+access-permission encodings for 8 4 MiB regions - see <<Smmtt-rw-l2-encoding>>;
 go to step 7, else
 
 * if _i_=0, the _mpte_ contains XLEN/4 entries that holds access-permission
