@@ -53,12 +53,12 @@ an illegal instruction exception.
 supervisor domains beyond the physical memory protection scheme described in
 Section 3.7 of the RISC-V privileged architecture specification cite:[ISA]. In
 this case, the remaining fields (`SDID`, `PPN`) in `mttp` must be set to
-zeros, else generate a fault. When `XLEN=32`, the other valid settings for
-`MODE` are `Smmtt34` and `Smmtt34rw`, to support allow/disallow and read-write
+zeros, else generate a fault. When `XLEN=32`, the other valid setting for
+`MODE` is `Smmtt34` to support allow/disallow and read-write-execute
 access permissions for 34-bit system physical addresses.
 
 When `XLEN=64`, other than `BARE`, the other valid settings for `MODE` are
-`Smmtt[46, 56][rw]` to support read-write/access permissions for 46-bit and
+`Smmtt[46 | 56]` to support read-write-execute permissions for 46-bit and
 56-bit system physical addresses.
 
 The remaining `MODE` settings when `XLEN=64` are `reserved` for future use and
@@ -73,12 +73,9 @@ protection scheme described in Section 3.7 of the RISC-V privileged architecture
 specification cite:[ISA]
 
 |1 |`Smmtt34` |Page-based supervisor domain protection for 34 bit physical
-addresses with access allowed/disallowed per page
+addresses with RWX permissions per page
 
-|2 |`Smmtt34rw` |Page-based supervisor domain protection for 34 bit
-physical addresses with RW permissions per page
-
-|3 |- |`_Reserved_`
+|2 |- |`_Reserved_`
 |===
 
 .Encoding of `mttp` `MODE` field for `XLEN=64`.
@@ -90,18 +87,12 @@ protection scheme described in Section 3.7 of the RISC-V privileged architecture
 specification cite:[ISA]
 
 |1 |`Smmtt46` |Page-based supervisor domain protection for 46 bit physical
-addresses
+addresses with RWX permissions per page
 
-|2 |`Smmtt46rw` |Page-based supervisor domain protection for 46 bit
-physical addresses with RW permissions per page
+|2 |`Smmtt56` |Page-based supervisor domain protection for 56 bit physical
+addresses with RWX permissions per page
 
-|3 |`Smmtt56` |Page-based supervisor domain protection for 56 bit physical
-addresses
-
-|4 |`Smmtt56rw` |Page-based supervisor domain protection for 56 bit
-physical addresses with RW permissions per page
-
-|5-15 |- |`_Reserved_`
+|3-15 |- |`_Reserved_`
 |===
 
 Implementations are not required to support all defined `MODE` settings when
@@ -111,10 +102,10 @@ Instead, the fields of `mttp` are `WARL` in the normal way, when so indicated.
 The `MTTPPN` refers to an `MTTL3` table or an `MTTL2` table based on physical
 address width (`PAW`). For 56 >= `PAW` > 46, `MTTL3` table must be of size
 `2^(PAW-43)` bytes and naturally aligned to that sized byte boundary. For 46
->= `PAW` > 32 the `MTTL2` table must be of size 2^(`PAW`-23) bytes for `Smmtt46`
-and `Smmtt34`, 2^(`PAW`-22) bytes for `Smmtt46rw` and `Smmtt34rw`, and must be
-naturally aligned to that sized byte boundary. In these modes, the lowest two
-bits of the physical page number (`MTTPPN`) in `mttp` always read as zeros.
+>= `PAW` > 32 the `MTTL2` table must be of size 2^(`PAW`-22) bytes for
+`Smmtt46` and `Smmtt34`, and must be naturally aligned to that sized byte
+boundary. In these modes, the lowest two bits of the physical page number
+(`MTTPPN`) in `mttp` always read as zeros.
 
 The number of `SDID` bits is `UNSPECIFIED` and may be zero. The number of
 implemented `SDID` bits, termed `SDIDLEN`, may be determined by writing one to
@@ -122,7 +113,7 @@ every bit position in the `SDID` field, then reading back the value in `mttp`
 to see which bit positions in the `SDID` field hold a one. The
 least-significant bits of `SDID` are implemented first: that is, if `SDIDLEN` >
 0, `SDID`[`SDIDLEN`-1:0] is writable. The maximal value of `SDIDLEN`, termed
-`SDIDMAX`, is 6 for `Smmtt34[rw]`, `Smmtt46[rw]`, and `Smmtt56[rw]`.
+`SDIDMAX`, is 6 for `Smmtt[34 | 46 | 56]`.
 
 The `mttp` register is considered active for the purposes of the physical
 address protection algorithm unless the effective privilege mode is `M`.
