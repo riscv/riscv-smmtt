@@ -124,7 +124,7 @@ all harts are big-endian-only).
 
 [NOTE]
 ====
-Big-endian-configured harts that make use of an RERI may implement the `REV8`
+Big-endian-configured harts that make use of I/O MTT may implement the `REV8`
 byte-reversal instruction defined by the Zbb extension. If `REV8` is not
 implemented, then endianness conversion may be implemented using a sequence
 of instructions.
@@ -221,7 +221,7 @@ rules and is supported only if explicitly specified by an operation.
                              operation may be requested to invalidate all
                              entries of an MTT cache or to invalidate entries
                              corresponding to an address range specified in the
-                             `operand-1`.
+                             `operand-1` register.
 |`IOFENCE`     | 4         | This command can be used to request that IOMTTCHK
                              ensure that all previous read and write requests
                              from devices that have already been processed by
@@ -395,10 +395,10 @@ representing any 1-bit value.
 [cols="^1,3,3", options="header"]
 |===
 | `SRC_IDM` | `SRC_ID`                     | *Comment*
-| 0         |`yyyyyyyy  yyyyyyyy  yyyyyyyy`| One specific seg:bus:dev:func
-| 1         |`yyyyyyyy  yyyyyyyy  yyyyy011`| seg:bus:dev - any func
+| 1         |`yyyyyyyy  yyyyyyyy  yyyyyyyy`| One specific seg:bus:dev:func
+| 2         |`yyyyyyyy  yyyyyyyy  yyyyy011`| seg:bus:dev - any func
 | 2         |`yyyyyyyy  yyyyyyyy  01111111`| seg:bus - any dev:func
-| 3         |`yyyyyyyy  01111111  11111111`| seg - any bus:dev:func
+| 2         |`yyyyyyyy  01111111  11111111`| seg - any bus:dev:func
 |===
 
 ====
@@ -426,7 +426,7 @@ PCIe IDE provides security for transactions from one Port to another. These
 transactions might be initiated by contexts within the device, such as an SR-IOV
 virtual function, which are associated with a Trusted Execution Environment
 (TEE). Within the IDE TLP header, there's a "T" bit that helps differentiate
-transactions related to a TEE. The `TEE_LIM` filter can be employed to associate
+transactions related to a TEE. The `TEE_FLT` filter can be employed to associate
 these TEE-related transactions with a different supervisor domain than the
 transactions not related to TEE. This distinction is made even if both types of
 transactions are received on the same PCIe IDE stream.
