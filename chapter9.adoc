@@ -56,7 +56,7 @@ to M.
 
 The `mrmcfg` register is an MXLEN-bit read/write register used to configure a
 Resource Control ID (`RCID`), Monitoring Counter ID (`MCID`), and a Machine QRID
-(`MQRID`). The `MQRID, `RCID`, and `MCID` are WARL fields. The register is
+(`MQRID`). The `MQRID`, `RCID`, and `MCID` are WARL fields. The register is
 formatted as shown in <<MRMCFG64>> when MXLEN=64 and <<MRMCFG32>> when MXLEN=32.
 The CSR number is TBA.
 
