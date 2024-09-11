@@ -75,7 +75,7 @@ specification cite:[ISA]
 |1 |`Smmtt34` |Page-based supervisor domain protection for 34 bit physical
 addresses with RWX permissions per page
 
-|2 |- |`_Reserved_`
+|2-3 |- |`_Reserved_`
 |===
 
 .Encoding of `mttp` `MODE` field for `XLEN=64`.
