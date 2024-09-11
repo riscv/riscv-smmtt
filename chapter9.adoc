@@ -176,14 +176,14 @@ for the `RCID` and `MCID` fields of the register is computed as follows:
 [listing]
 ----
 SRL_MASK = (1 << SRL) - 1
-if SSM == 1
+if SSM == 0
     RCID-value = srmcfg.RCID & SRL_MASK
 else
     RCID-value = srmcfg.RCID
 endif
 
 SML_MASK = (1 << SML) - 1
-if SSM == 1
+if SSM == 0
     MCID-value = srmcfg.MCID & SML_MASK
 else
     MCID-value = srmcfg.MCID
@@ -200,7 +200,7 @@ follows:
 [listing]
 ----
 SRL_MASK = (1 << SRL) - 1
-if SSM == 1
+if SSM == 0
     srmcfg.RCID = (srmcfg.RCID & ~SRL_MASK) | (RCID-value & SRL_MASK)
 else
     if ((RCID-value & ~SRL_MASK) | SRL_MASK) != ((1 << RCIDLEN) - 1)
@@ -209,7 +209,7 @@ else
 endif
 
 SML_MASK = (1 << SML) - 1
-if SSM == 1
+if SSM == 0
     srmcfg.MCID = (srmcfg.MCID & ~SML_MASK) | (MCID-value & SML_MASK)
 else
     if ((MCID-value & ~SML_MASK) | SML_MASK) != ((1 << MCIDLEN) - 1)
