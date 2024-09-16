@@ -54,7 +54,7 @@ supervisor domains beyond the physical memory protection scheme described in
 Section 3.7 of the RISC-V privileged architecture specification cite:[ISA]. In
 this case, the remaining fields (`SDID`, `PPN`) in `mttp` must be set to
 zeros, else generate a fault. When `XLEN=32`, the other valid setting for
-`MODE` is `Smmtt34` to support allow/disallow and read-write-execute
+`MODE` is `Smmtt34` to support read-write-execute
 access permissions for 34-bit system physical addresses.
 
 When `XLEN=64`, other than `BARE`, the other valid settings for `MODE` are
@@ -113,7 +113,8 @@ every bit position in the `SDID` field, then reading back the value in `mttp`
 to see which bit positions in the `SDID` field hold a one. The
 least-significant bits of `SDID` are implemented first: that is, if `SDIDLEN` >
 0, `SDID`[`SDIDLEN`-1:0] is writable. The maximal value of `SDIDLEN`, termed
-`SDIDMAX`, is 6 for `Smmtt[34 | 46 | 56]`.
+`SDIDMAX`, is 6 for `Smmtt[34 | 46 | 56]` and consequently allows for up to
+64 supervisor domains.
 
 The `mttp` register is considered active for the purposes of the physical
 address protection algorithm unless the effective privilege mode is `M`.
