@@ -149,7 +149,7 @@ RV64 and <<mtt-l1-rv32>> for RV32.
 |`2M_PAGES` a|
 This encoding applies only to RV64.
 _The 32 MiB range of address space is partitioned into 16 2 MiB pages where each
-page has read/write/execute/access disallowed/not specified via the `INFO` field._
+page has read/write/execute access specified via the `INFO` field._
 The `INFO` field holds 16 2-bit `PERM` access-encoding for each 2 MiB address
 range to indicate: `no_access_allowed` (00b), `read-execute-allowed` (01b),
 `read-write-allowed` (10b), `read-write-execute-allowed` (11b). Bits
@@ -159,7 +159,7 @@ reserved and must be zero.
 |`4M_PAGES` a|
 This encoding applies only to RV32.
 _The 32 MiB range of address space is partitioned into 8 4 MiB pages where each
-page has read/write/execute/access disallowed/not specified via the `INFO` field._
+page has read/write/execute access specified via the `INFO` field._
 The `INFO` field holds 8 2-bit `PERM` access-encoding for each 4 MiB address
 range to indicate: `no_access_allowed` (00b), `read-execute-allowed` (01b),
 `read-write-allowed` (10b), `read-write-execute-allowed` (11b). Bits
@@ -347,8 +347,8 @@ batch optimized via the use of the sequence `SFENCE.W.INVAL`, `MINVAL.SPA` and
 
 [NOTE]
 ====
-Ongoing MTT lookups are not required to complete or terminate when `mttp` is 
-effectively disabled, unless a `MFENCE.SPA` instruction
+MTT lookups that began while `mttp` was active are not required to complete or
+terminate when `mttp` is no longer active, unless a `MFENCE.SPA` instruction
 matches the `SDID` (and optionally, `PADDR`) is executed. The `MFENCE.SPA`
 instruction must be used to ensure that updates to the `MTT` data structures are
 observed by subsequent implicit reads to those structures by a hart.

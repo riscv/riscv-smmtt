@@ -113,8 +113,7 @@ every bit position in the `SDID` field, then reading back the value in `mttp`
 to see which bit positions in the `SDID` field hold a one. The
 least-significant bits of `SDID` are implemented first: that is, if `SDIDLEN` >
 0, `SDID`[`SDIDLEN`-1:0] is writable. The maximal value of `SDIDLEN`, termed
-`SDIDMAX`, is 6 for `Smmtt[34 | 46 | 56]` and consequently allows for up to
-64 supervisor domains.
+`SDIDMAX`, is 6 for `Smmtt[34 | 46 | 56]`.
 
 The `mttp` register is considered active for the purposes of the physical
 address protection algorithm unless the effective privilege mode is `M`.
