@@ -149,7 +149,7 @@ RV64 and <<mtt-l1-rv32>> for RV32.
 |`2M_PAGES` a|
 This encoding applies only to RV64.
 _The 32 MiB range of address space is partitioned into 16 2 MiB pages where each
-page has read/write/execute access allowed/not specified via the `INFO` field._
+page has read/write/execute access specified via the `INFO` field._
 The `INFO` field holds 16 2-bit `PERM` access-encoding for each 2 MiB address
 range to indicate: `no_access_allowed` (00b), `read-execute-allowed` (01b),
 `read-write-allowed` (10b), `read-write-execute-allowed` (11b). Bits
@@ -159,7 +159,7 @@ reserved and must be zero.
 |`4M_PAGES` a|
 This encoding applies only to RV32.
 _The 32 MiB range of address space is partitioned into 8 4 MiB pages where each
-page has read/write/execute access allowed/not specified via the `INFO` field._
+page has read/write/execute access specified via the `INFO` field._
 The `INFO` field holds 8 2-bit `PERM` access-encoding for each 4 MiB address
 range to indicate: `no_access_allowed` (00b), `read-execute-allowed` (01b),
 `read-write-allowed` (10b), `read-write-execute-allowed` (11b). Bits
@@ -226,7 +226,7 @@ address space for the domain.
 === MTT access permissions lookup process
 
 MTT access-permissions for a physical address PA in the context of a
-supervisor domain is ascertained as follows:
+supervisor domain are ascertained as follows:
 
 1. Let _a_ be `mttp.ppn` x PAGESIZE, and let _i_ = LEVELS, where for mode
 `Smmtt34`, LEVELS = 2 and for `Smmtt[46 | 56]`, LEVELS = 3; PAGESIZE
@@ -302,10 +302,10 @@ implemented.
 
 MTT is checked for all accesses to physical memory, unless the effective privilege
 mode is M, including accesses that have undergone virtual to physical memory
-translation, but excluding MTT structure accesses. Data accesses in M-mode
-when the MPRV bit in mstatus is set and the MPP field in mstatus contains S
-or U are subject to MTT checks. MTT structure accesses are to be treated
-as implicit M-mode accesses and are subject to PMP/Smepmp and
+translation, but excluding MTT checker accesses to MTT structures. Data accesses
+in M-mode when the MPRV bit in mstatus is set and the MPP field in mstatus contains S
+or U are subject to MTT checks. MTT checker accesses to MTT structures are to be 
+treated as implicit M-mode accesses and are subject to PMP/Smepmp and
 IOPMP checks. The MTT checker indexes the MTT using the
 physical address of the access to lookup and enforce the access permissions.
 A mismatch of the access type and the access permissions specified in the

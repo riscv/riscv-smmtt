@@ -54,7 +54,7 @@ supervisor domains beyond the physical memory protection scheme described in
 Section 3.7 of the RISC-V privileged architecture specification cite:[ISA]. In
 this case, the remaining fields (`SDID`, `PPN`) in `mttp` must be set to
 zeros, else generate a fault. When `XLEN=32`, the other valid setting for
-`MODE` is `Smmtt34` to support allow/disallow and read-write-execute
+`MODE` is `Smmtt34` to support read-write-execute
 access permissions for 34-bit system physical addresses.
 
 When `XLEN=64`, other than `BARE`, the other valid settings for `MODE` are
