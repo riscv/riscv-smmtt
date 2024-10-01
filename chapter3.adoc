@@ -244,3 +244,30 @@ prior to the `MINVAL.SPA`, and
 subsequent to the `MFENCE.SPA`
 
 `MINVAL.SPA` is only valid in M-mode.
+
+=== Extension to behavior of SFENCE.VMA and HFENCE.VMA
+
+The behavior of the SFENCE.VMA and the HFENCE.VMA instructions are affected when
+supervisor domains are used by the M-mode RDSM.
+
+When SFENCE.VMA is used within a supervisor domain, the virtual-address argument
+is a virtual address with either the ASID being a S/HS-level ASID (V=0), or a
+VS-level ASID (V=1).
+
+For S/HS-level ASID, the virtual-address argument to SFENCE.VMA is a host
+virtual address within the current supervisor domain, and the ASID argument is
+a S/HS-level ASID within the current supervisor domain. The current supervisor
+domain is identified by the SDID field of the CSR mttp, and the effective ASID
+can be considered the combination of the SDID and the S/HS-level ASID. The
+SFENCE.VMA orders stores only to this S/HS-level address-translation structures
+with subsequent HS-level address translations.
+
+When V=1, the virtual-address argument to SFENCE.VMA is a guest virtual address
+within the current virtual machine, and the ASID argument is a VS-level ASID
+within the current virtual machine. The current virtual machine is identified by
+the SDID field of the CSR mttp, the VMID field of CSR hgatp, and the effective
+ASID can be considered to be the combination of this SDID and VMID with the
+VS-level ASID. The SFENCE.VMA instruction orders stores only to the VS-level
+address-translation structures with subsequent VS-stage address translations for
+the same virtual machine, i.e., only when mttp.SDID and the hgatp.VMID is the
+same as when the SFENCE.VMA executed.
