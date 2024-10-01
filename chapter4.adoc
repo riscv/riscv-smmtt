@@ -234,7 +234,7 @@ is 2^12^; MTT_PTE_SIZE = 8 bytes (for RV32, MTT_PTE_SIZE = 4 bytes). The `mttp`
 register must be active, i.e., the effective privilege mode must not be M-mode.
 
 2. Let _mpte_ be the value of the `MTT` table entry at address _a_ + _pa.pn[i]_
- x MTE_PTE_SIZE. If accessing _mpte_ violates a PMA or PMP check, raise
+ x MTT_PTE_SIZE. If accessing _mpte_ violates a PMA or PMP check, raise
 an access-fault exception corresponding to the original access type.
 
 3. If any bits or encodings that are reserved for future standard use are
@@ -278,7 +278,7 @@ exception corresponding to the original access type.
 8. The access is allowed per the `MTT` lookup.
 
 All implicit accesses to the memory tracking table data structures in
-this algorithm are performed using width MTE_PTE_SIZE.
+this algorithm are performed using width MTT_PTE_SIZE.
 
 [NOTE]
 ====
