@@ -8,6 +8,8 @@ and `mttp`. The SDID programmed via this interface is a local identifier for the
 hart and may be used to tag hart-local resources to access-control data
 associated with the supervisor domain.
 
+=== Machine tracking table pointer (`mttp`)
+
 The `mttp` register is an `XLEN`-bit read/write register, formatted as shown in
 <<sdid-32>> for `XLEN=32` and <<sdid-64>> for `XLEN=64`, which controls
 physical address protection for supervisor domains. This register holds the
@@ -18,7 +20,7 @@ selects the address protection scheme (MTT Mode to be enforced) for physical
 addresses. The MTT is a structure that holds the access permissions for a
 physical address and is looked up per the programmed `MODE`.
 
-Attempts to read or write `mttp` while executing in U, S or HS-mode will raise
+Attempts to read or write `mttp` while executing in U or S-mode will raise
 an illegal instruction exception.
 
 [caption="Register {counter:rimage}: ", reftext="Register {rimage}"]
@@ -75,7 +77,7 @@ specification cite:[ISA]
 |1 |`Smmtt34` |Page-based supervisor domain protection for 34 bit physical
 addresses with RWX permissions per page
 
-|2 |- |`_Reserved_`
+|2-3 |- |`_Reserved_`
 |===
 
 .Encoding of `mttp` `MODE` field for `XLEN=64`.

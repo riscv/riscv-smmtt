@@ -146,16 +146,6 @@ bits (3:2) for future use. The 2-bit `PERM` field holds access-permission
 for 4 KiB pages for the supervisor domain, as described in <<mtt-l1-rv64>> for
 RV64 and <<mtt-l1-rv32>> for RV32.
 
-|`2M_PAGES` a|
-This encoding applies only to RV64.
-_The 32 MiB range of address space is partitioned into 16 2 MiB pages where each
-page has read/write/execute access specified via the `INFO` field._
-The `INFO` field holds 16 2-bit `PERM` access-encoding for each 2 MiB address
-range to indicate: `no_access_allowed` (00b), `read-execute-allowed` (01b),
-`read-write-allowed` (10b), `read-write-execute-allowed` (11b). Bits
-_mpte.info[31:0]_ holds the 2 MiB page permissions, and _mpte.info[43:32]_ are
-reserved and must be zero.
-
 |`4M_PAGES` a|
 This encoding applies only to RV32.
 _The 32 MiB range of address space is partitioned into 8 4 MiB pages where each
@@ -164,6 +154,16 @@ The `INFO` field holds 8 2-bit `PERM` access-encoding for each 4 MiB address
 range to indicate: `no_access_allowed` (00b), `read-execute-allowed` (01b),
 `read-write-allowed` (10b), `read-write-execute-allowed` (11b). Bits
 _mpte.info[15:0]_ holds the 2 MiB page permissions, and _mpte.info[21:16]_ are
+reserved and must be zero.
+
+|`2M_PAGES` a|
+This encoding applies only to RV64.
+_The 32 MiB range of address space is partitioned into 16 2 MiB pages where each
+page has read/write/execute access specified via the `INFO` field._
+The `INFO` field holds 16 2-bit `PERM` access-encoding for each 2 MiB address
+range to indicate: `no_access_allowed` (00b), `read-execute-allowed` (01b),
+`read-write-allowed` (10b), `read-write-execute-allowed` (11b). Bits
+_mpte.info[31:0]_ holds the 2 MiB page permissions, and _mpte.info[43:32]_ are
 reserved and must be zero.
 |===
 
@@ -230,24 +230,22 @@ supervisor domain are ascertained as follows:
 
 1. Let _a_ be `mttp.ppn` x PAGESIZE, and let _i_ = LEVELS, where for mode
 `Smmtt34`, LEVELS = 2 and for `Smmtt[46 | 56]`, LEVELS = 3; PAGESIZE
-is 2^12^; MTT NON_LEAF_PTE_SIZE = 8 bytes (for RV32, MTT NON_LEAF_PTE_SIZE =
-4 bytes). The `mttp` register must be active, i.e., the effective privilege mode
-must be not-M-mode.
+is 2^12^; MTT_PTE_SIZE = 8 bytes (for RV32, MTT_PTE_SIZE = 4 bytes). The `mttp`
+register must be active, i.e., the effective privilege mode must not be M-mode.
 
 2. Let _mpte_ be the value of the `MTT` table entry at address _a_ + _pa.pn[i]_
- x NON_LEAF_PTE_SIZE. If accessing _mpte_ violates a PMA or PMP check, raise
+ x MTT_PTE_SIZE. If accessing _mpte_ violates a PMA or PMP check, raise
 an access-fault exception corresponding to the original access type.
 
 3. If any bits or encodings that are reserved for future standard use are
 set within _mpte_, stop and raise an access-fault exception corresponding to
 the original access type.
 
-4. Otherwise, the _mpte_ is valid. If (_i_=0) or (_i_=1 and _mpte.type_ is not
+4. Otherwise, the _mpte_ is valid. If (_i_=1) or (_i_=2 and _mpte.type_ is not
 `MTT_L1_DIR`), go to step 5. Otherwise, the _mpte_ is a pointer to the next
-level of the `MTT`. Let _i_ = _i_-1. If _i_ < 0, stop and raise an access-fault
-exception corresponding to the original access type. Otherwise, let
-_a_ = _mpte.ppn_ x PAGESIZE and go to step 2. Note that when _mpte.type_ =
-`MTT_L1_DIR`, the _mpte.ppn_ is the value of the _mpte.info_ field.
+level of the `MTT`. Let _i_ = _i_-1. Let _a_ = _mpte.ppn_ x PAGESIZE and go to
+step 2. Note that when _mpte.type_ = `MTT_L1_DIR`, the _mpte.ppn_ is the value
+of the _mpte.info_ field.
 
 5. A leaf _mpte_ has been found. If any bits or encodings within _mpte.type_
 and _mpte.info_ that are reserved for future standard use, per
@@ -257,21 +255,21 @@ exception corresponding to the access type.
 6. The _mpte_ is a valid leaf _mpte_. Fetch the access-permissions for the
 physical address per the steps described below:
 
-* if _i_=1, and the _mpte.type_ field directly specifies the access-permissions
+* if _i_=2, and the _mpte.type_ field directly specifies the access-permissions
 for 1 GiB page regions (via 32 MTTL2 entries with identical _mpte.type_ values -
 see <<Smmtt-rw-l2-encoding>>); go to step 7, else
 
-* if _i_=1, and for XLEN = 64 and the _mpte.type_ field value `2M_PAGES`, the
+* if _i_=2, and for XLEN = 64 and the _mpte.type_ field value `2M_PAGES`, the
 _mpte.info_[31:0] field contains 16 entries of 2-bit access-permission encodings
 for 16 2 MiB address regions; For XLEN=32 and _mpte.type_ field value of
 `4M_PAGES`, the _mpte.info_[16:0] field contains 8 entries of 2-bit
 access-permission encodings for 8 4 MiB regions - see <<Smmtt-rw-l2-encoding>>;
 go to step 7, else
 
-* if _i_=0, the _mpte_ contains XLEN/4 entries that holds access-permission
-encodings for 4 KiB pages. The 4-bit field has the lsb 2-bits specify the
-access-permission encoding for the _pa_ (and 2 bits reserved) in the _mpte_ is
-indexed via _pa.pn[i]_. The encodings are specified in <<Smmtt-rw-l1-encoding>>.
+* if _i_=1, the _mpte_ contains XLEN/4 4-bit entries that hold access-permission
+encodings for 4 KiB pages. The entry is selected by _pa.pn[0]_. The least
+significant 2 bits of each entry specify the access-permission encoding for the
+_pa_. The encodings are specified in <<Smmtt-rw-l1-encoding>>.
 
 7. Determine if the requested physical memory access is allowed per the
 access-permissions. If access is not permitted, stop and raise an access-fault
@@ -279,8 +277,8 @@ exception corresponding to the original access type.
 
 8. The access is allowed per the `MTT` lookup.
 
-All implicit accesses to the non-leaf memory tracking table data structures in
-this algorithm are performed using width NON_LEAF_PTE_SIZE.
+All implicit accesses to the memory tracking table data structures in
+this algorithm are performed using width MTT_PTE_SIZE.
 
 [NOTE]
 ====
@@ -329,7 +327,7 @@ When `Smmtt` is implemented, an `MTT` structure is used to specify
 access-permissions for physical memory for a supervisor domain, the `MTT`
 settings for the resulting physical address (after any address translation) may
 be checked (and possibly cached) at any point between the address translation
-and the explicit memory access. If caching is occuring, when the `MTT` settings
+and the explicit memory access. Therefore, when the `MTT` settings
 are modified, `M-mode` software must synchronize the cached `MTT` state with the
 virtual memory system and any `PMP`, `MTT` or address-translation caches, as
 described via <<mfence-spa>> or in a batched manner via <<minval-spa>>.

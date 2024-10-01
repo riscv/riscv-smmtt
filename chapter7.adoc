@@ -103,8 +103,8 @@ The RDSM needs a method to be alerted if an external interrupt, whether at the
 S- or VS-level, is pending for any supervisor domains not currently active on a
 hart. The RDSM could leverage this notification to inform its scheduling
 decisions. To facilitate this functionality, the `Smsdia` extension introduces
-the `msdeip` and `msdeie` CSRs, along with an M-level supervisor domain external
-interrupt (`MSDEI`).
+the `msdeip` and `msdeie` CSRs, along with an local supervisor domain external
+interrupt (`LSDEI`).
 
 === Machine supervisor domain configuration (`msdcfg`)
 
@@ -116,7 +116,7 @@ supervisor domain interrupt controller for S- and VS-level external interrupts
 when `SDICN` is the number of an implemented interrupt controller, not zero.
 
 The `SDICN` field is a WLRL field that must be able to hold a value between 0
-and maximum implemented supervisor domain interrupt controller number,
+and the maximum implemented supervisor domain interrupt controller number,
 inclusive. If there are no supervisor domain interrupt controllers connected to
 the hart, then `SDICN` may be read-only zero.
 
@@ -207,19 +207,19 @@ aliases bits 63:32 of `msdeie`. When MXLEN=64, `msdeieh` does not exist.
 ....
 
 The `msdeie` CSR selects the subset of supervisor domain external interrupts
-that cause a M-level supervisor domain external interrupt. The enable bits in
+that cause a local supervisor domain external interrupt. The enable bits in
 `msdeie` do not affect the S- and VS-level external interrupt pending signals
 from the interrupt controller selected by `msdcfg.SDICN`.
 
 === Machine and Supervisor Interrupt registers (`mip/mie` and `sip/sie`)
 
 The `Smsdia` extension introduces the local supervisor domain external
-interrupt-pending (`LSDEI`). This interrupt is treated as a standard local
+interrupt (`LSDEI`). This interrupt is treated as a standard local
 interrupt that is assigned to bit 16 in the `mip`, `mie`, `sip`, and `sie`
 registers. The bit 16 in `mip` and `sip` is called `LSDEIP` and the same bit in
 `mie` and `sie` is called `LSDEIE`. The `mideleg` register controls the
-delegation of `LSDEI` interrupt to S-mode. This interrupt cannot be delegated to
-VS-mode and the the bit 16 of `hideleg` is read-only zero.
+delegation of `LSDEI` to S-mode. This interrupt cannot be delegated to
+VS-mode and bit 16 of `hideleg` is read-only zero.
 
 The `mip.LSDEIP` bit is read-only, and is 1 if and only if the bitwise logical
 AND of CSRs `msdeip` and `msdeie` is nonzero in any bit. The `sip.LSDEIP` bit is
