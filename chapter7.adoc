@@ -124,9 +124,10 @@ When `SDICN` is not the number of an implemented interrupt controller, or is
 zero then the following rules apply to all privilege modes:
 
 * The S-level external interrupt pending signal indicated in `mip.SEIP` is 0.
-* All non-custom values of `siselect` designate an _inaccessible_ register. When
-  `siselect` has the number of an _inaccessible_ register, attempts from M-mode
-  or HS-mode to access `sireg` raise an illegal instruction exception.
+* All non-custom values of `siselect` that access IMSIC registers designate an
+  _inaccessible_ register. When `siselect` holds the number of an _inaccessible_
+  register, attempts from M-mode or HS-mode to access `sireg` raise an illegal
+  instruction exception.
 * Access to CSR `stopei` raises an illegal instruction exception.
 * The `hstatus.vgein` field is read-only zero.
 * The VS-level external interrupt pending signals indicated in `hgeip` are 0.
