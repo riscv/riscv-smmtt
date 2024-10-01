@@ -124,13 +124,17 @@ When `SDICN` is not the number of an implemented interrupt controller, or is
 zero then the following rules apply to all privilege modes:
 
 * The S-level external interrupt pending signal indicated in `mip.SEIP` is 0.
-* All `siselect` values that access IMSIC registers are reserved.
+* All non-custom values of `siselect` that access IMSIC registers designate an
+  _inaccessible_ register. When `siselect` holds the number of an _inaccessible_
+  register, attempts from M-mode or HS-mode to access `sireg` raise an illegal
+  instruction exception.
 * Access to CSR `stopei` raises an illegal instruction exception.
 * The `hstatus.vgein` field is read-only zero.
 * The VS-level external interrupt pending signals indicated in `hgeip` are 0.
 
 When the interrupt controller selected by `msdcfg.SDICN` is an implemented
-interrupt controller, is not zero, and is an IMSIC, the following rules apply:
+interrupt controller, and is not zero, and is an IMSIC, the following rules
+apply:
 
 * The S-level external interrupt pending signal of the selected IMSIC is
   indicated in `mip.SEIP`.
