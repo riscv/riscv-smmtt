@@ -115,7 +115,7 @@ supervisor domain interrupt controllers associated with a hart as the active
 supervisor domain interrupt controller for S- and VS-level external interrupts
 when `SDICN` is the number of an implemented interrupt controller, not zero.
 
-The `SDICN` field is a WARL field that must be able to hold a value between 0
+The `SDICN` field is a WLRL field that must be able to hold a value between 0
 and maximum implemented supervisor domain interrupt controller number,
 inclusive. If there are no supervisor domain interrupt controllers connected to
 the hart, then `SDICN` may be read-only zero.
