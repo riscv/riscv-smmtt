@@ -504,8 +504,8 @@ of the `PPN` field.
 | `yyyyy yyyyyyyy yyyyyyyy`|  0  | 4  KiB
 | `yyyyy yyyyyyyy yyyyyyy0`|  1  | 8  KiB
 | `yyyyy yyyyyyy0 11111111`|  1  | 2  MiB
-| `yy011 11111111 11111111`|  1  | 1  GiB
-| `01111 11111111 11111111`|  1  | 4  GiB
+| `yyy01 11111111 11111111`|  1  | 1  GiB
+| `y0111 11111111 11111111`|  1  | 4  GiB
 |===
 
 ====
