@@ -278,12 +278,14 @@ subsequent behavior of the IO Bridge for unmatched transactions remains
 
 An implementation that performs the requested operation synchronously may
 hardwire the `BUSY` bit to 0.
+
 The `GET_ENTRY` operation ignores the contents of both the `operand-0` and
 `operand-1` registers. If the `GET_ENTRY` operation is unsuccessful, the
 contents of these registers remain `UNSPECIFIED`. However, upon a successful
-`GET_ENTRY` operation, the listed fields reflect the configurations of the
-rule identified by `control.RULEID`. The state of any unlisted fields in the
-`operand-0` and `operand-1` registers is `UNSPECIFIED`.
+`GET_ENTRY` operation, the configurations of the rule identified by
+`control.RULEID` are provided in the following fields: `SRC_IDT`, `SRC_IDM`,
+`TEE_FLT`, `SRC_ID`, `IOMMU_ID`, `SDID`, `MTT_MODE` and `PPN`. The state of
+all other fields in the `operand-0` and `operand-1` registers is `UNSPECIFIED`.
 
 The contents of `operand-0` and `operand-1` are disregarded by the `IOFENCE`
 operation.
@@ -291,6 +293,14 @@ operation.
 The `MTTINVAL` operation ignores the contents of `operand-0` register but
 utilizes the following fields from the `operand-1` register: `PPNV`, `PPN`
 and `S`.
+
+[NOTE]
+====
+If an identical `SDID` is configured in two rules but the MTT referenced by
+the rules is not identical then it is unpredictable whether the MTT referenced
+by the first rule or the second rule will be used. These are the only expected
+behaviors.
+====
 
 [[OP-0]]
 === Operand 0 register (`operand-0`)
@@ -391,7 +401,7 @@ by `DEVID` and a 24-bit PCIe `device_id` comprised of the segment, bus, device,
 and function number is used. In the table below, `y` acts as a placeholder
 representing any 1-bit value.
 
-.`SRC_IDM` with `SRC_IDT` set to `DEVID` based filtering
+.`SRC_IDM` with `SRC_IDT` set to Filter by device ID
 [cols="^1,3,3", options="header"]
 |===
 | `SRC_IDM` | `SRC_ID`                     | *Comment*
@@ -437,7 +447,8 @@ provide address translation and protection for the transactions matching this
 rule.
 
 The `SDID` field identifies the supervisor domain whose memory is accessed by
-this transaction.
+this transaction. When `operand-1.MTT_MODE` is `Bare`, the `SET_ENTRY`
+operations requires the `SDID` field to be zero.
 
 The `SRL` and `SML` fields along with `operand-1.SSM` field are used to determine
 the effective `RCID` and `MCID` provided by the IOMMU for device originated
@@ -475,8 +486,9 @@ the `GET_ENTRY` operation. Both the `IOFENCE` and `MTTINVAL` operations
 disregard the `MTT_MODE` field.
 
 The `PPN` field programs the PPN of the root page of the MTT during the
-`SET_ENTRY` operation and is retrieved by the `GET_ENTRY` operation. The
-`IOFENCE` operation disregards this field.
+`SET_ENTRY` operation and is retrieved by the `GET_ENTRY` operation. When
+`MTT_MODE` is `Bare`, the `SET_ENTRY` operations requires the `PPN` field to be
+zero. The `IOFENCE` operation disregards this field.
 
 The `MTTINVAL` operation refers to the PPNV field to determine the validity of
 the `PPN` field when it's set to 1. If the `PPNV` field is 0, the `MTTINVAL`
