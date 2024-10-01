@@ -172,7 +172,7 @@ the `MCID` field.
 When the `srmcfg` CSR is read at privilege modes less than M, the value returned
 for the `RCID` and `MCID` fields of the register is computed as follows:
 
-.`RCID` and `MCID` read value compuation
+.`RCID` and `MCID` read value computation
 [listing]
 ----
 SRL_MASK = (1 << SRL) - 1
