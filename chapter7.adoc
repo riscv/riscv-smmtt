@@ -77,9 +77,7 @@ an APLIC via a memory-mapped register interface. In another case, software
 interacts with an IMSIC through a set of S and VS-level CSRs, along with a
 series of memory-mapped registers.
 
-The RDSM can employ the MTT and/or PMP to restrict a supervisor domain's access to
-the memory-mapped register interface of the interrupt controller associated with
-it. The `Smsdia` supports the connection of multiple interrupt controllers to a
+The `Smsdia` supports the connection of multiple interrupt controllers to a
 hart, allowing a supervisor domain to be paired with one of these interrupt
 controllers. The `Smsdia` extension uses the `msdcfg` CSR to signify the
 active interrupt controller for a supervisor domain. When CSRs are employed to
