@@ -9,7 +9,7 @@ hart and may be used to tag hart-local resources to access-control data
 associated with the supervisor domain. For most typical usages, the SDID will
 remain stable over the life of the supervisor domain. However, the SDID can be
 changed at the cost of fencing to flush any prior cached state. The SDID is
-unique only within a cpu-complex, hence, SDID must not be used to tag downstream
+unique only to a hart, hence, SDID must not be used to tag downstream
 transactions that are globally visible - implementations may map the SDID from
 the initiator to other (global) identifiers but that mapping is
 implementation-specific and out of scope of this specification.
