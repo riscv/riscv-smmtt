@@ -233,26 +233,37 @@ supervisor domain are ascertained as follows:
 is 2^12^; MTT_PTE_SIZE = 8 bytes (for RV32, MTT_PTE_SIZE = 4 bytes). The `mttp`
 register must be active, i.e., the effective privilege mode must not be M-mode.
 
-2. Let _mpte_ be the value of the `MTT` table entry at address _a_ + _pa.pn[i]_
+2. If _pa_ has any bits set above the maximum physical address width supported
+by the hart, then stop and raise an access-fault exception corresponding to the
+original access type.
+
+[NOTE]
+====
+Restricting the _pa_ to the maximum PA width supported by a hart allows for
+optimizing memory requirements of the MTT structures such as the MTTL2 and MTTL3
+entry tables, when the PA width is not exactly 34, 46 or 56 bits.
+====
+
+3. Let _mpte_ be the value of the `MTT` table entry at address _a_ + _pa.pn[i]_
  x MTT_PTE_SIZE. If accessing _mpte_ violates a PMA or PMP check, raise
 an access-fault exception corresponding to the original access type.
 
-3. If any bits or encodings that are reserved for future standard use are
+4. If any bits or encodings that are reserved for future standard use are
 set within _mpte_, stop and raise an access-fault exception corresponding to
 the original access type.
 
-4. Otherwise, the _mpte_ is valid. If (_i_=1) or (_i_=2 and _mpte.type_ is not
+5. Otherwise, the _mpte_ is valid. If (_i_=1) or (_i_=2 and _mpte.type_ is not
 `MTT_L1_DIR`), go to step 5. Otherwise, the _mpte_ is a pointer to the next
 level of the `MTT`. Let _i_ = _i_-1. Let _a_ = _mpte.ppn_ x PAGESIZE and go to
 step 2. Note that when _mpte.type_ = `MTT_L1_DIR`, the _mpte.ppn_ is the value
 of the _mpte.info_ field.
 
-5. A leaf _mpte_ has been found. If any bits or encodings within _mpte.type_
+6. A leaf _mpte_ has been found. If any bits or encodings within _mpte.type_
 and _mpte.info_ that are reserved for future standard use, per
 <<Smmtt-rw-l2-encoding>>, are set within _mpte_, stop and raise an access-fault
 exception corresponding to the access type.
 
-6. The _mpte_ is a valid leaf _mpte_. Fetch the access-permissions for the
+7. The _mpte_ is a valid leaf _mpte_. Fetch the access-permissions for the
 physical address per the steps described below:
 
 * if _i_=2, and the _mpte.type_ field directly specifies the access-permissions
@@ -271,11 +282,11 @@ encodings for 4 KiB pages. The entry is selected by _pa.pn[0]_. The least
 significant 2 bits of each entry specify the access-permission encoding for the
 _pa_. The encodings are specified in <<Smmtt-rw-l1-encoding>>.
 
-7. Determine if the requested physical memory access is allowed per the
+8. Determine if the requested physical memory access is allowed per the
 access-permissions. If access is not permitted, stop and raise an access-fault
 exception corresponding to the original access type.
 
-8. The access is allowed per the `MTT` lookup.
+9. The access is allowed per the `MTT` lookup.
 
 All implicit accesses to the memory tracking table data structures in
 this algorithm are performed using width MTT_PTE_SIZE.
@@ -302,7 +313,7 @@ MTT is checked for all accesses to physical memory, unless the effective privile
 mode is M, including accesses that have undergone virtual to physical memory
 translation, but excluding MTT checker accesses to MTT structures. Data accesses
 in M-mode when the MPRV bit in mstatus is set and the MPP field in mstatus contains S
-or U are subject to MTT checks. MTT checker accesses to MTT structures are to be 
+or U are subject to MTT checks. MTT checker accesses to MTT structures are to be
 treated as implicit M-mode accesses and are subject to PMP/Smepmp and
 IOPMP checks. The MTT checker indexes the MTT using the
 physical address of the access to lookup and enforce the access permissions.
