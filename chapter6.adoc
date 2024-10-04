@@ -516,8 +516,8 @@ The `SRL` and `SML` fields along with `operand-1.SSM` field are used to determin
 the effective `RCID` and `MCID` provided by the IOMMU for device originated
 requests. The determination of the effective `RCID` and `MCID` is as specified
 by <<SMQOSID>>. The `SQRID` identifies the QRI for requests originating from the
-devices associated with the SD and accompanies the `RCID` and `MCID` in the
-requests made by the device to the QRI.
+devices and the IOMMU associated with the SD and accompanies the `RCID` and
+`MCID` in the requests made by the device to the QRI.
 
 [[OP-1]]
 === Operand 1 register (`operand-1`)
@@ -564,7 +564,7 @@ focuses on a NAPOT range. This range is decided by the low-order bits of the
 If the initial low-order 0 bit position is denoted as `x`, the size of the range
 is computed as `(1 << (12 + x + 1))`. When `PPNV` is set to 1, if the address
 range specifed by `PPN` and `S` is invalid, the operation may or may not be
-performed.
+performed. Operations besides `MTTINVAL` disregard the `PPNV` field.
 
 The `MTTINVAL` operation ensures that stores to the MTT are observed by MTTCHK
 before subsequent implicit reads by MTTCHK to the corresponding MTT.
@@ -620,4 +620,9 @@ Another consequence of this specification is that it is generally unsafe to
 update the MTT using a set of stores of a width less than the width of the MTT
 entry, as it is legal for the implementation to read the MTT entries at any
 time, including when only some of the partial stores have taken effect.
+
+The IOMMU itself is a DMA capable device. The DMA performed by the IOMMU is
+performed using the device ID of the IOMMU. A rule must be defined to associate
+the IOMMU device ID itself with an `IOSDID` and MTT unless the IOMMU device ID
+is encompassed by another rule that associates device IDs with an SD.
 ====
