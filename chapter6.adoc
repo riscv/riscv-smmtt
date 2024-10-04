@@ -610,7 +610,7 @@ of the `PPN` field.
 [NOTE]
 ====
 Simpler implementations may ignore the operands of `MTTINVAL` operation and
-perform a global invalidation of all inforamtion cached from any MTT.
+perform a global invalidation of all information cached from any MTT.
 
 A consequence of this specification is that an implementation may use any
 information for an address that was valid in the MTT at any time since the most
