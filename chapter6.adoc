@@ -96,7 +96,7 @@ the rules outlined below to update MTT entries.
   atomic memory access supported by MTTCHK.
 
 * MTTCHK is not required to immediately observe the software updates to an MTT
-  entry. Software must use the `MTTINVAL` operation outlined in <<section>> to
+  entry. Software must use the `MTTINVAL` operation outlined in <<CTRL>> to
   invalidate any previous copies of that entry that may be in the MTTCHK caches
   to synchronize the updates to the entry with the operation of MTTCHK.
 
@@ -108,9 +108,7 @@ new value of the entry and the choice is unpredictable until software uses the
 the MTTCHK. These are the only behaviors expected.
 ====
 
-The I/O MTT checker provides a memory-mapped register programming interface that
-is expected to be associated with the RDSM. The RDSM may employ the MTT (or PMP)
-to prohibit access to these registers from any of the supervisor domains.
+The I/O MTT checker provides a memory-mapped register programming interface.
 
 If an MTT check disallows a transaction then the transaction is aborted.
 
@@ -535,7 +533,7 @@ operations requested through `control.OP`.
   {bits:  4, name: 'MTT_MODE (WARL)'},
   {bits:  1, name: 'PPNV (WARL)'},
   {bits:  1, name: 'S (WARL)'},
-  {bits:  1, name: 'RV'},
+  {bits:  1, name: 'IOSDIDV'},
   {bits:  1, name: 'SSM'},
   {bits:  2, name: 'WPRI'},
   {bits: 44, name: 'PPN'},
@@ -556,7 +554,7 @@ The `PPN` field programs the PPN of the root page of the MTT during the
 zero. The `IOFENCE` operation disregards this field.
 
 For the `MTTINVAL` operation, the `PPNV` field indicates if the `PPN` field is
-valida and the `IOSDIDV` field indicates if the `IOSDID` field is valid for the
+valid and the `IOSDIDV` field indicates if the `IOSDID` field is valid for the
 operation. When a field is not valid for an operation, it is ignored by the
 operation. When the `PPNV` field is 1, the `S` field sets the address range size
 for the `MTTINVAL` operation. With an `S` field value of 0, the range size is
@@ -584,9 +582,9 @@ before subsequent implicit reads by MTTCHK to the corresponding MTT.
 |   1    |  0        | Invalidates information cached from the MTT for the
                        address range in the `PPN` operand for all supervisor
                        domain address spaces.
-|   1    |  0        | Invalidates information cached from the MTT for the
+|   1    |  1        | Invalidates information cached from the MTT for the
                        address range in the `PPN` operand for the supervisor
-                       domain address spaces identified by the `IOSDID` operand.
+                       domain address space identified by the `IOSDID` operand.
 |===
 
 [NOTE]
