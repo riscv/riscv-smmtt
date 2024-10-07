@@ -295,6 +295,6 @@ When `Sinval` is implemented with `Smsdid` the behavior of SINVAL.VMA is
 modified to also use the SDID from the CSR mttp in addition to the ASID provided
 in SINVAL.VMA.
 
-When the `Hypervisor` extension is also implemented the behavior of HINVAL.VVMA
+When the `Hypervisor` extension is also implemented, the behavior of HINVAL.VVMA
 and HINVAL.GVMA is modified to also use the SDID from the CSR mttp in addition
 to the VMID provided in the HINVAL.GVMA or the ASID provided in HINVAL.VVMA.
