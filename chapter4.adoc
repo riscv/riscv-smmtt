@@ -233,15 +233,19 @@ supervisor domain are ascertained as follows:
 is 2^12^; MTT_PTE_SIZE = 8 bytes (for RV32, MTT_PTE_SIZE = 4 bytes). The `mttp`
 register must be active, i.e., the effective privilege mode must not be M-mode.
 
-2. If _pa_ has any bits set above the maximum physical address width supported
+2. If _pa_ is beyond the maximum accessible physical address space of the platform
 by the hart, then stop and raise an access-fault exception corresponding to the
 original access type.
 
 [NOTE]
 ====
-Restricting the _pa_ to the maximum PA width supported by a hart allows for
-optimizing memory requirements of the MTT structures such as the MTTL2 and MTTL3
-entry tables, when the PA width is not exactly 34, 46 or 56 bits.
+Restricting the _pa_ to the maximum accessible PA width supported by a platform allows
+for optimizing memory requirements of the MTT structures such as the MTTL2 and MTTL3
+entry tables, when the PA width is not exactly 34, 46 or 56 bits. Also note that the intent
+of using the maximum _accessible_ physical address space versus the maximum
+_implemented_ physical address width also allows for the case where an Smmtt
+mode is used that is lower width than what is implemented by the platform,
+for example, Smmtt46 used with a platform maximum PA of say 56 bits.
 ====
 
 3. Let _mpte_ be the value of the `MTT` table entry at address _a_ + _pa.pn[i]_
