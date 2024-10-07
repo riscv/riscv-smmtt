@@ -233,8 +233,9 @@ supervisor domain are ascertained as follows:
 is 2^12^; MTT_PTE_SIZE = 8 bytes (for RV32, MTT_PTE_SIZE = 4 bytes). The `mttp`
 register must be active, i.e., the effective privilege mode must not be M-mode.
 
-2. If _pa_ is beyond the maximum accessible physical address space of the platform
-by the hart, then stop and raise an access-fault exception corresponding to the
+2. If _pa_ is greater than maximum physical address mappable under the current
+MTT mode, or is greater than a platform-defined maximum physical address for
+the hart, then stop and raise an access-fault exception corresponding to the
 original access type.
 
 [NOTE]
@@ -257,9 +258,9 @@ set within _mpte_, stop and raise an access-fault exception corresponding to
 the original access type.
 
 5. Otherwise, the _mpte_ is valid. If (_i_=1) or (_i_=2 and _mpte.type_ is not
-`MTT_L1_DIR`), go to step 5. Otherwise, the _mpte_ is a pointer to the next
+`MTT_L1_DIR`), go to step 6. Otherwise, the _mpte_ is a pointer to the next
 level of the `MTT`. Let _i_ = _i_-1. Let _a_ = _mpte.ppn_ x PAGESIZE and go to
-step 2. Note that when _mpte.type_ = `MTT_L1_DIR`, the _mpte.ppn_ is the value
+step 3. Note that when _mpte.type_ = `MTT_L1_DIR`, the _mpte.ppn_ is the value
 of the _mpte.info_ field.
 
 6. A leaf _mpte_ has been found. If any bits or encodings within _mpte.type_
