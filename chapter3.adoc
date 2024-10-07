@@ -245,7 +245,7 @@ subsequent to the `MFENCE.SPA`
 
 `MINVAL.SPA` is only valid in M-mode.
 
-=== Extension to behavior of SFENCE.VMA and HFENCE.VMA
+=== Extension to behavior of SFENCE.VMA, HFENCE.GVMA and HFENCE.VVMA
 
 The behavior of the SFENCE.VMA and the HFENCE.VMA instructions are affected when
 the Smsdid extension is implemented.
