@@ -56,8 +56,8 @@ image::images/IOMTTCHK.png[width=800]
 
 The IO Bridge invokes the SDCL function using the SDID request interface (SDR)
 and provides it the identifiers associated with the incoming transaction. The
-SDCL classifies the request using the identifiers and provides the SDID and the
-IOMMU ID on the SDID completion interface (SDC).
+SDCL classifies the request using the identifiers and provides the IOSDID and
+the IOMMU ID on the SDID completion interface (SDC).
 
 The IO Bridge uses the IOMMU ID to determine the IOMMU governing this request.
 The IO Bridge uses the device translation request (DTR) interface to the
@@ -67,24 +67,83 @@ response to the address translation request on the device translation completion
 to access its in-memory data structures over its data structure interface (DSI).
 
 The IO Bridge invokes the MTTCHK function over the MTT check request (MCR)
-interface and provides it the SDID and physical address of the access. The
-MTTCHK uses the SDID to determine the MTT associated with the supervisor domain
-and checks if the physical address may be accessed by the device or IOMMU
+interface and provides it the IOSDID and physical address of the access. The
+MTTCHK uses the IOSDID to determine the MTT associated with the supervisor
+domain and checks if the physical address may be accessed by the device or IOMMU
 associated with that supervisor domain. The result of the check is provided on
-the MTT check completion (MTC) interface to the IO Bridge. As part of the MTT
+the MTT check completion (MCC) interface to the IO Bridge. As part of the MTT
 check, the MTTCHK may need to perform implicit accesses to the MTT using the MTT
-walk interface (MWI).
+walk interface (MWI). To perform the checks the MTTCHK uses the same MTT table
+format as used by the CPU's MMU. Using the same MTT table formats as the CPU's
+MMU allows the same table to be used simultaneously by the CPU MMU and MTTCHK.
+The MTT access permission lookup process used by MTTCHK is identical to that
+specified by Smmtt extension in section "MTT access permissions lookup process".
 
-Each IOMMU offers a memory-mapped register programming interface that the
-associated supervisor domain uses to configure and control the IOMMU. The RISC-V
-hart employs the MTT to enforce access controls on the physical address. This is
-done to ascertain whether the supervisor domain currently executing on that
-RISC-V hart possesses the rights to access the physical address of an IOMMU
-register programming interface.
+The RISC-V memory model requires memory access from a hart to be single-copy
+atomic. When RV32 is implemented the size of a single-copy atomic memory access
+is up to 32-bits. When RV64 is implemented the size of a single-copy atomic
+memory access is up to 64-bits. The size of a single-copy atomic memory access
+implemented by MTTCHK is UNSPECIFIED but is required to be at least 32-bits if
+all of the harts in the system implement RV32 and is required to be at least
+64-bits if any of the harts in the system implement RV64. Software must follow
+the rules outlined below to update MTT entries.
 
-The I/O MTT checker provides a memory-mapped register programming interface
-associated with the RDSM. The RDSM employs the MTT (or PMP) to prohibit access
-to these registers from any of the supervisor domains.
+* It is generally unsafe to update fields of an MTT entry using stores of width
+  less than the minimal single-copy atomic memory access supported by MTTCHK as
+  it is legal for MTTCHK to read the entry at any time, including when only
+  some of the partial stores have taken effect. For an update to be atomic,
+  software must use a single store of width equal to the minimal single-copy
+  atomic memory access supported by MTTCHK.
+
+* MTTCHK is not required to immediately observe the software updates to an MTT
+  entry. Software must use the `MTTINVAL` operation outlined in <<CTRL>> to
+  invalidate any previous copies of that entry that may be in the MTTCHK caches
+  to synchronize the updates to the entry with the operation of MTTCHK.
+
+[NOTE]
+====
+If an MTT entry is changed, MTTCHK may use the old value of the entry or the
+new value of the entry and the choice is unpredictable until software uses the
+`MTTINVAL` operation to synchronize updates to the entry with the operation of
+the MTTCHK. These are the only behaviors expected.
+====
+
+The I/O MTT checker provides a memory-mapped register programming interface.
+
+If an MTT check disallows a transaction then the transaction is aborted.
+
+If the aborted transaction is an IOMMU-initiated memory access then the IO bridge
+signals such access faults to the IOMMU itself. The details of such signaling is
+implementation defined.
+
+If the aborted transaction is a write then the IO bridge may discard the write;
+the details of how the write is discarded are implementation defined. If the IO
+protocol requires a response for write transactions (e.g., AXI) then a response
+as defined by the IO protocol may be generated by the IO bridge (e.g., SLVERR on
+BRESP - Write Response channel). For PCIe, for example, write transactions are
+posted and no response is returned when a write transaction is discarded. If the
+faulting transaction is a read then the device expects a completion. The IO
+bridge may provide a completion to the device. The data, if returned, in such
+completion is implementation defined; usually it is a fixed value such as all 0
+or all 1. A status code may be returned to the device in the completion to
+indicate this condition. For AXI, for example, the completion status is provided
+by SLVERR on RRESP (Read Data channel). For PCIe, for example, the completion
+status field may be set to "Unsupported Request" (UR) or "Completer Abort" (CA).
+
+As part of its operations, MTTCHK may need to read data from the MTT. The
+provider (a memory controller or a cache) of the data may detect that the data
+requested has an uncorrectable error and signal that the data is corrupted and
+defer the error to MTTCHK. Such technique to defer the handling of the corrupted
+data to the consumer of the data is also commonly known as data poisoning. The
+effects of such errors may be contained to the transaction that caused the
+corrupted data to be accessed. In the cases where the error affects the
+transaction being processed but otherwise allows the MTTCHK to continue providing
+service, MTTCHK may request the IO bridge to abort the transaction. The MTTCHK
+may support the RISC-V RAS error record register interface (RERI) that specifies
+methods for enabling error detection, logging the detected errors, and
+configuring means to report the error to an error handler. When such a RAS
+architecture is supported, errors such as attempted consumption of poisoned data
+may be reported using the methods provided by the RAS architecture.
 
 === I/O MTT Checker Register Interface
 
@@ -159,7 +218,7 @@ checker capabilities.
 ....
 {reg: [
   {bits:  8, name: 'VER'},
-  {bits:  1, name: 'MXL'},
+  {bits:  1, name: 'MTTM'},
   {bits: 39, name: 'WPRI'},
   {bits: 16, name: 'custom'}
 ], config:{lanes: 4, hspace:1024}}
@@ -171,16 +230,16 @@ specification and the upper nibble is used to hold the major version of the
 specification. For example, an implementation that supports version 1.0 of the
 specification reports 0x10.
 
-The `MXL` field indicates the supported MTT address protection schemes. If 1,
-then the MTT modes for `XLEN=64` are supported else the MTT modes for `XLEN=32`
-are supported.
+The `MTTM` field indicates the supported MTT address protection schemes. If 1,
+then the MTT modes for RV64 are supported else the MTT modes for RV32 are
+supported.
 
 [[CTRL]]
 === Control register (`control`)
 
 The `control` register is used to control classification of DMA requests using
 the identifiers associated with the DMA requests to determine the associated
-supervisor domain ID (`SDID`) and the MTT pointer (`MTTP`).
+IO supervisor domain ID (`IOSDID`) and the MTT pointer (`MTTP`).
 
 [caption="Register {counter:rimage}: ", reftext="Register {rimage}", title="Control register (`control`)"]
 [wavedrom, , ]
@@ -217,11 +276,9 @@ rules and is supported only if explicitly specified by an operation.
                              rule. If the operation is not successful then the
                              contents of `operand-0` and `operand-1` are
                              `UNSPECIFIED`.
-|`MTTINVAL`    | 3         | Invalidate MTT entries from a MTT cache. The
-                             operation may be requested to invalidate all
-                             entries of an MTT cache or to invalidate entries
-                             corresponding to an address range specified in the
-                             `operand-1` register.
+|`MTTINVAL`    | 3         | This operation ensures that stores to an MTT are
+                             observed by MTTCHK before subsequent implicit
+                             reads by MTTCHK to the corresponding MTT.
 |`IOFENCE`     | 4         | This command can be used to request that IOMTTCHK
                              ensure that all previous read and write requests
                              from devices that have already been processed by
@@ -268,7 +325,7 @@ Before requesting the `SET_ENTRY` operation using the `control` register,
 software should program the fields of the `operand-0` and `operand-1`
 registers. The `SET_ENTRY` operation utilizes the following fields from the
 `operand-0` and `operand-1` registers: `SRC_IDT`, `SRC_IDM`, `TEE_FLT`,
-`SRC_ID`, `IOMMU_ID`, `SDID`, `MTT_MODE` and `PPN`.
+`SRC_ID`, `IOMMU_ID`, `IOSDID`, `MTT_MODE`, `SRL`, `SML`, `SQRID` and `PPN`.
 
 If multiple rules are programmed to match a transaction, the implementation may
 act based on any one of those matching rules. However, if a transaction does not
@@ -284,19 +341,21 @@ The `GET_ENTRY` operation ignores the contents of both the `operand-0` and
 contents of these registers remain `UNSPECIFIED`. However, upon a successful
 `GET_ENTRY` operation, the configurations of the rule identified by
 `control.RULEID` are provided in the following fields: `SRC_IDT`, `SRC_IDM`,
-`TEE_FLT`, `SRC_ID`, `IOMMU_ID`, `SDID`, `MTT_MODE` and `PPN`. The state of
-all other fields in the `operand-0` and `operand-1` registers is `UNSPECIFIED`.
+`TEE_FLT`, `SRC_ID`, `IOMMU_ID`, `IOSDID`, `MTT_MODE`, `SRL`, `SML`, `SQRID`,
+and `PPN`. The state of all other fields in the `operand-0` and `operand-1`
+registers is `UNSPECIFIED`.
 
-The contents of `operand-0` and `operand-1` are disregarded by the `IOFENCE`
-operation.
+The contents of `RULEID`, `operand-0` and `operand-1` are disregarded by the
+`IOFENCE` operation.
 
-The `MTTINVAL` operation ignores the contents of `operand-0` register but
-utilizes the following fields from the `operand-1` register: `PPNV`, `PPN`
-and `S`.
+The `MTTINVAL` operation utilizes the `IOSDID` field of `operand-0` register and
+utilizes the following fields from the `operand-1` register: `PPNV`, `PPN`,
+`IOSDIDV`, and `S`. The contents of `RULEID` and all other fields of `operand-0`
+and `operand-1` register are disregarded by the `MTTINVAL` operation.
 
 [NOTE]
 ====
-If an identical `SDID` is configured in two rules but the MTT referenced by
+If an identical `IOSDID` is configured in two rules but the MTT referenced by
 the rules is not identical then it is unpredictable whether the MTT referenced
 by the first rule or the second rule will be used. These are the only expected
 behaviors.
@@ -318,7 +377,7 @@ operations requested through `control.OP`.
   {bits:  2, name: 'TEE_FLT (WARL)'},
   {bits: 24, name: 'SRC_ID'},
   {bits:  8, name: 'IOMMU_ID (WARL)'},
-  {bits:  8, name: 'SDID (WARL)'},
+  {bits:  8, name: 'IOSDID (WARL)'},
   {bits:  4, name: 'SRL'},
   {bits:  4, name: 'SML'},
   {bits:  4, name: 'SQRID'},
@@ -440,22 +499,25 @@ transactions related to a TEE. The `TEE_FLT` filter can be employed to associate
 these TEE-related transactions with a different supervisor domain than the
 transactions not related to TEE. This distinction is made even if both types of
 transactions are received on the same PCIe IDE stream.
+
+Fields such as `TEE_FLT` and `IOMMU_ID` are WARL and may be hardwired to 0 if
+the implementation does not support PCIe IDE and/or an IOMMU.
 ====
 
 The `IOMMU_ID` field identifies the instance of the IOMMU that should be used to
 provide address translation and protection for the transactions matching this
 rule.
 
-The `SDID` field identifies the supervisor domain whose memory is accessed by
+The `IOSDID` field identifies the supervisor domain whose memory is accessed by
 this transaction. When `operand-1.MTT_MODE` is `Bare`, the `SET_ENTRY`
-operations requires the `SDID` field to be zero.
+operations requires the `IOSDID` field to be zero.
 
 The `SRL` and `SML` fields along with `operand-1.SSM` field are used to determine
 the effective `RCID` and `MCID` provided by the IOMMU for device originated
 requests. The determination of the effective `RCID` and `MCID` is as specified
 by <<SMQOSID>>. The `SQRID` identifies the QRI for requests originating from the
-devices associated with the SD and accompanies the `RCID` and `MCID` in the
-requests made by the device to the QRI.
+devices and the IOMMU associated with the SD and accompanies the `RCID` and
+`MCID` in the requests made by the device to the QRI.
 
 [[OP-1]]
 === Operand 1 register (`operand-1`)
@@ -471,15 +533,16 @@ operations requested through `control.OP`.
   {bits:  4, name: 'MTT_MODE (WARL)'},
   {bits:  1, name: 'PPNV (WARL)'},
   {bits:  1, name: 'S (WARL)'},
+  {bits:  1, name: 'IOSDIDV'},
   {bits:  1, name: 'SSM'},
-  {bits:  3, name: 'WPRI'},
+  {bits:  2, name: 'WPRI'},
   {bits: 44, name: 'PPN'},
   {bits: 10, name: 'WPRI'}
 ], config:{lanes: 8, hspace:1024}}
 ....
 
 The `MTT_MODE` field identifies the mode of the MTT. It's interpreted as
-outlined in <<mtt-32>> when `capabilities.MXL` is 1, and as detailed in
+outlined in <<mtt-32>> when `capabilities.MTTM` is 1, and as detailed in
 <<mtt-64>> otherwise. The `MTT_MODE` field is programmed into the rule
 identified by `RULEID` via the `SET_ENTRY` operation and can be retrieved by
 the `GET_ENTRY` operation. Both the `IOFENCE` and `MTTINVAL` operations
@@ -490,17 +553,39 @@ The `PPN` field programs the PPN of the root page of the MTT during the
 `MTT_MODE` is `Bare`, the `SET_ENTRY` operations requires the `PPN` field to be
 zero. The `IOFENCE` operation disregards this field.
 
-The `MTTINVAL` operation refers to the PPNV field to determine the validity of
-the `PPN` field when it's set to 1. If the `PPNV` field is 0, the `MTTINVAL`
-operation affects all entries from the MTT associated with `RULEID`. If not, it
-acts on the PPN range as specified by the `PPN` and `S` fields. When the `PPNV`
-field is 1, the `S` field sets the address range size for the `MTTINVAL`
-operation. With an `S` field value of 0, the range size is 4 KiB. But, when the
-`S` field has a value of 1, the `MTTINVAL` operation focuses on a NAPOT range.
-This range is decided by the low-order bits of the `PPN` field, going up to the
-first low-order 0 bit (inclusive of this position). If the initial low-order 0
-bit position is denoted as `x`, the size of the range is computed as
-`(1 << (12 + x + 1))`.
+For the `MTTINVAL` operation, the `PPNV` field indicates if the `PPN` field is
+valid and the `IOSDIDV` field indicates if the `IOSDID` field is valid for the
+operation. When a field is not valid for an operation, it is ignored by the
+operation. When the `PPNV` field is 1, the `S` field sets the address range size
+for the `MTTINVAL` operation. With an `S` field value of 0, the range size is
+4 KiB. But, when the `S` field has a value of 1, the `MTTINVAL` operation
+focuses on a NAPOT range. This range is decided by the low-order bits of the
+`PPN` field, going up to the first low-order 0 bit (inclusive of this position).
+If the initial low-order 0 bit position is denoted as `x`, the size of the range
+is computed as `(1 << (12 + x + 1))`. When `PPNV` is set to 1, if the address
+range specifed by `PPN` and `S` is invalid, the operation may or may not be
+performed. Operations besides `MTTINVAL` disregard the `PPNV` field.
+
+The `MTTINVAL` operation ensures that stores to the MTT are observed by MTTCHK
+before subsequent implicit reads by MTTCHK to the corresponding MTT.
+
+. `MTTINVAL` operands and operations
+[%autowidth,float="center",align="center"]
+[%header, cols="^2,^2,20"]
+|===
+| `PPNV` | `IOSDIDV` | Operation
+|   0    |  0        | Invalidates information cached from any MTT for all
+                       supervisor domain address spaces.
+|   0    |  1        | Invalidates information cached from the MTT for the
+                       adddress space of the supervisor domain identified by
+                       the `IOSDID` operand.
+|   1    |  0        | Invalidates information cached from the MTT for the
+                       address range in the `PPN` operand for all supervisor
+                       domain address spaces.
+|   1    |  1        | Invalidates information cached from the MTT for the
+                       address range in the `PPN` operand for the supervisor
+                       domain address space identified by the `IOSDID` operand.
+|===
 
 [NOTE]
 ====
@@ -520,4 +605,24 @@ of the `PPN` field.
 | `01111 11111111 11111111`|  1  | 8  GiB
 |===
 
+====
+
+[NOTE]
+====
+Simpler implementations may ignore the operands of `MTTINVAL` operation and
+perform a global invalidation of all information cached from any MTT.
+
+A consequence of this specification is that an implementation may use any
+information for an address that was valid in the MTT at any time since the most
+recent `MTTINVAL` that subsumes that address.
+
+Another consequence of this specification is that it is generally unsafe to
+update the MTT using a set of stores of a width less than the width of the MTT
+entry, as it is legal for the implementation to read the MTT entries at any
+time, including when only some of the partial stores have taken effect.
+
+The IOMMU itself is a DMA capable device. The DMA performed by the IOMMU is
+performed using the device ID of the IOMMU. A rule must be defined to associate
+the IOMMU device ID itself with an `IOSDID` and MTT unless the IOMMU device ID
+is encompassed by another rule that associates device IDs with an SD.
 ====
