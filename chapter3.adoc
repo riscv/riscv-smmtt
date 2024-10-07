@@ -289,9 +289,9 @@ VS-stage address translations for instructions that are subsequent to the
 HFENCE.VMMA and execute when hgatp.VMID and mttp.SDID have the same setting as
 it did when HFENCE.VVMA executed.
 
-=== Extension to behavior of `Sinval`
+=== Extension to behavior of `Svinval`
 
-When `Sinval` is implemented with `Smsdid` the behavior of SINVAL.VMA is
+When `Svinval` is implemented with `Smsdid` the behavior of SINVAL.VMA is
 modified to also use the SDID from the CSR mttp in addition to the ASID provided
 in SINVAL.VMA.
 
