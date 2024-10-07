@@ -256,8 +256,7 @@ IO supervisor domain ID (`IOSDID`) and the MTT pointer (`MTTP`).
 
 The `OP` field is used to instruct IOMTTCHK to perform an operation listed in
 <<IOMTTCHK_OP>>. The `RULEID` is identifier of a rule in the SDCL function to
-operate on. The `RULEID` value of 0 indicates that the operation applies to all
-rules and is supported only if explicitly specified by an operation.
+operate on.
 
 [[IOMTTCHK_OP]]
 .I/O MTT checker operations (`OP`)
