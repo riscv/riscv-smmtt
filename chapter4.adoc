@@ -233,20 +233,16 @@ supervisor domain are ascertained as follows:
 is 2^12^; MTT_PTE_SIZE = 8 bytes (for RV32, MTT_PTE_SIZE = 4 bytes). The `mttp`
 register must be active, i.e., the effective privilege mode must not be M-mode.
 
-2. If _pa_ is greater than maximum physical address mappable under the current
-MTT mode, or is greater than a platform-defined maximum physical address for
-the hart, then stop and raise an access-fault exception corresponding to the
-original access type.
+2. If _pa_ is greater than maximum-addressable physical address under the
+current MTT mode, or is greater than a platform-defined maximum-addressable
+physical address for the hart, then stop and raise an access-fault exception
+corresponding to the original access type.
 
 [NOTE]
 ====
-Restricting the _pa_ to the maximum accessible PA width supported by a platform allows
-for optimizing memory requirements of the MTT structures such as the MTTL2 and MTTL3
-entry tables, when the PA width is not exactly 34, 46 or 56 bits. Also note that the intent
-of using the maximum _accessible_ physical address space versus the maximum
-_implemented_ physical address width also allows for the case where an Smmtt
-mode is used that is lower width than what is implemented by the platform,
-for example, Smmtt46 used with a platform maximum PA of say 56 bits.
+Restricting the _pa_ to the maximum-addressable PA width supported by a platform
+allows for optimizing memory requirements of the MTT structures such as the
+MTTL2 and MTTL3 entry tables, when the PA width is not 34, 46, or 56 bits.
 ====
 
 3. Let _mpte_ be the value of the `MTT` table entry at address _a_ + _pa.pn[i]_
@@ -273,14 +269,14 @@ physical address per the steps described below:
 
 * if _i_=2, and the _mpte.type_ field directly specifies the access-permissions
 for 1 GiB page regions (via 32 MTTL2 entries with identical _mpte.type_ values -
-see <<Smmtt-rw-l2-encoding>>); go to step 7, else
+see <<Smmtt-rw-l2-encoding>>); go to step 8, else
 
 * if _i_=2, and for XLEN = 64 and the _mpte.type_ field value `2M_PAGES`, the
 _mpte.info_[31:0] field contains 16 entries of 2-bit access-permission encodings
 for 16 2 MiB address regions; For XLEN=32 and _mpte.type_ field value of
 `4M_PAGES`, the _mpte.info_[16:0] field contains 8 entries of 2-bit
 access-permission encodings for 8 4 MiB regions - see <<Smmtt-rw-l2-encoding>>;
-go to step 7, else
+go to step 8, else
 
 * if _i_=1, the _mpte_ contains XLEN/4 4-bit entries that hold access-permission
 encodings for 4 KiB pages. The entry is selected by _pa.pn[0]_. The least
