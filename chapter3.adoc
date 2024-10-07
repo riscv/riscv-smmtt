@@ -191,10 +191,16 @@ domain access-permissions with current execution.
 specifies a single physical address, and if rs2≠x0, it specifies a single SDID. 
 The behavior of `MFENCE.SPA` depends on rs1 and rs2 as follows:
 
-* If rs1=x0 and rs2=x0, the fence orders all reads and writes to the MTT for all supervisor domain address spaces.
-* If rs1=x0 and rs2≠x0, the fence orders all reads and writes to the MTT for the supervisor domain address space identified by the SDID in rs2.
-* If rs1≠x0 and rs2=x0, the fence orders all reads and writes made to the MTT that correspond to the physical address in rs1, for all supervisor domain address spaces.
-* If rs1≠x0 and rs2≠x0, the fence orders all reads and writes made to the MTT that correspond to the physical address in rs1, for the supervisor domain address space identified by the SDID in rs2.
+* If rs1=x0 and rs2=x0, the fence orders all reads and writes to the MTT for 
+all supervisor domain address spaces.
+* If rs1=x0 and rs2≠x0, the fence orders all reads and writes to the MTT for
+the supervisor domain address space identified by the SDID in rs2.
+* If rs1≠x0 and rs2=x0, the fence orders all reads and writes made to the MTT
+that correspond to the physical address in rs1, for all supervisor domain
+address spaces.
+* If rs1≠x0 and rs2≠x0, the fence orders all reads and writes made to the MTT
+that correspond to the physical address in rs1, for the supervisor domain 
+address space identified by the SDID in rs2.
 
 Executing a `MFENCE.SPA` guarantees that any previous stores
 already visible to the current hart are ordered before all implicit reads by
