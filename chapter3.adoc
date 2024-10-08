@@ -209,7 +209,7 @@ and/or the SDID value in rs2, and always perform a global fence for all SDs.
 
 In some high-performance implementations, a finer-granular invalidation and
 fencing is required that allows for synchronization operations to be more
-efficiently batched. When `Sinval` is implemented with `Smsdid`, the
+efficiently batched. When `Svinval` is implemented with `Smsdid`, the
 `MINVAL.SPA` instruction must be implemented to support such fine-granular
 invalidation of physical memory access-permission caches.
 
@@ -248,3 +248,57 @@ prior to the `MINVAL.SPA`, and
 subsequent to the `MFENCE.SPA`
 
 `MINVAL.SPA` is only valid in M-mode.
+
+=== Extension to behavior of SFENCE.VMA, HFENCE.GVMA and HFENCE.VVMA
+
+The behavior of the SFENCE.VMA, HFENCE.GVMA and HFENCE.VVMA instructions are
+affected when the Smsdid extension is implemented.
+
+When SFENCE.VMA is used within a supervisor domain, the virtual-address argument
+is a virtual address with either the ASID being a S/HS-level ASID (V=0), or a
+VS-level ASID (V=1).
+
+For S/HS-level ASID, the virtual-address argument to SFENCE.VMA is a host
+virtual address within the current supervisor domain, and the ASID argument is
+a S/HS-level ASID within the current supervisor domain. The current supervisor
+domain is identified by the SDID field of the CSR mttp, and the effective ASID
+can be considered the combination of the SDID and the S/HS-level ASID. The
+SFENCE.VMA orders stores only to this S/HS-level address-translation structures
+with subsequent S/HS-level address translations.
+
+When V=1, the virtual-address argument to SFENCE.VMA is a guest virtual address
+within the current virtual machine, and the ASID argument is a VS-level ASID
+within the current virtual machine. The current virtual machine is identified by
+the SDID field of the CSR mttp and the VMID field of CSR hgatp. The effective
+ASID within this virtual machine can be considered to be the combination of this
+SDID and VMID along with the VS-level ASID. The SFENCE.VMA instruction orders
+stores only to the VS-level address-translation structures with subsequent
+VS-stage address translations for the same virtual machine, i.e., only when
+mttp.SDID and the hgatp.VMID is the same as when the SFENCE.VMA executed.
+
+For HFENCE.GVMA, the guest-physical address argument is within the context of
+the current virtual machine idenfied by the combination of the SDID field of the
+CSR mttp and the VMID field of CSR hgatp. Executing an HFENCE.GVMA guarantees
+that any previous stores already visible to the current hart are ordered before
+all implicit reads by that hart done for G-stage address translation for
+instructions that follow the HFENCE.GVMA, and execute with the same mttp.SDID
+and hgatp.VMID when HFENCE.GVMA executed.
+
+For HFENCE.VVMA, the guest-virtual address argument is within the context of
+the current virtual machine identified by the combination of the ASID specified
+in the vsatp, the VMID field of CSR hgatp, and the SDID field of CSR mttp.
+Executing an HFENCE.VVMA guarantees that any previous stores already visible to
+the current hart are ordered before all implicit reads by that hart done for
+VS-stage address translations for instructions that are subsequent to the
+HFENCE.VMMA and execute when hgatp.VMID and mttp.SDID have the same setting as
+it did when HFENCE.VVMA executed.
+
+=== Extension to behavior of `Svinval`
+
+When `Svinval` is implemented with `Smsdid` the behavior of SINVAL.VMA is
+modified to also use the SDID from the CSR mttp in addition to the ASID provided
+in SINVAL.VMA.
+
+When the `Hypervisor` extension is also implemented, the behavior of HINVAL.VVMA
+and HINVAL.GVMA is modified to also use the SDID from the CSR mttp in addition
+to the VMID provided in the HINVAL.GVMA or the ASID provided in HINVAL.VVMA.
