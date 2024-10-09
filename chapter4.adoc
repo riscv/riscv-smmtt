@@ -238,13 +238,6 @@ current MTT mode, or is greater than a platform-defined maximum-addressable
 physical address for the hart, then stop and raise an access-fault exception
 corresponding to the original access type.
 
-[NOTE]
-====
-Restricting the _pa_ to the maximum-addressable PA width supported by a platform
-allows for optimizing memory requirements of the MTT structures such as the
-MTTL2 and MTTL3 entry tables, when the PA width is not 34, 46, or 56 bits.
-====
-
 3. Let _mpte_ be the value of the `MTT` table entry at address _a_ + _pa.pn[i]_
  x MTT_PTE_SIZE. If accessing _mpte_ violates a PMA or PMP check, raise
 an access-fault exception corresponding to the original access type.
@@ -291,6 +284,14 @@ exception corresponding to the original access type.
 
 All implicit accesses to the memory tracking table data structures in
 this algorithm are performed using width MTT_PTE_SIZE.
+
+[NOTE]
+====
+Restricting the _pa_ (in step 2) to the maximum-addressable PA width supported
+by a platform allows for optimizing memory requirements of the MTT structures
+such as the MTTL2 and MTTL3 entry tables, when the PA width is not 34, 46, or 56
+bits.
+====
 
 [NOTE]
 ====
