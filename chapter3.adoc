@@ -189,6 +189,12 @@ The `MFENCE.SPA` fence instruction is used to synchronize updates to supervisor
 domain access-permissions with current execution.
 `MFENCE.SPA` is only valid in M-mode. If operand rs1≠x0, it
 specifies a single physical address, and if rs2≠x0, it specifies a single SDID. 
+
+If rs1 corresponds to an `MTT_L1_DIR` mapping, the fence applies to
+a 4 KiB page. If rs1 corresponds to a `2M_PAGES` or `4M_PAGES` mapping,
+the fence applies to a 2 MiB or 4 MiB range. If rs1 corresponds to one
+of the 1G_* mappings, the fence applies to a 1 GiB range.
+
 The behavior of `MFENCE.SPA` depends on rs1 and rs2 as follows:
 
 * If rs1=x0 and rs2=x0, the fence orders all reads and writes to the MTT for 
