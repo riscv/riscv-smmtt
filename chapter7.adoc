@@ -160,7 +160,7 @@ domains. To emulate an IMSIC, the RDSM may use the illegal instruction trap on
 access to the associated CSRs for emulation purposes.
 ====
 
-If `Smsdia` extension is implemented, then `msdcfg.SDICN` at reset is non-zero
+If `Smsdia` extension is implemented, then `msdcfg.SDICN` is non-zero at reset
 and holds the number of an implemented supervisor domain interrupt controller.
 
 === Machine supervisor domain external interrupt pending (`msdeip/msdeiph`)
