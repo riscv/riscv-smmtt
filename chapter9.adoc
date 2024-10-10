@@ -205,6 +205,8 @@ if SSM == 0
 else
     if ((RCID-value & ~SRL_MASK) | SRL_MASK) != ((1 << RCIDLEN) - 1)
         srmcfg.RCID = RCID-value
+    else
+        srmcfg.RCID = RCID-value & ((1 << RCIDLEN) - (1 << SRL) - 1)
     endif
 endif
 
@@ -214,6 +216,8 @@ if SSM == 0
 else
     if ((MCID-value & ~SML_MASK) | SML_MASK) != ((1 << MCIDLEN) - 1)
         srmcfg.MCID = MCID-value
+    else
+        srmcfg.MCID = MCID-value & ((1 << MCIDLEN) - (1 << SML) - 1)
     endif
 endif
 ----
