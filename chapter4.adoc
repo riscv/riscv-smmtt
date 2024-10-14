@@ -59,9 +59,16 @@ The following MTT L3 entry accomodates a 56 bit PAW:
 ....
 {reg: [
   {bits:  44, name: 'MTTL2 PPN'},
-  {bits:  20, name: 'ZERO'},
+  {bits:  19, name: 'ZERO'},
+  {bits:   1, name: 'VALID'},
 ], config:{lanes: 1, hspace:1024}}
 ....
+
+The `VALID` bit determines the validity of the `MTTL3` entry. If this bit is
+set, the `MTTL3` entry is valid and the `MTTL2 PPN` holds the next level of the
+MTT, and the `ZERO` field must be 0. If the `VALID` bit is clear, the entry is
+invalid, and all other bits in the entry are don't-cares and may be used freely
+by software.
 
 The following are the `MTTL2` entry by XLEN:
 
@@ -243,8 +250,8 @@ corresponding to the original access type.
 an access-fault exception corresponding to the original access type.
 
 4. If any bits or encodings that are reserved for future standard use are
-set within _mpte_, stop and raise an access-fault exception corresponding to
-the original access type.
+set within _mpte_, or _mpte_ is a not-valid `MTTL3` entry, stop and raise an
+access-fault exception corresponding to the original access type.
 
 5. Otherwise, the _mpte_ is valid. If (_i_=1) or (_i_=2 and _mpte.type_ is not
 `MTT_L1_DIR`), go to step 6. Otherwise, the _mpte_ is a pointer to the next
