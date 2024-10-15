@@ -59,8 +59,8 @@ The following MTT L3 entry accomodates a 56 bit PAW:
 ....
 {reg: [
   {bits:  44, name: 'MTTL2 PPN'},
-  {bits:  19, name: 'ZERO'},
   {bits:   1, name: 'VALID'},
+  {bits:  19, name: 'ZERO'},
 ], config:{lanes: 1, hspace:1024}}
 ....
 
