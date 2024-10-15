@@ -78,7 +78,7 @@ may define different interpretations of the other fields in `mttp`.
 protection scheme described in Section 3.7 of the RISC-V privileged architecture
 specification cite:[ISA]
 
-|1 |`Smmtt34` |Page-based supervisor domain protection for 34 bit physical
+|1 |`Smmtt34` |Page-based supervisor domain protection for up to 34 bit physical
 addresses with RWX permissions per page
 
 |2-3 |- |`_Reserved_`
@@ -92,10 +92,10 @@ addresses with RWX permissions per page
 protection scheme described in Section 3.7 of the RISC-V privileged architecture
 specification cite:[ISA]
 
-|1 |`Smmtt46` |Page-based supervisor domain protection for 46 bit physical
+|1 |`Smmtt46` |Page-based supervisor domain protection for up to 46 bit physical
 addresses with RWX permissions per page
 
-|2 |`Smmtt56` |Page-based supervisor domain protection for 56 bit physical
+|2 |`Smmtt56` |Page-based supervisor domain protection for up to 56 bit physical
 addresses with RWX permissions per page
 
 |3-15 |- |`_Reserved_`
