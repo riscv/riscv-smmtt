@@ -59,7 +59,7 @@ an illegal instruction exception.
 supervisor domains beyond the physical memory protection scheme described in
 Section 3.7 of the RISC-V privileged architecture specification cite:[ISA]. In
 this case, the remaining fields (`SDID`, `PPN`) in `mttp` must be set to
-zeros, else generate a fault. When `XLEN=32`, the other valid setting for
+zeros. When `XLEN=32`, the other valid setting for
 `MODE` is `Smmtt34` to support read-write-execute
 access permissions for 34-bit system physical addresses.
 
@@ -188,7 +188,7 @@ respective sections in this specification.
 The `MFENCE.SPA` fence instruction is used to synchronize updates to supervisor
 domain access-permissions with current execution.
 `MFENCE.SPA` is only valid in M-mode. If operand rs1≠x0, it
-specifies a single physical address, and if rs2≠x0, it specifies a single SDID. 
+specifies a single physical address, and if rs2≠x0, it specifies a single SDID.
 
 If rs1 corresponds to an `MTT_L1_DIR` mapping, the fence applies to
 a 4 KiB page. If rs1 corresponds to a `2M_PAGES` or `4M_PAGES` mapping,
@@ -197,7 +197,7 @@ of the 1G_* mappings, the fence applies to a 1 GiB range.
 
 The behavior of `MFENCE.SPA` depends on rs1 and rs2 as follows:
 
-* If rs1=x0 and rs2=x0, the fence orders all reads and writes to the MTT for 
+* If rs1=x0 and rs2=x0, the fence orders all reads and writes to the MTT for
 all supervisor domain address spaces.
 * If rs1=x0 and rs2≠x0, the fence orders all reads and writes to the MTT for
 the supervisor domain address space identified by the SDID in rs2.
@@ -205,7 +205,7 @@ the supervisor domain address space identified by the SDID in rs2.
 that correspond to the physical address in rs1, for all supervisor domain
 address spaces.
 * If rs1≠x0 and rs2≠x0, the fence orders all reads and writes made to the MTT
-that correspond to the physical address in rs1, for the supervisor domain 
+that correspond to the physical address in rs1, for the supervisor domain
 address space identified by the SDID in rs2.
 
 Executing a `MFENCE.SPA` guarantees that any previous stores
