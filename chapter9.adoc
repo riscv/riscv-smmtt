@@ -229,10 +229,10 @@ The RDSM may allocate 24 RCIDs to the first SD and 8 RCIDs to the second SD. The
 `SRL` and `SSM` configurations used by the RDSM to support this use case are as
 follows:
 
-* The RDSM configures `SRL` to 3 and `SSM` to 0 for first SD. This allows the
+* The RDSM configures `SRL` to 3 and `SSM` to 1 for first SD. This allows the
   first SD to select `RCID` values 0 through 23 in `srmcfg`.
 
-* The RDSM configures `SRL` to 3 and `SSM` to 1 for the second SD and programs
+* The RDSM configures `SRL` to 3 and `SSM` to 0 for the second SD and programs
   the `srmcfg` with a value of 24. The second SD is allowed to program the low
   order 3 bits of `srmcfg.RCID`, thereby selecting `RCID` values between 24 and 31.
   When this SD reads `srmcfg.RCID`, the value returned consist of the low 3 bits,
