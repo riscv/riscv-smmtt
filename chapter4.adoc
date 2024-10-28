@@ -291,6 +291,8 @@ exception corresponding to the original access type.
 
 All implicit accesses to the memory tracking table data structures in
 this algorithm are performed using width MTT_PTE_SIZE.
+Implicit accesses to the MTT are governed by `mstatus.MBE` control for RV64
+(`mstatush.MBE` control for RV32).
 
 [NOTE]
 ====
