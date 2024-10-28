@@ -45,7 +45,7 @@ by virtualizing hart, guest physical memory and input/output (IO) resources.
 
 | MMU | Memory management unit (MMU).
 
-| MTT | Memory Tracking Table (MTT).
+| MPT | Machine-level Memory Protection Tables (MPT).
 
 | Relying party | An entity that uses the attestation process
 to assess the trustworthiness of an attester.
