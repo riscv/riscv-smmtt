@@ -33,7 +33,7 @@ functions:
   for that request.
 
 * MPT Checker (MPTCHK): This function ensures that stipulated access controls by
-  Smmpt are applied to the memory regions accessed by the DMA. It uses the MPT
+  `Smmpt` are applied to the memory regions accessed by the DMA. It uses the MPT
   identified by the SDCL.
 
 Collectively, these two functionalities form a logical block in the I/O
@@ -77,7 +77,7 @@ walk interface (MWI). To perform the checks the MPTCHK uses the same MPT table
 format as used by the CPU's MMU. Using the same MPT table formats as the CPU's
 MMU allows the same table to be used simultaneously by the CPU MMU and MPTCHK.
 The MPT access permission lookup process used by MPTCHK is identical to that
-specified by Smmpt extension in section "MPT access permissions lookup process".
+specified by `Smmpt` extension in section "MPT access permissions lookup process".
 
 The RISC-V memory model requires memory access from a hart to be single-copy
 atomic. When RV32 is implemented the size of a single-copy atomic memory access

@@ -14,7 +14,7 @@ transactions that are globally visible.
 
 === Machine-level Memory Protection Tables (`mmpt`)
 
-The `mptp` register is an `XLEN`-bit read/write register, formatted as shown in
+The `mmpt` register is an `XLEN`-bit read/write register, formatted as shown in
 <<sdid-32>> for `XLEN=32` and <<sdid-64>> for `XLEN=64`, which controls
 physical address protection for supervisor domains. This register holds the
 physical page number (`PPN`) of the root page of the memory protection tables
@@ -111,7 +111,7 @@ address width (`PAW`). For 56 >= `PAW` > 46, `MPTL3` table must be of size
 >= `PAW` > 32 the `MPTL2` table must be of size 2^(`PAW`-22) bytes for
 `Smmpt46` and `Smmpt34`, and must be naturally aligned to that sized byte
 boundary. In these modes, the lowest two bits of the physical page number
-(`mptp.PPN`) in `mmpt` always read as zeros.
+(`mmpt.PPN`) in `mmpt` always read as zeros.
 
 The number of `SDID` bits is `UNSPECIFIED` and may be zero. The number of
 implemented `SDID` bits, termed `SDIDLEN`, may be determined by writing one to
