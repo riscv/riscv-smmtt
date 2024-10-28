@@ -194,8 +194,7 @@ desired for the supervisor domain.
 The `MTTL1` entry is XLEN wide and holds XLEN/4 number of 2-bit fields where
 each field specifies the access-permissions for a 4 KiB page (with XLEN-1:XLEN/2
 bits reserved for future use). The entry is selected by page.pn[1], and the
-2-bit field in the entry is selected using page.pn[0], with lsb bits 1:0 holding
-the access-permission encoding. See <<mtt-l1-rv64>> for XLEN = 64 and
+2-bit field in the entry is selected using page.pn[0]. See <<mtt-l1-rv64>> for XLEN = 64 and
 <<mtt-l1-rv32>> for XLEN = 32. Thus, there are 2 `PERM` bits for each 4 KiB
 page. The encoding of `PERM` is as follows:
 
