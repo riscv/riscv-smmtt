@@ -336,7 +336,8 @@ translation, but excluding implicit MPT checker accesses to MPT structures. Data
 in M-mode when the MPRV bit in mstatus is set and the MPP field in mstatus contains S
 or U are subject to MPT checks. MPT checker accesses to MPT structures are to be
 treated as implicit M-mode accesses and are subject to PMP/Smepmp and
-IOPMP checks. The MPT checker indexes the MPT using the
+IOPMP checks. Implicit accesses to the MPT are governed by `mstatus.MBE` control
+for RV64 and `mstatush.MBE` control for RV32. The MPT checker indexes the MPT using the
 physical address of the access to lookup and enforce the access permissions.
 A mismatch of the access type and the access permissions specified in the
 MPT entry that applies to the accessed region is reported as a trap to the

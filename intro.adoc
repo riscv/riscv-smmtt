@@ -107,9 +107,10 @@ supervisor domain may be static (e.g. device assignment to a VM) or dynamic
 (e.g. scheduling a VM virtual cpu within a domain). The MPT for the supervisor
 domain active on the hart is programmed on the hart along with the supervisor
 domain identifier. The MPT does not perform any address translation; it simply
-provides access permissions for the physically addressed region/page (post any
-S-mode and/or G-stage address translation) to enforce the isolation properties
-per the use case requirements (see <<mpt-lookup>>).
+provides access permissions for the physically addressed regions/pages
+to enforce the isolation properties per the use case requirements (see
+<<mpt-lookup>> for a high-level illustration and section <<Smmpt>> for
+normative details).
 
 [caption="Figure {counter:image}: ", reftext="Figure {image}"]
 [title= "MPT lookup for Supervisor Domain Access", id=mpt-lookup]
