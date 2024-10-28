@@ -34,14 +34,14 @@ The MPT maps the SPA to read-write-execute access permissions.
 ....
 
 The `PPN` rooted structure for the MPT is shown below. <<mpt-map-rv64>>
-shows an RV64 supervisor physical address lookup; for lower physical
-address widths e.g. 34 or 46 bits, the `MPTL3` table is not applicable as shown
-in <<mpt-map-rv32>>. Each physical-addressable page is associated with an
-access-permission encoding. The Supervisor Physical address (SPA) is used to
-index into the `MPT` structure in memory to lookup access permissions for the
-supervisor domain specified in the `MPTL2` or `MPTL1` entries. Intermediate
-`MPTL3` and `MPTL2` non-leaf entries are used to allow this structure to be
-sparsely populated.
+specifies an RV64 supervisor physical address lookup and <<mpt-map-rv32>>
+specifies an RV32 supervisor physical address lookup. Each physical-addressable
+page is associated with an access-permission encoding. The supervisor physical
+address (SPA) is used to index into the `MPT` structure in memory to lookup
+access permissions for the supervisor domain specified via the MPT structures.
+Intermediate `MPTL3` and `MPTL2` non-leaf entries are used to allow this
+structure to be sparsely populated. The `MPTL3` table is not applicable for
+physical address widths <= 46.
 
 [caption="Figure {counter:image}: ", reftext="Figure {image}"]
 [title= "`MPT` walk for RV64", id=mpt-map-rv64]
@@ -60,15 +60,15 @@ The following MPT L3 entry accomodates a 56 bit PAW:
 {reg: [
   {bits:  44, name: 'MPTL2 PPN'},
   {bits:   1, name: 'VALID'},
-  {bits:  19, name: 'ZERO'},
+  {bits:  19, name: 'RESERVED'},
 ], config:{lanes: 1, hspace:1024}}
 ....
 
 The `VALID` bit determines the validity of the `MPTL3` entry. If this bit is
 set, the `MPTL3` entry is valid and the `MPTL2 PPN` holds the next level of the
-MPT, and the `ZERO` field must be 0. If the `VALID` bit is clear, the entry is
-invalid, and all other bits in the entry are don't-cares and may be used freely
-by software.
+MPT, and the `RESERVED` field must be 0. If the `VALID` bit is clear, the entry
+is invalid, and all other bits in the entry are don't-cares and may be used
+freely by software.
 
 The following are the `MPTL2` entry by XLEN:
 
@@ -79,7 +79,7 @@ The following are the `MPTL2` entry by XLEN:
 {reg: [
   {bits:  44, name: 'INFO'},
   {bits:  3,  name: 'TYPE'},
-  {bits:  17, name: 'ZERO'},
+  {bits:  17, name: 'RESERVED'},
 ], config:{lanes: 1, hspace:1024}}
 ....
 
@@ -90,14 +90,15 @@ The following are the `MPTL2` entry by XLEN:
 {reg: [
   {bits:  22, name: 'INFO'},
   {bits:  3,  name: 'TYPE'},
-  {bits:  7,  name: 'ZERO'},
+  {bits:  7,  name: 'RESERVED'},
 ], config:{lanes: 1, hspace:1024}}
 ....
 
-The `ZERO` field must always be 0.
+The `RESERVED` field must always be 0.
 
-The `TYPE` field determines the interpretation of the `MPTL2` entry. The
-`TYPE` field encoding is as follows:
+The `TYPE` field determines the interpretation of the `MPTL2` entry. Unless
+specified, the encodings are the same for RV32 and RV64. The `TYPE` field
+encoding is as follows:
 
 * 000b - `1G_disallow` - read, write or execute access is not allowed for the
           1 GiB range for the supervisor domain.
@@ -108,10 +109,11 @@ The `TYPE` field determines the interpretation of the `MPTL2` entry. The
 * 011b - `1G_allow_rwx` - read, write and execute access for the 1 GiB range is
           allowed for the supervisor domain
 * 100b - `MPT_L1_DIR` - The 32 MiB range is composed of 8192 x 4 KiB pages.
-* 101b - `4M_PAGES` - The 32 MiB range is composed of 8 x 4 MiB pages. This
-          encoding only applies to RV32 and is reserved for RV64.
-* 110b - `2M_PAGES` - The 32 MiB range is composed of 16 x 2 MiB pages. This
-          encoding only applies to RV64 and is reserved for RV32.
+* 101b - `4M_PAGES` (RV32) or `2M_PAGES` (RV64). For RV32, `4M_PAGES` specifies
+          that the 32 MiB range is composed of 8 x 4 MiB pages. For RV64
+         `2M_PAGES` specifies that the 32 MiB range is composed of 16 x 2 MiB
+          pages.
+* 110b - `Reserved` for future use and causes an access violation if used.
 * 111b - `Reserved` for future use and causes an access violation if used.
 
 The `INFO` field depends on the `TYPE` field and is formatted as per the
@@ -126,35 +128,47 @@ following table:
 _read, write or execute is not allowed to this 1 GiB address range for the
 domain._ The `INFO` field must be 0. When configuring 1 GiB ranges, RDSM must
 ensure that 32 `MPTL2` entries, each corresponding to 32 MiB of address space,
-have identical `TYPE` field values.
+have identical `TYPE` field values. If the 32 consecutive `MPTL2` entries
+corresponding to this 1 GiB address range do not have identical `TYPE` field
+values, it is unspecified which of these entries is used to determine the
+permissions for this address range.
 
 |`1G_allow_rx` a|
 _read and execute (but no write) is allowed to this 1 GiB address range for the
 domain._ The `INFO` field must be 0. When configuring 1 GiB ranges, RDSM must
 ensure that 32 `MPTL2` entries, each corresponding to 32 MiB of address space,
-have identical `TYPE` field values.
+have identical `TYPE` field values. If the 32 consecutive `MPTL2` entries
+corresponding to this 1 GiB address range do not have identical `TYPE` field
+values, it is unspecified which of these entries is used to determine the
+permissions for this address range.
 
 |`1G_allow_rw` a|
 _read and write (but no execute) is allowed to this 1 GiB address range for the
 domain._ The `INFO` field must be 0. When configuring 1 GiB ranges, RDSM must
 ensure that 32 `MPTL2` entries, each corresponding to 32 MiB of address space,
-have identical `TYPE` field values.
+have identical `TYPE` field values. If the 32 consecutive `MPTL2` entries
+corresponding to this 1 GiB address range do not have identical `TYPE` field
+values, it is unspecified which of these entries is used to determine the
+permissions for this address range.
 
 |`1G_allow_rwx` a|
 _read, write and execute is allowed to this 1 GiB address range for the domain._
 The `INFO` field must be 0. When configuring 1 GiB ranges, RDSM must ensure that
 32 `MPTL2` entries, each corresponding to 32 MiB of address space, have
-identical `TYPE` field values.
+have identical `TYPE` field values. If the 32 consecutive `MPTL2` entries
+corresponding to this 1 GiB address range do not have identical `TYPE` field
+values, it is unspecified which of these entries is used to determine the
+permissions for this address range.
 
 |`MPT_L1_DIR` a|
 The `INFO` field provides the PPN of the `MPTL1` page. Entries of the `MPTL1`
-page hold XLEN/4 4-bit fields with 2-bit `PERM` field (bits 1:0) and 2 reserved
-bits (3:2) for future use. The 2-bit `PERM` field holds access-permission
-for 4 KiB pages for the supervisor domain, as described in <<mpt-l1-rv64>> for
-RV64 and <<mpt-l1-rv32>> for RV32.
+page hold XLEN/4 2-bit `PERM` fields for each 4 KiB page. MSB bits
+XLEN-1:XLEN/2 of the `MTTL1` entry are reserved for future use. The 2-bit `PERM`
+field holds access-permission for 4 KiB pages for the supervisor domain, as
+described in <<mpt-l1-rv64>> for RV64 and <<mpt-l1-rv32>> for RV32.
 
 |`4M_PAGES` a|
-This encoding applies only to RV32.
+This encoding is specified as follows for RV32:
 _The 32 MiB range of address space is partitioned into 8 4 MiB pages where each
 page has read/write/execute access specified via the `INFO` field._
 The `INFO` field holds 8 2-bit `PERM` access-encoding for each 4 MiB address
@@ -164,7 +178,7 @@ _mpte.info[15:0]_ holds the 2 MiB page permissions, and _mpte.info[21:16]_ are
 reserved and must be zero.
 
 |`2M_PAGES` a|
-This encoding applies only to RV64.
+This encoding is specifies as follows for RV64:
 _The 32 MiB range of address space is partitioned into 16 2 MiB pages where each
 page has read/write/execute access specified via the `INFO` field._
 The `INFO` field holds 16 2-bit `PERM` access-encoding for each 2 MiB address
@@ -177,11 +191,10 @@ reserved and must be zero.
 The `MPTL1` table is populated if protection granularity of the 4 KiB page is
 desired for the supervisor domain.
 
-The `MPTL1` entry is XLEN wide and holds XLEN/4 number of 4-bit fields where
-each field specifies 2-bit access-permissions for a 4 KiB page (with 2 bits
-reserved for future uses). The entry is selected by page.pn[1], and the 4-bit
-field in the entry is selected using page.pn[0], with lsb bits 1:0 holding the
-access-permission encoding. See <<mpt-l1-rv64>> for XLEN = 64 and
+The `MPTL1` entry is XLEN wide and holds XLEN/4 number of 2-bit fields where
+each field specifies the access-permissions for a 4 KiB page (with XLEN-1:XLEN/2
+bits reserved for future use). The entry is selected by page.pn[1], and the
+2-bit field in the entry is selected using page.pn[0]. See <<mpt-l1-rv64>> for XLEN = 64 and
 <<mpt-l1-rv32>> for XLEN = 32. Thus, there are 2 `PERM` bits for each 4 KiB
 page. The encoding of `PERM` is as follows:
 
@@ -209,11 +222,10 @@ address space for the domain.
 [wavedrom, ,svg]
 ....
 {reg: [
-  {bits:  2, name: 'PERM'},
-  {bits:  2, name: 'resv'},
-  {bits:  56, name: '...'},
-  {bits:  2, name: 'PERM'},
-  {bits:  2, name: 'resv'},
+  {bits:  2,  name: 'PERM'},
+  {bits:  28, name: '...'},
+  {bits:  2,  name: 'PERM'},
+  {bits:  32, name: 'resv'},
 ], config:{lanes: 1, hspace:1024}}
 ....
 
@@ -222,11 +234,10 @@ address space for the domain.
 [wavedrom, ,svg]
 ....
 {reg: [
-  {bits:  2, name: 'PERM'},
-  {bits:  2, name: 'resv'},
-  {bits:  24, name: '...'},
-  {bits:  2, name: 'PERM'},
-  {bits:  2, name: 'resv'},
+  {bits:  2,  name: 'PERM'},
+  {bits:  12, name: '...'},
+  {bits:  2,  name: 'PERM'},
+  {bits:  16,  name: 'resv'},
 ], config:{lanes: 1, hspace:1024}}
 ....
 
@@ -278,10 +289,11 @@ for 16 2 MiB address regions; For XLEN=32 and _mpte.type_ field value of
 access-permission encodings for 8 4 MiB regions - see <<Smmpt-rw-l2-encoding>>;
 go to step 8, else
 
-* if _i_=1, the _mpte_ contains XLEN/4 4-bit entries that hold access-permission
-encodings for 4 KiB pages. The entry is selected by _pa.pn[0]_. The least
-significant 2 bits of each entry specify the access-permission encoding for the
-_pa_. The encodings are specified in <<Smmpt-rw-l1-encoding>>.
+* if _i_=1, the _mpte_ contains XLEN/4 2-bit entries that hold access-permission
+encodings for 4 KiB pages. The entry is selected by _pa.pn[0]_. The LSB
+XLEN/2-1:0 bits holds 2-bit encodings within the entry to specify the
+access-permission encoding for the _pa_. The MSB XLEN-1:XLEN/2 bits are
+reserved. The encodings are specified in <<Smmpt-rw-l1-encoding>>.
 
 8. Determine if the requested physical memory access is allowed per the
 access-permissions. If access is not permitted, stop and raise an access-fault
@@ -320,7 +332,7 @@ implemented.
 
 MPT is checked for all accesses to physical memory, unless the effective privilege
 mode is M, including accesses that have undergone virtual to physical memory
-translation, but excluding MPT checker accesses to MPT structures. Data accesses
+translation, but excluding implicit MPT checker accesses to MPT structures. Data accesses
 in M-mode when the MPRV bit in mstatus is set and the MPP field in mstatus contains S
 or U are subject to MPT checks. MPT checker accesses to MPT structures are to be
 treated as implicit M-mode accesses and are subject to PMP/Smepmp and
