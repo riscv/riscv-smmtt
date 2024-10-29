@@ -163,7 +163,7 @@ permissions for this address range.
 |`MPT_L1_DIR` a|
 The `INFO` field provides the PPN of the `MPTL1` page. Entries of the `MPTL1`
 page hold XLEN/4 2-bit `PERM` fields for each 4 KiB page. MSB bits
-XLEN-1:XLEN/2 of the `MTTL1` entry are reserved for future use. The 2-bit `PERM`
+XLEN-1:XLEN/2 of the `MPTL1` entry are reserved for future use. The 2-bit `PERM`
 field holds access-permission for 4 KiB pages for the supervisor domain, as
 described in <<mpt-l1-rv64>> for RV64 and <<mpt-l1-rv32>> for RV32.
 
