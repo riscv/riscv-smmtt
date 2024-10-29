@@ -266,8 +266,8 @@ Capacity and bandwidth controllers that support supervisor domains provide one
 or more memory-mapped QoS register interfaces (QRI). A QRI may be made
 exclusively accessible to a supervisor domain or the RDSM may mediate access to
 the QRI using an SBI. The RDSM can control access to the QRI from supervisor
-domains using MTT and/or PMP. The RDSM controls access to the QRI from devices
-using IOMTT and/or IOPMP.
+domains using MPT and/or PMP. The RDSM controls access to the QRI from devices
+using IOMPT and/or IOPMP.
 
 The number of `RCID` and `MCID` supported by the controllers for each QRI need
 not be identical. For maximal flexibility in allocation of `RCID` and `MCID`

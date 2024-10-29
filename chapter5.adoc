@@ -2,14 +2,14 @@
 [[Svpams]]
 == `Svpams`: Supervisor domain physical address metadata selector
 
-M-mode software uses the MTT to create isolated physical memory regions
+M-mode software uses the MPT to create isolated physical memory regions
 associated with specific supervisor domains to enforce the required software
 access-control policies. Typically a supervisor domain has *domain exclusive*
 access to the memory region/pages of a region. Supervisor domains may also
 negotiate/grant access to a common/shared pool of memory regions/pages between
 supervisor domains - these memory regions may be accessible to all supervisor
 domains i.e. *domain global-shared* memory, or a specific subset of supervisor
-domains i.e., *domain restricted-shared* memory. Note here that the MTT
+domains i.e., *domain restricted-shared* memory. Note here that the MPT
 enforces access-control based isolation only.
 
 Some supervisor domain usages and threat models may also require cryptographic
@@ -33,9 +33,9 @@ cases, other n-lateral setup cryptographic contexts can be selected via the
 Svpams capability. Other meta-data values associated with physical addresses
 may also be selected via the Physical Address Metadata Selector.
 
-The Svpams mechanism is independent of the Smmtt mechanism since Svpams enables
+The Svpams mechanism is independent of the Smmpt mechanism since Svpams enables
 additional properties to be enforced for memory accesses beyond the
-access-control/isolation mechanism that Smmtt enables.
+access-control/isolation mechanism that Smmpt enables.
 
 === Svpams
 
