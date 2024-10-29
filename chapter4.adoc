@@ -247,7 +247,7 @@ MPT access-permissions for a physical address PA in the context of a
 supervisor domain are ascertained as follows:
 
 1. Let _a_ be `mmpt.ppn` x PAGESIZE, and let _i_ = LEVELS, where for mode
-`Smmpt34`, LEVELS = 2 and for `Smmpt[46 | 56]`, LEVELS = 3; PAGESIZE
+`Smmpt[34 | 46]`, LEVELS = 2 and for `Smmpt56`, LEVELS = 3; PAGESIZE
 is 2^12^; MPT_PTE_SIZE = 8 bytes (for RV32, MPT_PTE_SIZE = 4 bytes). The `mmpt`
 register must be active, i.e., the effective privilege mode must not be M-mode.
 
