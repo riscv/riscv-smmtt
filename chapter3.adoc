@@ -6,11 +6,17 @@
 under which a hart is operating. The interface consists of M-mode CSRs `msdcfg`
 and `mmpt`. The SDID programmed via this interface is a local identifier for the
 hart and may be used to tag hart-local resources to access-control data
-associated with the supervisor domain. For most typical usages, the SDID will
-remain stable over the life of the supervisor domain. However, the SDID can be
-changed at the cost of fencing to flush any prior cached state. The SDID is
+associated with the supervisor domain. The SDID is
 unique only to a hart, hence, SDID must not be used to tag downstream
 transactions that are globally visible.
+
+[NOTE]
+====
+For most typical usages, the SDID will remain stable over the life
+of the supervisor domain. However, the SDID can be changed
+at the cost of flushing any prior cached state that was
+associated with the SDID.
+====
 
 === Machine-level Memory Protection Tables (`mmpt`)
 
