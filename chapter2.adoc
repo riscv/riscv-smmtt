@@ -5,7 +5,7 @@ The following normative architecture extensions are defined.
 
 * `Smsdid` (<<Smsdid>>) - An interface to program the active supervisor domain
 under which a hart is operating. This is a dynamic control state on the hart
-that can be held in an M-mode CSR and modifiable by the RDSM via CSR r/w
+that is held in an M-mode CSR and modifiable by the RDSM via CSR r/w
 instructions  - herewith called the `supervisor domain identifier` assigned to
 the hart. The SDID is a local identifier for the hart and may be used to tag
 hart-local resources to access-control data associated with the supervisor
