@@ -41,7 +41,7 @@ address (SPA) is used to index into the `MPT` structure in memory to lookup
 access permissions for the supervisor domain specified via the MPT structures.
 Intermediate `MPTL3` and `MPTL2` non-leaf entries are used to allow this
 structure to be sparsely populated. The `MPTL3` table is not applicable for
-physical address widths <= 46.
+physical address widths \<= 46.
 
 [caption="Figure {counter:image}: ", reftext="Figure {image}"]
 [title= "`MPT` walk for RV64", id=mpt-map-rv64]
