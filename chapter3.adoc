@@ -112,13 +112,19 @@ Implementations are not required to support all defined `MODE` settings when
 Instead, the fields of `mmpt` are `WARL` in the normal way, when so indicated
 in <<sdid-32>> and <<sdid-64>>.
 
-The `mmpt.PPN` refers to an `MPTL3` table or an `MPTL2` table based on physical
-address width (`PAW`). For 56 >= `PAW` > 46, `MPTL3` table must be of size
-`2^(PAW-43)` bytes and naturally aligned to that sized byte boundary. For 46
->= `PAW` > 32 the `MPTL2` table must be of size 2^(`PAW`-22) bytes for
-`Smmpt46` and `Smmpt34`, and must be naturally aligned to that sized byte
-boundary. In these modes, the lowest two bits of the physical page number
-(`mmpt.PPN`) in `mmpt` always read as zeros.
+`mmpt.PPN` refers to an `MPTL3` table or an `MPTL2` table based on `MODE`. The
+top-level MPT may be smaller than the size given in <<Smmpt-rw>> for that table
+level, provided that it contains enough entries to cover the platform's
+physical address width (`PAW`), which is the number of bits needed to express
+the platform-defined maximum-addressable physical address.
+
+For `PAW` >= 56 a top-level `MPTL3` table must be complete; for 56 > `PAW` >=
+46 the table must contain at least `2^(PAW-46)` entries; otherwise it must
+contain at least one entry. For `PAW` >= 46 (34 for `Smmpt34`) a top-level
+`MTTL2` table must be complete; otherwise for `PAW` >= 25 the table must
+contain at least `2^(PAW-25)` entries; otherwise it must contain at least one
+entry. The top-level table must be naturally aligned to its size, or aligned to
+a 4 KiB page boundary, whichever is greater.
 
 The number of `SDID` bits is `UNSPECIFIED` and may be zero. The number of
 implemented `SDID` bits, termed `SDIDLEN`, may be determined by writing one to
