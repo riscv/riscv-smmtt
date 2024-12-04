@@ -234,8 +234,8 @@ the value of the `mip.LSDEIP` when read.
 Multiple simultaneous interrupts destined for different privilege modes are
 handled in decreasing order of destined privilege mode. Multiple simultaneous
 interrupts destined for the same privilege mode are handled in the following
-decreasing default priority order: high-priority RAS event, MEI, MSI, MTI, SEI,
-SSI, STI, LSDEI, SGEI, VSEI, VSSI, VSTI, LCOFI, low-priority RAS event.
+decreasing default priority order: high-priority RAS event, MEI, MSI, MTI,
+LSDEI, SEI, SSI, STI, SGEI, VSEI, VSSI, VSTI, LCOFI, low-priority RAS event.
 
 [NOTE]
 ====
