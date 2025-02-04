@@ -52,8 +52,8 @@ an illegal instruction exception.
 [wavedrom, ,svg]
 ....
 {reg: [
-  {bits:  44, name: 'PPN (WARL)'},
-  {bits:  10, name: 'WPRI'},
+  {bits:  52, name: 'PPN (WARL)'},
+  {bits:   2, name: 'WPRI'},
   {bits:   6, name: 'SDID (WARL)'},
   {bits:   4, name: 'Mode (WARL)'},
 ], config:{lanes: 2, hspace:1024}}
@@ -65,13 +65,14 @@ an illegal instruction exception.
 supervisor domains beyond the physical memory protection scheme described in
 Section 3.7 of the RISC-V privileged architecture specification cite:[ISA]. In
 this case, the remaining fields (`SDID`, `PPN`) in `mmpt` must be set to
-zeros. When `XLEN=32`, the other valid setting for
-`MODE` is `Smmpt34` to support read-write-execute
-access permissions for 34-bit system physical addresses.
+zeros. When `XLEN=32`, the other valid setting for `MODE` is `2_level` to
+support read-write-execute access permissions for 34-bit system physical
+addresses.
 
 When `XLEN=64`, other than `BARE`, the other valid settings for `MODE` are
-`Smmpt[46 | 56]` to support read-write-execute permissions for 46-bit and
-56-bit system physical addresses.
+`3_level`, `4_level` and `5_level` to support read-write-execute permissions for
+43-bit (3 level `MPT`), 52-bit (4-level `MPT`) and 64-bit (5-level `MPT`) system
+physical addresses.
 
 The remaining `MODE` settings when `XLEN=64` are `reserved` for future use and
 may define different interpretations of the other fields in `mmpt`.
@@ -84,7 +85,7 @@ may define different interpretations of the other fields in `mmpt`.
 protection scheme described in Section 3.7 of the RISC-V privileged architecture
 specification cite:[ISA]
 
-|1 |`Smmpt34` |Page-based supervisor domain protection for up to 34 bit physical
+|1 |`2_level` |Page-based supervisor domain protection for up to 34 bit physical
 addresses with RWX permissions per page
 
 |2-3 |- |`_Reserved_`
@@ -98,13 +99,16 @@ addresses with RWX permissions per page
 protection scheme described in Section 3.7 of the RISC-V privileged architecture
 specification cite:[ISA]
 
-|1 |`Smmpt46` |Page-based supervisor domain protection for up to 46 bit physical
+|1 |`3_level` |Page-based supervisor domain protection for up to 43-bit physical
 addresses with RWX permissions per page
 
-|2 |`Smmpt56` |Page-based supervisor domain protection for up to 56 bit physical
+|2 |`4_level` |Page-based supervisor domain protection for up to 52-bit physical
 addresses with RWX permissions per page
 
-|3-15 |- |`_Reserved_`
+|3 |`5_level` |Page-based supervisor domain protection for up to 64-bit physical
+addresses with RWX permissions per page
+
+|4-15 |- |`_Reserved_`
 |===
 
 Implementations are not required to support all defined `MODE` settings when
@@ -112,19 +116,22 @@ Implementations are not required to support all defined `MODE` settings when
 Instead, the fields of `mmpt` are `WARL` in the normal way, when so indicated
 in <<sdid-32>> and <<sdid-64>>.
 
-`mmpt.PPN` refers to an `MPTL3` table or an `MPTL2` table based on `MODE`. The
-top-level MPT may be smaller than the size given in <<Smmpt-rw>> for that table
-level, provided that it contains enough entries to cover the platform's
-physical address width (`PAW`), which is the number of bits needed to express
-the platform-defined maximum-addressable physical address.
+`mmpt.PPN` refers to an `MPTL5`, `MPTL4`, `MPTL3` or `MPTL2` table based on
+`MODE`. The top-level MPT may be smaller than the size given in <<Smmpt-rw>> for
+that table level, provided that it contains enough entries to cover the
+platform's physical address width (`PAW`), which is the number of bits needed to
+express the platform-defined maximum-addressable physical address.
 
-For `PAW` >= 56 a top-level `MPTL3` table must be complete; for 56 > `PAW` >=
-46 the table must contain at least `2^(PAW-46)` entries; otherwise it must
-contain at least one entry. For `PAW` >= 46 (34 for `Smmpt34`) a top-level
-`MTTL2` table must be complete; otherwise for `PAW` >= 25 the table must
-contain at least `2^(PAW-25)` entries; otherwise it must contain at least one
-entry. The top-level table must be naturally aligned to its size, or aligned to
-a 4 KiB page boundary, whichever is greater.
+For `PAW` = 64, a top-level `MPTL5` table must be complete; for 64 > `PAW` >= 52
+the `MPTL5` table must contain at least `2^(PAW-52)` entries, otherwise it must
+contain at least one entry; for 52 > `PAW` >= 43 the `MPTL4` table must contain
+at least `2^(PAW-43)` entries; otherwise it must contain at least one entry. For
+43 > `PAW` >= 34 (34 for XLEN=32 MODE=`2-level`) the `MPTL3` table must contain
+at least `2^(PAW-34)`. For `PAW` = 34, a top-level `MTTL2` table must be
+complete; otherwise for 34 > `PAW` >= 25 the table must contain at least
+`2^(PAW-25)` entries; otherwise it must contain at least one entry. The
+top-level table must be naturally aligned to its size, or aligned to a 4 KiB
+page boundary, whichever is greater.
 
 The number of `SDID` bits is `UNSPECIFIED` and may be zero. The number of
 implemented `SDID` bits, termed `SDIDLEN`, may be determined by writing one to
@@ -132,7 +139,7 @@ every bit position in the `SDID` field, then reading back the value in `mmpt`
 to see which bit positions in the `SDID` field hold a one. The
 least-significant bits of `SDID` are implemented first: that is, if `SDIDLEN` >
 0, `SDID`[`SDIDLEN`-1:0] is writable. The maximal value of `SDIDLEN`, termed
-`SDIDMAX`, is 6 for `Smmpt[34 | 46 | 56]`.
+`SDIDMAX`, is 6 for all `Smmpt` modes.
 
 The `mmpt` register is considered active for the purposes of the physical
 address protection algorithm unless the effective privilege mode is `M`.
@@ -203,10 +210,11 @@ domain access-permissions with current execution.
 `MFENCE.SPA` is only valid in M-mode. If operand rs1≠x0, it
 specifies a single physical address, and if rs2≠x0, it specifies a single SDID.
 
-If the address in rs1 corresponds to an `MPT_L1_DIR` mapping, the fence applies to
-a 4 KiB page. If the address in rs1 corresponds to a `2M_PAGES` or `4M_PAGES` mapping,
-the fence applies to a 2 MiB or 4 MiB range. If the address in rs1 corresponds to one
-of the 1G_* mappings, the fence applies to a 1 GiB range.
+If the address in rs1 corresponds to an `MPT_LEAF` entry mapping, the fence
+applies to a 4 KiB page. If the address in rs1 corresponds to a
+`MPT_LEAF_NAPOT_L1` mapping, the fence applies to a 2 MiB (XLEN=64) or 4 MiB
+(XLEN=32) range. If the address in rs1 corresponds to a `MPT_LEAF_NAPOT_L2`
+mapping, the fence applies to a 1 GiB range.
 
 The behavior of `MFENCE.SPA` depends on rs1 and rs2 as follows:
 
