@@ -5,7 +5,7 @@
 [[Smmpt-rwx]]
 === Smmpt
 
-The Supervisor Physical Address (SPA) for RV32 and RV64 is shown below.
+The Supervisor Physical Address (SPA) for RV32 and RV64 are partitioned into a Page Number (pn)  and a page offset as shown in <<add figure reference>> and <<add figure reference>> respectively.
 The MPT maps the SPA to read-write-execute access permissions.
 
 [caption="Figure {counter:image}: ", reftext="Figure {image}"]
