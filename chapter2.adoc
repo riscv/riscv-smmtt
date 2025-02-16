@@ -16,20 +16,20 @@ specification.
 
 * `Smmpt` (<<Smmpt>>) - An extension to set the access permissions for a memory
 region or page associated with a supervisor domain. This extension allows for
-dynamic changes of access permission. Such dynamic changes may require flushing of
-appropriate state cached in harts. The access properties are programmed via an Machine-level Memory
-Protection Tables (MPT) structure. The physical page number (PPN) of the root table of
-the MPT is programmed into a M-mode CSR. When `Smmpt` is implemented, MPT
-and e(PMP) are always active. Although there is no option to disable MPT, it can be
-effectively disabled if granular memory access control is not required by configuring
-MPT mode to be `Bare`.
+dynamic changes of access permission. Such dynamic changes may require flushing
+of appropriate state cached in harts. The access properties are programmed via
+a Machine-level Memory Protection Tables (MPT) structure. The physical page
+number (PPN) of the root table of the MPT is programmed into a M-mode CSR. When
+`Smmpt` is implemented, MPT and e(PMP) are always active. Although there is no
+option to disable MPT, it can be effectively disabled if granular memory access
+control is not required by configuring MPT mode to be `Bare`.
 
 * `IO-MPT` (<<IO-MPT>>) - A non-ISA extension that enables programming of an IO
-interconnect to associate an IOMMU and devices in scope of that IOMMU with an SD. The
-assignment of IOMMUs to supervisor domains is also expected to be under the
-purview of the RDSM. IO-MPT extension specifies the memory access control mechanisms for
-memory accesses performed by the IOMMU as well as by the devices associated with that SD.
-Note that isolation of data within a device is
+interconnect to associate an IOMMU and devices in scope of that IOMMU with a SD.
+The assignment of IOMMUs to supervisor domains is also expected to be under the
+purview of the RDSM. IO-MPT extension specifies the memory access control
+mechanisms for memory accesses performed by the IOMMU as well as by the devices
+associated with that SD. Note that isolation of data within a device is
 out of scope of this specification.
 
 * `Smsdia` (<<Smsdia>>) - This extension enables assignment of IMSIC

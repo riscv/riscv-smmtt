@@ -190,8 +190,6 @@ else
 endif
 ----
 
-<<<
-
 On a write to the `srmcfg` CSR at privilege modes less than M, the value
 stored in the `RCID` and `MCID` fields of the register are computed as
 follows:
@@ -308,8 +306,6 @@ configure the capacity limit for a QRI before passing through the QRI to the
 associated SD. An SD may then allocate capacity for RCIDs from within this limit
 established by the RDSM.
 ====
-
-<<<
 
 [NOTE]
 ====

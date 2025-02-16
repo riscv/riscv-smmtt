@@ -1,341 +1,414 @@
 [[chapter4]]
 [[Smmpt]]
-== `Smmpt`: Hart MPT Extension
+== `Smmpt`: Machine-mode Memory Protection Table (MPT)
 
-[[Smmpt-rwx]]
-=== Smmpt
+Memory Protection table is a radix-tree table used to provide read, write, and
+execute permissions for implicit and explicit memory accesses by effective
+privilege modes less than M.
 
-The Supervisor Physical Address (SPA) for RV32 and RV64 is shown below.
-The MPT maps the SPA to read-write-execute access permissions.
+The following MPT extensions are defined:
+
+* Smmpt34 - Page-based 34-bit memory protection system (RV32 only)
+* Smmpt43 - Page-based 43-bit memory protection system (RV64 only)
+* Smmpt52 - Page-based 52-bit memory protection system (RV64 only)
+* Smmpt64 - Page-based 64-bit memory protection system (RV64 only)
+* Smmptnapot - NAPOT Access-Type Permission Granularity (RV32 and R64)
+* Smmptnlnapot - NAPOT Memory Protection Table (RV64 only)
+
+These MPT extensions depend on `Smsdid`.
+
+=== Smmpt34: Page-Based Memory Protection System
+
+The RV32 Memory Protection Table provides memory access type permissions
+for pages in a 34-bit supervisor physical address (SPA) space. The SPA is
+partitioned into a page number (`pn`) and a range offset. When the Smmpt34 mode
+is selected in the `MODE` field of `mmpt`, the access type permissions for a
+supervisor physical address are determined using a two-level memory protection
+table.
 
 [caption="Figure {counter:image}: ", reftext="Figure {image}"]
 [title="RV32 Supervisor Physical Address", id=rv32-spa]
 [wavedrom, ,svg]
 ....
 {reg: [
-  {bits:  12, name: 'page offset', attr: '12'},
-  {bits:  3,  name: 'pn[0]',       attr: '3' },
-  {bits:  10, name: 'pn[1]',       attr: '10' },
-  {bits:  9,  name: 'pn[2]',       attr: '9'},
+  {bits:  15, name: 'range offset', attr: '15'},
+  {bits:  10, name: 'pn[0]',        attr: '10' },
+  {bits:  9,  name: 'pn[1]',        attr: '9'},
 ], config:{lanes: 1, hspace:1024}}
 ....
 
+The root memory protection table has 2^9^ memory-protection-table entries
+(MPTEs) and the memory protection tables linked to the root table have 2^10^
+MPTEs. Each MPTE is a four byte value.
+
+If the MPTE points to the next level of the memory protection table, it is a
+non-leaf MPTE else it is a leaf MPTE. A leaf MPTE provides access type
+permissions for eight pages in the address range determined by that MPTE.
+
+The format of a non-leaf MPTE entry is shown in <<rv32-mpte>> and that of a leaf
+MPTE entry in <<rv32-mpte-leaf>>.
+
 [caption="Figure {counter:image}: ", reftext="Figure {image}"]
-[title="RV64 Supervisor Physical Address. Factors M, N, O are based on non-leaf NAPOT encodings. See <<Smmpt-napot>>", id=rv64-spa]
+[title="`Smmpt34` non-leaf `MPTE`", id="rv32-mpte"]
 [wavedrom, ,svg]
 ....
 {reg: [
-  {bits:  12, name: 'page offset', attr: '12'},
-  {bits:  4,  name: 'pn[0]',       attr: '4' },
-  {bits:  9,  name: 'pn[1]',       attr: '9' },
-  {bits:  9,  name: 'pn[2]',       attr: '9+O'},
-  {bits:  9,  name: 'pn[3]',       attr: '9+N'},
-  {bits:  9,  name: 'pn[4]',       attr: '9+M'},
-  {bits:  12, name: 'pn[5]',       attr: '12'},
-], config:{lanes: 1, hspace:1024}}
+  {bits:  1,  name: 'V'},
+  {bits:  1,  name: 'L=0'},
+  {bits:  8,  name: 'RESERVED'},
+  {bits:  22, name: 'PPN'},
+], config:{lanes: 2, hspace:1024}}
 ....
 
-MPT is a `MMPT.PPN` -rooted memory structure that is used to lookup a
-supervisor physical address at a page granularity to the read, write and
-execute (RWX) access permissions for accesses from a supervisor domain. Each
-physical-addressable page is associated with RWX access-permissions. The
-supervisor physical address (SPA) components shown in <<rv32-spa>> and
-<<rv64-spa>> are used to index into the `MPT` structure in memory to lookup
-access permissions for the supervisor domain specified via the
-MPT structures. Intermediate/non-leaf entries are used to allow this structure
-to be sparsely populated. There is a format specified for XLEN=64 and
-XLEN=32.
-
-The following `MPT` Entry (`MPTE`) is specified for XLEN=64:
-
 [caption="Figure {counter:image}: ", reftext="Figure {image}"]
-[title="`MPT` entry (XLEN=64 only)", id="rv64-mpte"]
+[title="`Smmpt34` leaf `MPTE`", id="rv32-mpte-leaf"]
 [wavedrom, ,svg]
 ....
 {reg: [
-  {bits:  52, name: 'PPN -OR- 16x3b (4b rsv:48b) PERMS'},
-  {bits:   1, name: 'VALID'},
-  {bits:   2, name: 'TYPE'},
-  {bits:   9, name: 'RESERVED'},
-], config:{lanes: 1, hspace:1024}}
-....
-
-The following `MPT` Entry (`MPTE_32`) is specified for XLEN=32:
-
-[caption="Figure {counter:image}: ", reftext="Figure {image}"]
-[title="`MPT` entry (XLEN=32)", id="rv32-mpte"]
-[wavedrom, ,svg]
-....
-{reg: [
-  {bits:  24, name: '2b:22b PPN -OR- 8x3b (24b) PERMS'},
-  {bits:  1,  name: 'VALID'},
-  {bits:  2,  name: 'TYPE'},
+  {bits:  1,  name: 'V'},
+  {bits:  1,  name: 'L=1'},
   {bits:  5,  name: 'RESERVED'},
+  {bits:  24, name: 'PERMS'},
+  {bits:  1,  name: 'N'},
+], config:{lanes: 2, hspace:1024}}
+....
+
+The `V` bit indicates if the MPTE is valid; if it is 0, all other bits in the
+MPTE are don't-cares and may be used freely by software. When the `MPTE` is
+valid, the `RESERVED` field must be 0.
+
+When the `L` bit is set to 0 the enrty is a non-leaf MPTE else its a leaf MPTE.
+
+A non-leaf MPTE holds the PPN of the next level of the memory protection table.
+
+A leaf MPTE holds eight tuples of access type permisssion bits - one for each
+page in the range determined by that MPTE. Each tuple consists of 3 bits `XWR`,
+that provide the Execute(`X`), Write(`W`), and Read(`R`) permissions. The most
+significant 3 bits of the range offset identify a page in that range and are
+used to identify the access type permission bits for an access to that page.
+
+[[Smmpt-xwr-encoding]]
+.Encoding of `MPTE` X/W/R permission tuple
+[%autowidth,float="center",align="center",cols="^,^,^,<",options="header"]
+|===
+| X | W | R | Meaning
+| 0 | 0 | 0 | _Reserved for future use._
+| 0 | 0 | 1 | Read-only page.
+| 0 | 1 | 0 |  _Reserved for future use._
+| 0 | 1 | 1 | Read-write page.
+| 1 | 0 | 0 | Execute-only page.
+| 1 | 0 | 1 |  Read-execute page.
+| 1 | 1 | 0 | _Reserved for future use._
+| 1 | 1 | 1 | Read-write-execute page.
+|===
+
+Access type permissions -- readable, writable, or executble -- are checked
+by MPT the same as for VS-stage and G-stage translation. For a memory access
+made to support VS-stage or G-stage address translation (such as a read/write to
+a VS-level page table or a G-level page table), permissions are checked as
+though for an implicit load or store, not for the original access type. However,
+any exception is always reported for the original access type (instruction,
+load, or store/AMO).
+
+If Smmptnapot is not implemented, the bit 31 in leaf MPTE remains reserved.
+
+Any level of MPTE may be a leaf MPTE, so in addition to providing access type
+permissions to 4 KiB pages, Smmpt34 supports 32 MiB megapages.
+
+[[MPT_ACC_LKUP]]
+==== MPT access type permissions lookup process
+Access type permissions for a physical address PA are determined as
+follows:
+
+1. Let _a_ be `mmpt.ppn` x PAGESIZE, and let _i_ = LEVELS-1 (For Smmpt34,
+   PAGESIZE is 2^12^ and LEVELS=2). The `mmpt` register must be active,
+   i.e., the effective privilege mode must not be M-mode.
+
+2. Let _mpte_ be the value of the `MPTE` at address _a_ + _pa.pn[i]_
+   x MPTESIZE (For Smmpt34, MPTESIZE=4). If accessing _mpte_ violates a PMA
+   or PMP check, raise an access-fault exception corresponding to the original
+   access type.
+
+3. If _mpte.v_=0, or if any bits or encodings that are reserved for future
+   standard use are set within _mpte_, stop and raise an access-fault exception
+   corresponding to the original access type.
+
+4. Otherwise, the _mpte_ is valid. If _mpte.L=1_ go to step 5; Otherwise, this
+   MPTE is a pointer to the next level of the memory protection table. Let
+   _i_=_i_-1. If _i_<0, stop and raise an access-fault exception corresponding
+   to the original access type. Otherwise, let _a_ = _mpte.PPN_ x PAGESIZE and
+   go to step 2.
+
+5. A leaf _mpte_ has been found. Let _pi_ be the NUMPGINRANGE (For Smmpt34,
+   NUMPGINRANGE is 3) most significant bits of the range offset. Let
+   _XWR=PERMS[pi*3+2:pi*3]_. Determine if the requested memory access is allowed
+   by the _XWR_ bits, given the current privilege mode and MXR field of the
+   `mstatus` register. If not, stop and raise an access-fault exception
+   corresponding to the original access type, else the requested memory access
+   is allowed.
+
+Implicit accesses to MPT by this process are checked by PMP/Smepmp as implicit
+M-mode accesses. The endianness of such implicit accesses is controlled by
+`mstatus.MBE`.
+
+=== Smmpt43: Page-Based 43-bit Memory Protection System
+
+This section describes a page-based memory protection system RV64, which
+supports a 43-bit supervisor physical address space. The design of Smmpt43
+follows the overall scheme of Smmpt34, and this section details only the
+differences between the schemes.
+
+[NOTE]
+====
+Multiple memory protection systems are specified for RV64 to relieve the tension
+between providing a large physical address space and minimizing the memory
+protection cost. For many systems, 43-bits of physical address space is ample,
+and so Smmpt43 suffices. Smmpt52 increases the physical address space to 52
+bits, but increases the physical memory capacity dedicated to memory protection
+tables and the latency of memory protection table traversals. Smmpt64 increases
+the physical address space to 64 bits.
+====
+
+Smmpt43 supports a 43-bit physical address space, divided into pages. The
+Smmpt43 address is partitioned as shown in  <<rv64-spa-Smmpt43>>. The system
+physical address must have bits 43 and higher all equal to 0, or else an
+access-fault exception corresponding to the original access type will occur. The
+Smmpt43 memory protection table has three levels.
+
+[caption="Figure {counter:image}: ", reftext="Figure {image}"]
+[title="Smmpt43 Supervisor Physical Address", id=rv64-spa-Smmpt43]
+[wavedrom, ,svg]
+....
+{reg: [
+  {bits:  16, name: 'range offset', attr: '16'},
+  {bits:  9,  name: 'pn[0]',        attr: '9' },
+  {bits:  9,  name: 'pn[1]',        attr: '9'},
+  {bits:  9,  name: 'pn[2]',        attr: '9'},
 ], config:{lanes: 1, hspace:1024}}
 ....
 
-The `VALID` bit determines the validity of the `MPTE`. If this bit is
-set, the `MPTE` is valid and depending on the `MPTE.TYPE` field, the `MPTE` is
-a valid non-leaf or leaf entry.
+The Smmpt43 memory protection tables contain 2^9^ memory protection table
+entries (MPTEs). Each Smmpt43 MPTE is an eight byte value. A page table is
+exactly the size of a page and must always be aligned to a page boundary.
+The physical page number of the root memory protection table is stored in the
+`mmpt` register's PPN field.
 
-When the `MPTE` is valid, the `RESERVED` field must be 0.
-If the `VALID` bit is clear, the entry is invalid, and all other bits in the
-entry are don't-cares and may be used freely by software.
+The format of a non-leaf MPTE entry is shown in <<rv64-mpte>> and that of a leaf
+MPTE entry in <<rv64-mpte-leaf>>.
 
-The `TYPE` field determines the interpretation of the `MPTE`. Unless
-specified, the encodings are the same for RV32 and RV64. The `TYPE` field
-encoding is as follows:
+A leaf MPTE provides access type permissions for sixteen pages in the address
+range determined by that MPTE.
 
-* 00b - `MPT_NON_LEAF_ENTRY`
-* 01b -  XLEN=64: `MPT_NON_LEAF_ENTRY_NAPOT` (see <<Smmpt-napot>>);
-         XLEN=32: Reserved
-* 10b - `MPT_LEAF_ENTRY`
-* 11b - `MPT_LEAF_ENTRY_NAPOT` XLEN=64 NAPOT factor of x32 (see <<Smmpt-napot>>)
-         XLEN=32 NAPOT factor of x128 (see <<Smmpt-napot>>)
+[caption="Figure {counter:image}: ", reftext="Figure {image}"]
+[title="Smmpt43 non-leaf `MPTE` entry", id="rv64-mpte"]
+[wavedrom, ,svg]
+....
+{reg: [
+  {bits:   1, name: 'V'},
+  {bits:   1, name: 'L=0'},
+  {bits:   8, name: 'RESERVED'},
+  {bits:  52, name: 'PPN'},
+  {bits:   1, name: 'RSV'},
+  {bits:   1, name: 'N'},
+], config:{lanes: 2, hspace:1024}}
+....
 
-If the `MPTE.TYPE` specifies a `MPT_NON_LEAF_ENTRY`, the `MPTE` specifies the
-next level of the MPT via the `MPTE.PPN` field. For XLEN=64, the non-leaf entry
-may specify a NAPOT encoding `MPT_NON_LEAF_ENTRY_NAPOT` to enable optimizing
-`MPT` lookup and caching of `MPT` by coalescing entries. (See <<Smmpt-napot>>).
+[caption="Figure {counter:image}: ", reftext="Figure {image}"]
+[title="Smmpt43 leaf `MPTE` entry", id="rv64-mpte-leaf"]
+[wavedrom, ,svg]
+....
+{reg: [
+  {bits:   1, name: 'V'},
+  {bits:   1, name: 'L=1'},
+  {bits:   8, name: 'RESERVED'},
+  {bits:  48, name: 'PERMS'},
+  {bits:   5, name: 'RESERVED'},
+  {bits:   1, name: 'N'},
+], config:{lanes: 2, hspace:1024}}
+....
 
-If the `MPTE.TYPE` specifies an `MPT_LEAF_ENTRY`, the `MPTE` specifies the
-RWX access permissions for a 4 KiB page. The leaf entry may specify a NAPOT
-encoding via `TYPE`=`MPT_LEAF_ENTRY_NAPOT` to specify 2MiB or 1 GiB page
-regions for XLEN=64, or 4 MiB pages for XLEN=32 (See <<Smmpt-napot>>)
+If Smmptnapot is not implemented, the bit 63 in leaf MPTE remains reserved. If
+Smmptnlnapot is not implemented, the bit 63 in non-leaf MPTE remains reserved.
 
-For `MPTE.TYPE` = `MPT_NON_LEAF_ENTRY` the `PERMS` is specified as a 3b tuple
-of Read, Write and Execute permissions as follows:
+Any level of MPTE may be a leaf MPTE, so in addition to providing access type
+permissions to 4 KiB pages, Smmpt43 supports 32 MiB _megapages_, 16 GiB
+_gigapages_, and 8 TB _terapages_.
 
-The `MPTE.PERMS` for the `MPT_NON_LEAF_ENTRY` holds XLEN/4 number of 3-bit
-access permissions for a 4 KiB page starting from bit 0 of the field. For
-XLEN=64 4 remaining most significant bits are reserved for future use). The
-entry is selected by page.pn[1], and the 3-bit field in the entry is selected
-using page.pn[0]. See <<rv64-spa>> for XLEN = 64 and <<rv32-spa>> for XLEN = 32.
-Thus, there are 3 RWX `PERMS` bits for each 4 KiB page.
+The algorithm to determine access type permissions for a page is same as in
+<<MPT_ACC_LKUP>>, except LEVELS equals 3, MPTESIZE equals 8, and NUMPGINRANGE
+equals 4.
 
-[[Smmpt-rw-l1-encoding]]
-.`MPTL1` Entry permission encoding
-[width="100%",cols="25%,75%",options="header",]
-|===
-|*`MPTL1` Access-permission encoding* |*Description*
-|RWX = 000b a|
-The entry specifies access to the 4 KiB address space is *not allowed* for the
-domain.
-|RWX = 001b a|
-The entry specifies *execute-only* access to the 4 KiB address space is
-*allowed* for the domain.
-|RWX = 010b a|
-Reserved - this is an invalid encoding.
-|RWX = 011b a|
-Reserved - this is an invalid encoding.
-|RWX = 100b a|
-The entry specifies *read-only* (but *no write* and *no execute*) access is
-allowed to the 4 KiB address space for the domain.
-|RWX = 101b a|
-The entry specifies *read* and *execute* (but *no write*) access is allowed
-to the 4 KiB address space for the domain.
-|RWX = 110b a|
-The entry specifies *read*, *write* (but *no execute*) access is allowed to the
-4 KiB address space for the domain.
-|RWX = 111b a|
-The entry specifies *read*, *write* and *execute* access is allowed to the
-4 KiB address space for the domain.
-|===
+=== Smmpt52: Page-Based 52-bit Memory Protection System
 
-=== MPT access permissions lookup process
+This section describes a page-based memory protection system for RV64 that
+supports 52-bit physical address spaces. It closely follows the design of
+Smmpt43, simply adding an additional level of page table, and so this section
+only details the differences between the two schemes.
 
-MPT access-permissions for a physical address PA in the context of a
-supervisor domain are ascertained as follows:
+Smmpt52 supports a 52-bit physical address space, divided into pages. The
+Smmpt52 address is partitioned as shown in  <<rv64-spa-Smmpt52>>. The system
+physical address must have bits 52 and higher all equal to 0, or else an
+access-fault exception corresponding to the original access type will occur. The
+Smmpt52 memory protection table has four levels.
 
-1. Let _a_ be `mmpt.ppn` x PAGESIZE, and let _i_ = LEVELS, based on `MMPT.MODE`;
-For XLEN=32 mode `2_level`, LEVELS = 2 and for XLEN=64, LEVELS = 3/4/5 for modes
-`3_level`, `4-level`, and `5-level` resp.; PAGESIZE is 2^12^; MPT_PTE_SIZE = 8
-bytes for XLEN=64, and MPT_PTE_SIZE = 4 bytes for XLEN=32. The `mmpt`
-register must be active, i.e., the effective privilege mode must not be M-mode.
+[caption="Figure {counter:image}: ", reftext="Figure {image}"]
+[title="Smmpt52 Supervisor Physical Address", id=rv64-spa-Smmpt52]
+[wavedrom, ,svg]
+....
+{reg: [
+  {bits:  16, name: 'range offset', attr: '16'},
+  {bits:  9,  name: 'pn[0]',        attr: '9' },
+  {bits:  9,  name: 'pn[1]',        attr: '9'},
+  {bits:  9,  name: 'pn[2]',        attr: '9'},
+  {bits:  9,  name: 'pn[3]',        attr: '9'},
+], config:{lanes: 1, hspace:1024}}
+....
 
-2. If _pa_ is greater than maximum-addressable physical address under the
-current MPT mode, or is greater than a platform-defined maximum-addressable
-physical address for the hart, then stop and raise an access-fault exception
-corresponding to the original access type.
+The Smmpt52 memory protection tables contain 2^9^ memory protection table
+entries (MPTEs). Each MPTE is an eight byte value. A page table is exactly the
+size of a page and must always be aligned to a page boundary. The physical page
+number of the root memory protection table is stored in the `mmpt` register's
+PPN field.
 
-3. Let _mpte_ be the value of the `MPTE` at address _a_ + _pa.pn[i]_
- x MPT_PTE_SIZE. If accessing _mpte_ violates a PMA or PMP check, raise
-an access-fault exception corresponding to the original access type.
+The MPTE formats for Smmpt52 is identical to that of Smmpt43.
 
-4. If any bits or encodings that are reserved for future standard use are
-set within _mpte_, or _mpte_ is a not-valid `MPTE`, stop and raise an
-access-fault exception corresponding to the original access type.
+Any level of MPTE may be a leaf MPTE, so in addition to providing access type
+permissions to 4 KiB pages, Smmpt52 supports 32 MiB _megapages_, 16 GiB
+_gigapages_, 8 TB _terapages_, and 4 PB _petapages_.
 
-5. Otherwise, the _mpte_ is valid. If _mpte.type_ is `MPTE_LEAF_ENTRY_*` go to
-step 6; Otherwise, the _mpte_ is a pointer to the next level of the `MPT`.
-Let _i_ = _i_-1. Let _a_ = _mpte.ppn_ x PAGESIZE and go to step 3.
-Note that when _mpte.type_ = `MPTE_LEAF_ENTRY`, the _mpte.ppn_ contains the
-48b value (XLEN=64) or 24b value (XLEN=32) of the _mpte.perms_ field.
+The algorithm to determine access type permissions for a page is same as in
+<<MPT_ACC_LKUP>>, except LEVELS equals 4, MPTESIZE equals 8, and NUMPGINRANGE
+equals 4.
 
-6. A leaf _mpte_ has been found. If any bits or encodings within _mpte.type_
-and _mpte.perms_ that are reserved for future standard use, per <<rv64-mpte>>
-or <<rv32-mpte>>, are set within _mpte_, stop and raise an access-fault
-exception corresponding to the access type.
+=== Smmpt64: Page-Based 64-bit Memory Protection System
 
-7. The _mpte_ is a valid leaf _mpte_. Fetch the access-permissions for the
-physical address per the steps described below:
+This section describes a page-based memory protection system for RV64 that
+supports 64-bit physical address spaces. It closely follows the design of
+Smmpt52, simply adding an additional level of page table, and so this section
+only details the differences between the two schemes.
 
-* if _i_=2 and _mpte.type_ field is a `MPTE_LEAF_ENTRY_NAPOT`, for XLEN=64,
-_mpte_ specifies the access-permissions for 1 GiB page regions (via 32 `MPT` L2
-entries with  identical _mpte.perms_ values - see <<Smmpt-napot>>);
-go to step 8, else
+Smmpt64 supports a 64-bit physical address space, divided into pages. The
+Smmpt64 address is partitioned as shown in  <<rv64-spa-Smmpt64>>. The
+Smmpt64 memory protection table has four levels.
 
-* if _i_=1, and _mpte.type_ field is a `MPTE_LEAF_ENTRY_NAPOT` value:
-For XLEN=64, it specifies the access-permissions for 2 MiB
-page region (via 32 `MPT` L1 entries with identical _mpte.perms_ valus - See
-<<Smmpt-napot>>;
-For XLEN=32, _mpte_ specifies access-permissions for 4 MiB via 128 `MPT` L1
-entries with identical _mpte.perms_ values - See <<Smmpt-napot>>.
-go to step 8, else
+[caption="Figure {counter:image}: ", reftext="Figure {image}"]
+[title="Smmpt64 Supervisor Physical Address", id=rv64-spa-Smmpt64]
+[wavedrom, ,svg]
+....
+{reg: [
+  {bits:  16, name: 'range offset', attr: '16'},
+  {bits:  9,  name: 'pn[0]',        attr: '9' },
+  {bits:  9,  name: 'pn[1]',        attr: '9'},
+  {bits:  9,  name: 'pn[2]',        attr: '9'},
+  {bits:  9,  name: 'pn[3]',        attr: '9'},
+  {bits:  12, name: 'pn[4]',        attr: '12'},
+], config:{lanes: 1, hspace:1024}}
+....
 
-* if _i_=1, the _mpte_ contains XLEN/4 3-bit entries that hold access-permission
-encodings for 4 KiB pages. The entry is selected by _pa.pn[0]_. The LSB
-3*XLEN/4-1:0 bits holds 3-bit encodings within the entry to specify the
-access-permission encoding for the _pa_. The MSB bits of the PPN field are
-reserved (4b for XLEN=64). The valid permission encodings are specified in
-<<Smmpt-rw-l1-encoding>>.
+The Smmpt64 root memory protection table contain 2^12^ memory protection
+table entries (MPTEs). Each MPTE is an eight bytes value. The root memory
+protection table is 32 KiB instead of the usual 4 KiB and must be aligned to a
+32 KiB boundary. The physical page number of the root memory protection table is
+stored in the `mmpt` register's PPN field.
 
-8. Determine if the requested physical memory access is allowed per the
-access-permissions. If access is not permitted, stop and raise an access-fault
-exception corresponding to the original access type.
+The non-root Smmpt64 memory protection tables contain 2^9^ MPTEs, eight bytes
+each. The non-root memory protection table is exactly the size of a page and
+must always be aligned to a page boundary.
 
-9. The access is allowed per the `MPT` lookup.
+The MPTE formats for Smmpt64 is identical to that of Smmpt52.
 
-All implicit accesses to the `MPT` data structures in
-this algorithm are performed using width MPT_PTE_SIZE.
+Any level of MPTE may be a leaf MPTE, so in addition to providing access type
+permissions to 4 KiB pages, Smmpt54 supports 32 MiB _megapages_, 16 GiB
+_gigapages_, 8 TB _terapages_, 4 PB _petapages_, and 2 EB _exapages_.
+
+The algorithm to determine access type permissions for a page is same as in
+<<MPT_ACC_LKUP>>, except LEVELS equals 5, MPTESIZE equals 8, and NUMPGINRANGE
+equals 4.
+
+=== Smmptnapot - NAPOT Access-Type Permission Granularity
+
+When `MPTE.L`=1 and `MPTE.N`=1, the leaf `MPTE` represents a memory protection
+range that is part of a larger contigous NAPOT memory protection range comprised
+of 512 pages for RV64 and 1024 pages for RV32. All leaf MPTEs at that level of
+this NAPOT memory protection range have the same value for L, N, PERMS and V
+bits. Further, the XWR access type permssion tuples in the PERMS field of such
+PTEs are identical.
+
+Such MPTEs behave identically to leaf MPTEs in the MPT access permission lookup
+process described in <<MPT-lookup>>, except that:
+
+* For RV32, the `N` bit may be set to 1 in the level 0 leaf MPTEs.
+* For RV64, the `N` bit may be set to 1 in the level 0 and level 1 leaf MPTEs.
 
 [NOTE]
 ====
-Restricting the _pa_ (in step 2) to the maximum-addressable PA width supported
-by a platform allows for optimizing memory requirements of the MPT structures
-such as the MPT non-leaf entry tables, when the PA width is not 34, 43, 52 or
-64 bits.
+The motivation of NAPOT MPTE is that access-type permissions for one or more
+entries representing the contigous region may be cached as a single cache entry
+as if it were a single (large) page. This compaction can relieve access-type
+permission caches. The scheme allows an implementation to not take advantage of
+this property and simply cache the access-type permissions for pages seperately.
+
+The scheme supports caching a single access-type permission entry representing a
+2 MiB or a 1 GiB memory range for RV64. For RV32, it supports caching a single
+access-type permission entry representing a 4 MiB memory range. These contigous
+memory range sizes represent large/huge page sizes used commonly by memory
+allocators.
 ====
 
-[NOTE]
-====
-MPT access-permissions can only further restrict access, and never grant
-read, write or execute permission denied by 1st-stage or G-stage translations.
-====
+If SmmptNapot extension is implemented then one of Smmpt34, Smmpt43, Smmpt52,
+or Smmpt64 extensions must be implemented.
 
-=== Smmpt Napot
+=== Smmptnlnapot - NAPOT Memory Protection Table
 
-For XLEN=64, the following `MPTE` encodings are defined when `MPTE.TYPE` is
-`MPTE_NON_LEAF_NAPOT`
+The Smmptnlnapot extension supports NAPOT non-leaf MPTEs. This extension is
+RV64 only, and depends on one of Smmpt43, Smmpt52 or Smmpt64.
+
+For RV64, when the `MPTE.L`=0 and `MPTE.N`=1, the non-leaf `MPTE`
+is part of a range of MPTEs at that level of MPT with the same value for
+the L, N, PPN, and V bits.
+
+The following Non-leaf `MPTE` encodings are defined when _mpte_.N is 1.
 
 [[Smmpt-napot]]
-.Non-leaf NAPOT `MPTE` encoding
+.Non-leaf `MPTE` encodings when _mpte_.N=1
 [width="100%",cols="10%,30%,30%,30%",options="header",]
 |===
-|*i*    a| *PPN[i]*         a| *Description*             a|*Non-leaf PTE napot bits*
-|3 or 4 a| x xxx1 0000 0000 a| 2 MiB contiguous L2 or L3 a| 9
-|3 or 4 a| x xxx0 xxxx xxxx a| Reserved                  a| -
-|5      a| x 1000 0000 0000 a| 16 MiB contiguous L4      a| 12
-|5      a| x 0xxx xxxx xxxx a| Reserved                  a| -
+| *_i_* a| *_mpte.PPN[i]_*  a| *Description*        a|*_mpte.napot_bits_*
+| < 2   a| x xxxx xxxx xxxx a| Reserved             a| -
+|   2   a| x xxx1 0000 0000 a| 2 MiB contiguous L2  a| 9
+|   2   a| x xxx0 xxxx xxxx a| Reserved             a| -
+|   3   a| x xxx1 0000 0000 a| 2 MiB L3             a| 9
+|   3   a| x xxx0 xxxx xxxx a| Reserved             a| -
+|   4   a| x 1000 0000 0000 a| 16 MiB contiguous L4 a| 12
+|   4   a| x 0xxx xxxx xxxx a| Reserved             a| -
 |===
 
-NAPOT PTEs behave identical to non-NAPOT PTEs within the MPT lookup algorithm in
-<<MPT-lookup>> except that if the encoding in `MPTE` is valid according to table
-<<Smmpt-napot>>, then the MPT lookup considers the napot bits to lookup the next
-level of the MPT lookup thereby allowing larger next level tables.
-If the encoding in pte is reserved according to <<Smmpt-napot>>, then an access-
-fault exception must be raised.
+Such MPTEs behave identically to non-leaf MPTEs in the MPT access permission
+lookup process described in <<MPT-lookup>>, except that:
+
+ * If the encoding in _mpte_ is valid according to table <<Smmpt-napot>>,
+   then instead of returning the original value of the _mpte_, implicit read
+   of a non-leaf NAPOT _mpte_ returns a copy of `mpte` in which
+   _mpte.ppn[i][mpte.napot_bits-1:0]_ are replaced by
+   _pn[i][mpte.napot_bits-1:0]_. If the encoding in _mpte_ is reserved
+   according to <<Smmpt-napot>> then an access-fault exception corresponding to
+   the original access type must be raised.
+ * Implicit reads of non-leaf NAPOT MPTEs may create MPT walk cache entries
+   mapping _a_ + _j_*PTESIZE to a copy of _mpte_ in which
+   _mpte[i][pte.napot_bits-1:0]_ is replaced by _pn[i][mpte.napot_bits-1:0]_,
+   for any and all _j_ such that _j_ >> _napot_bits_ = _pn[i].napot_bits_.
 
 [NOTE]
 ====
-The motivation for a NAPOT Leaf and Non-leaf PTE is that it can be cached in a
-lookup cache as one or more entries representing the contiguous region as if it
-were a single (large) page covered by a single MPT mapping. This compaction can
-help relieve MPT cache pressure in some scenarios.
+Some implementations may cache non-leaf MPTE to accelerate the MPT access-type
+permission lookup process using MPT walk caches. Such implementations may then
+use the MPTE that was implicitly accessed as one or more entries representing
+a contingous set of non-leaf MPTEs at that level. This compaction helps relieve
+MPT walk cache pressure in some scenarios. Simpler implementations may simply
+create a single entry in their page walk cache using the transformed mpte value
+returned by the implicit access to the mpte.
 
-Other non-leaf NAPOT sizes may be defined in the future.
+Depending on the need, the NAPOT scheme may be extended to other levels of the
+MPT in the future.
 ====
 
-For XLEN=64, leaf NAPOT encodings allow 32 L2 or L1 entries to be combined to
-specify 1 GiB or 2 MiB page regions.
-
-For XLEN=32, leaf NAPOT encodings allow 128 L1 entries to be combined to specify
-4 MiB page regions.
-
-[NOTE]
-====
-These leaf NAPOT sizes are specified to compose with Sv page sizes. Other leaf
-NAPOT sizes may be defined in the future.
-====
-
-
-=== Access Enforcement and Fault Reporting
-
-As shown in <<mpt-lookup>>, and described in the MPT lookup process,
-MPT lookup composes with, but does not require,
-page-based virtual memory (MMU, IOMMU) and physical memory protection mechanisms
-(PMP, Smepmp, IOPMP). When paging is enabled, instructions that access virtual
-memory may result in multiple physical-memory accesses, including (implicit
-S-mode) accesses to the page tables. MPT checks also apply to these implicit
-S-mode accesses - those accesses will be treated as reads for translation and as
-writes when A/D bits are updated in page table entries when `Svadu` is
-implemented.
-
-MPT is checked for all accesses to physical memory, unless the effective privilege
-mode is M, including accesses that have undergone virtual to physical memory
-translation, but excluding implicit MPT checker accesses to MPT structures. Data accesses
-in M-mode when the MPRV bit in mstatus is set and the MPP field in mstatus contains S
-or U are subject to MPT checks. MPT checker accesses to MPT structures are to be
-treated as implicit M-mode accesses and are subject to PMP/Smepmp and
-IOPMP checks. Implicit accesses to the MPT are governed by `mstatus.MBE` control
-for RV64 and `mstatush.MBE` control for RV32. The MPT checker indexes the MPT using the
-physical address of the access to lookup and enforce the access permissions.
-A mismatch of the access type and the access permissions specified in the
-MPT entry that applies to the accessed region is reported as a trap to the
-RDSM which may report it to a supervisor domain. To enable composing
-with Sv modes, the MPT supports configuration at supported architectural
-page sizes. MPT violations manifest as instruction, load, or store access-fault
-exceptions. The exception conditions for MPT are checked when the access
-to memory is performed.
-
-=== Caching of MPT and Supervisor Domain Fence Instruction
-
-<<mfence-spa>> describes the canonical behavior of the `MFENCE.SPA` instruction
-to invalidate cached access-permissions for all supervisor domains, a specific
-supervisor domain, or a specific physical address for a supervisor domain.
-
-<<minval-spa>> implemented with `Sinval` describes a finer granular invalidation
-of access-permission caches.
-
-When `Smmpt` is implemented, an `MPT` structure is used to specify
-access-permissions for physical memory for a supervisor domain, the `MPT`
-settings for the resulting physical address (after any address translation) may
-be checked (and possibly cached) at any point between the address translation
-and the explicit memory access. Therefore, when the `MPT` settings
-are modified, `M-mode` software must synchronize the cached `MPT` state with the
-virtual memory system and any `PMP`, `MPT` or address-translation caches, as
-described via <<mfence-spa>> or in a batched manner via <<minval-spa>>.
-
-When used with the `MPT`, the `MFENCE.SPA` is used to synchronize updates to
-in-memory MPT structures with current execution. `MFENCE.SPA` in this case,
-applies only to the `MPT` data structures controlled by the
-CSR `mmpt`. Executing a `MFENCE.SPA` guarantees that any previous stores already
-visible to the current hart are ordered before all implicit reads by that hart
-done for the `MPT` for non- `M-mode` instructions that follow the `MFENCE.SPA`.
-
-When `MINVAL.SPA` is used, access-permission cache synchronization may be
-batch optimized via the use of the sequence `SFENCE.W.INVAL`, `MINVAL.SPA` and
-`SFENCE.INVAL.IR`.
-
-[NOTE]
-====
-MPT lookups that began while `mmpt` was active are not required to complete or
-terminate when `mmpt` is no longer active, unless a `MFENCE.SPA` instruction
-matches the `SDID` (and optionally, `PADDR`) is executed. The `MFENCE.SPA`
-instruction must be used to ensure that updates to the `MPT` data structures are
-observed by subsequent implicit reads to those structures by a hart.
-====
-
-If `mmpt.MODE` is changed for a given SDID, a `MFENCE.SPA` with rs1=x0 and rs2
-set either to x0 or the given SDID, must be executed to order subsequent PA
-access checks with the `MODE` change, even if the old or new `MODE` is `Bare`.
