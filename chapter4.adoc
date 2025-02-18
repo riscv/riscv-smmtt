@@ -77,6 +77,18 @@ The `V` bit indicates if the MPTE is valid; if it is 0, all other bits in the
 MPTE are don't-cares and may be used freely by software. When the `MPTE` is
 valid, the `RESERVED` field must be 0.
 
+Explicit stores by a hart that update the `V` bit of leaf and/or non-leaf MPTEs
+from 0 to 1 and are visible to a hart will eventually become visible within a
+bounded timeframe to subsequent implicit accesses by that hart to such MPTEs.
+
+[NOTE]
+====
+Depending on the microarchitecture, some possible ways to facilitate include:
+not storing Invalid PTEs in the MPT page-walk caches, automatically evicting
+Invalid MPTEs using a bounded timer, or making MPT page-walk caches coherent
+with store instructions that modify MPTEs.
+====
+
 When the `L` bit is set to 0 the enrty is a non-leaf MPTE else its a leaf MPTE.
 
 A non-leaf MPTE holds the PPN of the next level of the memory protection table.
