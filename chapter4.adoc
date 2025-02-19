@@ -75,7 +75,10 @@ MPTE entry in <<rv32-mpte-leaf>>.
 
 The `V` bit indicates if the MPTE is valid; if it is 0, all other bits in the
 MPTE are don't-cares and may be used freely by software. When the `MPTE` is
-valid, the bits constituting the `RESERVED` field are reserved for future standard use and, until its use is defined by some standard extension, must be zeroed by software for forward compatibility. If any of these bits are set, an access-fault exception is raised.
+valid, the bits constituting the `RESERVED` field are reserved for future
+standard use and, until its use is defined by some standard extension,
+must be zeroed by software for forward compatibility. If any of these
+bits are set, an access-fault exception is raised.
 
 Explicit stores by a hart that update the `V` bit of leaf and/or non-leaf MPTEs
 from 0 to 1 and are visible to a hart will eventually become visible within a
