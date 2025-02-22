@@ -23,7 +23,7 @@ associated with the SDID.
 The `mmpt` register is an `XLEN`-bit read/write register, formatted as shown in
 <<sdid-32>> for `XLEN=32` and <<sdid-64>> for `XLEN=64`, which controls
 page-based physical address space protection. This register holds the
-supervisor domain identifier (`SDID`), the physical page number (`PPN`) of the
+supervisor domain identifier (`SDID`); the physical page number (`PPN`) of the
 root page of the memory protection tables (`MPT`), which facilitates page-based
 address space protection; and the `MODE` field, which selects the memory
 protection scheme for system physical addresses.
@@ -76,7 +76,7 @@ least-significant bits of `SDID` are implemented first: that is, if
 protection scheme described in Section 3.7 of the RISC-V privileged architecture
 specification cite:[ISA]. The remaining fields in `mmpt` (`SDID`, `PPN`) must be
 set to zeros.
-|1 |`Smmpt34` |Page-based memory protection for upto 34-bit physical address
+|1 |`Smmpt34` |Page-based memory protection for up to 34-bit physical address
 spaces.
 |2-3 |- |`_Reserved_`
 |===
@@ -103,7 +103,7 @@ to `mmpt` with an unsupported `MODE` value is not ignored. Instead, the fields
 of `mmpt` are `WARL` in the normal way, when so indicated in <<sdid-32>> and
 <<sdid-64>>.
 
-`mmpt.PPN` refers to the root of memory protection table when `mmpt.MODE` is not
+`mmpt.PPN` refers to the root of the memory protection table when `mmpt.MODE` is not
 `Bare`.
 
 The `mmpt` register is considered active for the purposes of access type
@@ -282,9 +282,9 @@ configuration for supervisor domains:
 
 . `Smsdia` uses `msdcfg.SDICN` to specify the active configuration for
   the supervisor domain interrupt controller associated with the hart.
-. `Smsdedbg` specifies the `msdcfg.sdedbgalw` bit to manage
+. `Smsdedbg` specifies the `msdcfg.SDEDBGALW` bit to manage
   external-debug for a supervisor domain.
-. `Smsdetrc` specifies the `msdcfg.sdetrcalw` bit to manage
+. `Smsdetrc` specifies the `msdcfg.SDETRCALW` bit to manage
   external-trace for a supervisor domain.
 . `Smqosid` specifies the control bits `SSM`, `SRL`, `SML` and `SQRID` to enable
   the RDSM to manage QoS controls for supervisor domains.

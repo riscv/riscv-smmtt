@@ -42,7 +42,7 @@ The root memory protection table has 2^9^ memory-protection-table entries
 MPTEs. Each MPTE is a four byte value.
 
 If the MPTE points to the next level of the memory protection table, it is a
-non-leaf MPTE else it is a leaf MPTE. A leaf MPTE provides access type
+non-leaf MPTE, else it is a leaf MPTE. A leaf MPTE provides access type
 permissions for eight pages in the address range determined by that MPTE.
 
 The format of a non-leaf MPTE entry is shown in <<rv32-mpte>> and that of a leaf
@@ -92,13 +92,13 @@ Invalid MPTEs using a bounded timer, or making MPT page-walk caches coherent
 with store instructions that modify MPTEs.
 ====
 
-When the `L` bit is set to 0 the enrty is a non-leaf MPTE else its a leaf MPTE.
+When the `L` bit is set to 0, the entry is a non-leaf MPTE, else it is a leaf MPTE.
 
 A non-leaf MPTE holds the PPN of the next level of the memory protection table.
 
 A leaf MPTE holds eight tuples of access type permisssion bits - one for each
 page in the range determined by that MPTE. Each tuple consists of 3 bits `XWR`,
-that provide the Execute(`X`), Write(`W`), and Read(`R`) permissions. The most
+that provide the Execute (`X`), Write (`W`), and Read (`R`) permissions. The most
 significant 3 bits of the range offset identify a page in that range and are
 used to identify the access type permission bits for an access to that page.
 
@@ -109,10 +109,10 @@ used to identify the access type permission bits for an access to that page.
 | X | W | R | Meaning
 | 0 | 0 | 0 | _Reserved for future use._
 | 0 | 0 | 1 | Read-only page.
-| 0 | 1 | 0 |  _Reserved for future use._
+| 0 | 1 | 0 | _Reserved for future use._
 | 0 | 1 | 1 | Read-write page.
 | 1 | 0 | 0 | Execute-only page.
-| 1 | 0 | 1 |  Read-execute page.
+| 1 | 0 | 1 | Read-execute page.
 | 1 | 1 | 0 | _Reserved for future use._
 | 1 | 1 | 1 | Read-write-execute page.
 |===
@@ -120,12 +120,12 @@ used to identify the access type permission bits for an access to that page.
 Access type permissions -- readable, writable, or executble -- are checked
 by MPT the same as for VS-stage and G-stage translation. For a memory access
 made to support VS-stage or G-stage address translation (such as a read/write to
-a VS-level page table or a G-level page table), permissions are checked as
+a VS-stage page table or a G-stage page table), permissions are checked as
 though for an implicit load or store, not for the original access type. However,
 any exception is always reported for the original access type (instruction,
 load, or store/AMO).
 
-If Smmptnapot is not implemented, the bit 31 in leaf MPTE remains reserved.
+If Smmptnapot is not implemented, bit 31 in a leaf MPTE remains reserved.
 
 Any level of MPTE may be a leaf MPTE, so in addition to providing access type
 permissions to 4 KiB pages, Smmpt34 supports 32 MiB megapages.
@@ -168,7 +168,7 @@ M-mode accesses. The endianness of such implicit accesses is controlled by
 
 === Smmpt43: Page-Based 43-bit Memory Protection System
 
-This section describes a page-based memory protection system RV64, which
+This section describes a page-based memory protection system for RV64, which
 supports a 43-bit supervisor physical address space. The design of Smmpt43
 follows the overall scheme of Smmpt34, and this section details only the
 differences between the schemes.
@@ -242,8 +242,8 @@ range determined by that MPTE.
 ], config:{lanes: 2, hspace:1024}}
 ....
 
-If Smmptnapot is not implemented, the bit 63 in leaf MPTE remains reserved. If
-Smmptnlnapot is not implemented, the bit 63 in non-leaf MPTE remains reserved.
+If Smmptnapot is not implemented, bit 63 in a leaf MPTE remains reserved. If
+Smmptnlnapot is not implemented, bit 63 in a non-leaf MPTE remains reserved.
 
 Any level of MPTE may be a leaf MPTE, so in addition to providing access type
 permissions to 4 KiB pages, Smmpt43 supports 32 MiB _megapages_, 16 GiB
@@ -285,7 +285,7 @@ size of a page and must always be aligned to a page boundary. The physical page
 number of the root memory protection table is stored in the `mmpt` register's
 PPN field.
 
-The MPTE formats for Smmpt52 is identical to that of Smmpt43.
+The MPTE formats for Smmpt52 are identical to that of Smmpt43.
 
 Any level of MPTE may be a leaf MPTE, so in addition to providing access type
 permissions to 4 KiB pages, Smmpt52 supports 32 MiB _megapages_, 16 GiB
@@ -304,7 +304,7 @@ only details the differences between the two schemes.
 
 Smmpt64 supports a 64-bit physical address space, divided into pages. The
 Smmpt64 address is partitioned as shown in  <<rv64-spa-Smmpt64>>. The
-Smmpt64 memory protection table has four levels.
+Smmpt64 memory protection table has five levels.
 
 [caption="Figure {counter:image}: ", reftext="Figure {image}"]
 [title="Smmpt64 Supervisor Physical Address", id=rv64-spa-Smmpt64]
@@ -330,7 +330,7 @@ The non-root Smmpt64 memory protection tables contain 2^9^ MPTEs, eight bytes
 each. The non-root memory protection table is exactly the size of a page and
 must always be aligned to a page boundary.
 
-The MPTE formats for Smmpt64 is identical to that of Smmpt52.
+The MPTE formats for Smmpt64 are identical to that of Smmpt52.
 
 Any level of MPTE may be a leaf MPTE, so in addition to providing access type
 permissions to 4 KiB pages, Smmpt54 supports 32 MiB _megapages_, 16 GiB
@@ -343,14 +343,14 @@ equals 4.
 === Smmptnapot - NAPOT Access-Type Permission Granularity
 
 When `MPTE.L`=1 and `MPTE.N`=1, the leaf `MPTE` represents a memory protection
-range that is part of a larger contigous NAPOT memory protection range comprised
+range that is part of a larger contiguous NAPOT memory protection range comprised
 of 512 pages for RV64 and 1024 pages for RV32. All leaf MPTEs at that level of
 this NAPOT memory protection range have the same value for L, N, PERMS and V
 bits. Further, the XWR access type permssion tuples in the PERMS field of such
 PTEs are identical.
 
 Such MPTEs behave identically to leaf MPTEs in the MPT access permission lookup
-process described in <<MPT-lookup>>, except that:
+process described in <<MPT_ACC_LKUP>>, except that:
 
 * For RV32, the `N` bit may be set to 1 in the level 0 leaf MPTEs.
 * For RV64, the `N` bit may be set to 1 in the level 0 and level 1 leaf MPTEs.
