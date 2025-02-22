@@ -375,55 +375,23 @@ or Smmpt64 extensions must be implemented.
 
 === Smmptnlnapot - NAPOT Memory Protection Table
 
-The Smmptnlnapot extension supports NAPOT non-leaf MPTEs. This extension is
-RV64 only, and depends on one of Smmpt43, Smmpt52 or Smmpt64.
+The Smmptnlnapot extension supports NAPOT non-leaf MPTEs. This extension
+applies to RV64 only, and depends on one of Smmpt43, Smmpt52, or Smmpt64. It
+allows skipping an intermediate level of the MPT lookup process by coalescing
+512 adjacent MPT pages into a single 2 MiB superpage. When a NAPOT non-leaf
+MPTE is encountered, the next two levels of the MPT lookup process (each
+normally computing an MPTE address using 9 bits of the physical address) are
+replaced by a single level which computes the MPTE address using the next 18
+bits of the physical address.
 
-For RV64, when the `MPTE.L`=0 and `MPTE.N`=1, the non-leaf `MPTE`
-is part of a range of MPTEs at that level of MPT with the same value for
-the L, N, PPN, and V bits.
-
-The following Non-leaf `MPTE` encodings are defined when _mpte_.N is 1.
-
-[[Smmpt-napot]]
-.Non-leaf `MPTE` encodings when _mpte_.N=1
-[width="100%",cols="10%,30%,30%,30%",options="header",]
-|===
-| *_i_* a| *_mpte.PPN[i]_*  a| *Description*        a|*_mpte.napot_bits_*
-| < 2   a| x xxxx xxxx xxxx a| Reserved             a| -
-|   2   a| x xxx1 0000 0000 a| 2 MiB contiguous L2  a| 9
-|   2   a| x xxx0 xxxx xxxx a| Reserved             a| -
-|   3   a| x xxx1 0000 0000 a| 2 MiB L3             a| 9
-|   3   a| x xxx0 xxxx xxxx a| Reserved             a| -
-|   4   a| x 1000 0000 0000 a| 16 MiB contiguous L4 a| 12
-|   4   a| x 0xxx xxxx xxxx a| Reserved             a| -
-|===
+When `MPTE.L`=0 and `MPTE.N`=1, the MPTE is a NAPOT non-leaf MPTE. `MPTE.PPN`
+points to a naturally-aligned 2 MiB superpage, so `MPTE.PPN`[8:0] are reserved
+and must be zero.
 
 Such MPTEs behave identically to non-leaf MPTEs in the MPT access permission
-lookup process described in <<MPT-lookup>>, except that:
+lookup process described in <<MPT_ACC_LKUP>>, except that:
 
- * If the encoding in _mpte_ is valid according to table <<Smmpt-napot>>,
-   then instead of returning the original value of the _mpte_, implicit read
-   of a non-leaf NAPOT _mpte_ returns a copy of `mpte` in which
-   _mpte.ppn[i][mpte.napot_bits-1:0]_ are replaced by
-   _pn[i][mpte.napot_bits-1:0]_. If the encoding in _mpte_ is reserved
-   according to <<Smmpt-napot>> then an access-fault exception corresponding to
-   the original access type must be raised.
- * Implicit reads of non-leaf NAPOT MPTEs may create MPT walk cache entries
-   mapping _a_ + _j_*PTESIZE to a copy of _mpte_ in which
-   _mpte[i][pte.napot_bits-1:0]_ is replaced by _pn[i][mpte.napot_bits-1:0]_,
-   for any and all _j_ such that _j_ >> _napot_bits_ = _pn[i].napot_bits_.
-
-[NOTE]
-====
-Some implementations may cache non-leaf MPTE to accelerate the MPT access-type
-permission lookup process using MPT walk caches. Such implementations may then
-use the MPTE that was implicitly accessed as one or more entries representing
-a contingous set of non-leaf MPTEs at that level. This compaction helps relieve
-MPT walk cache pressure in some scenarios. Simpler implementations may simply
-create a single entry in their page walk cache using the transformed mpte value
-returned by the implicit access to the mpte.
-
-Depending on the need, the NAPOT scheme may be extended to other levels of the
-MPT in the future.
-====
+ * In step 4, subtract 2 from _i_ instead of 1.
+ * In step 2 on the following iteration, the `MPTE` address is calculated as
+   _a_ + _pa.pn[i+1:i]_ x MPTESIZE.
 
