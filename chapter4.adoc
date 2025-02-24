@@ -87,6 +87,17 @@ bounded timeframe to subsequent implicit accesses by that hart to such MPTEs.
 
 [NOTE]
 ====
+This behavior relieves M-mode software from executing certain memory-management
+instructions, such as MFENCE.SPA or MINVAL.SPA, which would normally be used to
+synchronize the hart’s MPT caches when a memory-resident MPTE is changed from
+Invalid to Valid. Synchronizing the hart’s MPT caches with other forms of updates
+to a memory-resident MPTE, including when a MPTE is changed from Valid to Invalid,
+requires the use of suitable memory-management instructions. This behavior
+guarantees that a change to a MPTE from Invalid to Valid is made visible within a
+bounded time, thereby making the execution of these memory-management
+instructions redundant. The performance benefit of eliding these instructions
+outweighs the cost of an occasional gratuitous additional access fault that may occur.
+
 Depending on the microarchitecture, some possible ways to facilitate include:
 not storing Invalid PTEs in the MPT page-walk caches, automatically evicting
 Invalid MPTEs using a bounded timer, or making MPT page-walk caches coherent
@@ -200,7 +211,6 @@ Smmpt43 memory protection table has three levels.
   {bits:  9,  name: 'pn[0]',        attr: '9' },
   {bits:  9,  name: 'pn[1]',        attr: '9'},
   {bits:  9,  name: 'pn[2]',        attr: '9'},
-  {bits:  21, name: '0',            attr: '21'},
 ], config:{lanes: 1, hspace:1024}}
 ....
 
@@ -278,7 +288,6 @@ Smmpt52 memory protection table has four levels.
   {bits:  9,  name: 'pn[1]',        attr: '9'},
   {bits:  9,  name: 'pn[2]',        attr: '9'},
   {bits:  9,  name: 'pn[3]',        attr: '9'},
-  {bits:  12, name: '0',            attr: '12'},
 ], config:{lanes: 1, hspace:1024}}
 ....
 
@@ -356,7 +365,7 @@ Such MPTEs behave identically to leaf MPTEs in the MPT access permission lookup
 process described in <<MPT_ACC_LKUP>>, except that:
 
 * For RV32, the `N` bit may be set to 1 in the level 0 leaf MPTEs.
-* For RV64, the `N` bit may be set to 1 in the level 0 and level 1 leaf MPTEs.
+* For RV64, the `N` bit may be set to 1 in the leaf MPTEs.
 
 [NOTE]
 ====
