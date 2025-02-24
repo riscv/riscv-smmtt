@@ -63,7 +63,7 @@ writing one to every bit position in the `SDID` field, then reading back the
 value in `mmpt` to see which bit positions in the `SDID` field hold a one. The
 least-significant bits of `SDID` are implemented first: that is, if
 `SDIDLEN` > 0, `SDID`[`SDIDLEN`-1:0] is writable. The maximal value of
-`SDIDLEN`, termed `SDIDMAX`, is 6 for all `Smmpt` modes.
+`SDIDLEN`, termed `SDIDMAX`, is 6.
 
 <<mpt-32>> shows the encodings of the `MODE` field when `XLEN=32` and
 <<mpt-64>> shows the encodings of the `MODE` field when `XLEN=64`.
@@ -276,7 +276,7 @@ to the VMID provided in the HINVAL.GVMA or the ASID provided in HINVAL.VVMA.
 
 The `msdcfg` is a 32-bit read/write register, formatted as shown in <<MSDCFG>>.
 This CSR is used by M-mode software to specify the active configuration for
-capabilities of the supervisor domain when associated with a hart. +
+capabilities of the supervisor domain when associated with a hart.
 The following extensions use the `msdcfg` register to specify additional
 configuration for supervisor domains:
 

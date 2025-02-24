@@ -1,6 +1,6 @@
 [[chapter4]]
 [[Smmpt]]
-== `Smmpt`: Machine-mode Memory Protection Table (MPT)
+== Machine-mode Memory Protection Table (MPT)
 
 Memory Protection table is a radix-tree table used to provide read, write, and
 execute permissions for implicit and explicit memory accesses by effective
@@ -39,7 +39,8 @@ table.
 
 The root memory protection table has 2^9^ memory-protection-table entries
 (MPTEs) and the memory protection tables linked to the root table have 2^10^
-MPTEs. Each MPTE is a four byte value.
+MPTEs. Each MPTE is a four byte value. Each memory protection table,
+including the root MPT, must always be aligned to a page boundary.
 
 If the MPTE points to the next level of the memory protection table, it is a
 non-leaf MPTE, else it is a leaf MPTE. A leaf MPTE provides access type
@@ -157,7 +158,7 @@ follows:
 5. A leaf _mpte_ has been found. Let _pi_ be the NUMPGINRANGE (For Smmpt34,
    NUMPGINRANGE is 3) most significant bits of the range offset. Let
    _XWR=PERMS[pi*3+2:pi*3]_. Determine if the requested memory access is allowed
-   by the _XWR_ bits, given the current privilege mode and MXR field of the
+   by the _XWR_ bits, given the effective privilege mode and MXR field of the
    `mstatus` register. If not, stop and raise an access-fault exception
    corresponding to the original access type, else the requested memory access
    is allowed.
@@ -199,6 +200,7 @@ Smmpt43 memory protection table has three levels.
   {bits:  9,  name: 'pn[0]',        attr: '9' },
   {bits:  9,  name: 'pn[1]',        attr: '9'},
   {bits:  9,  name: 'pn[2]',        attr: '9'},
+  {bits:  21, name: '0',            attr: '21'},
 ], config:{lanes: 1, hspace:1024}}
 ....
 
@@ -276,6 +278,7 @@ Smmpt52 memory protection table has four levels.
   {bits:  9,  name: 'pn[1]',        attr: '9'},
   {bits:  9,  name: 'pn[2]',        attr: '9'},
   {bits:  9,  name: 'pn[3]',        attr: '9'},
+  {bits:  12, name: '0',            attr: '12'},
 ], config:{lanes: 1, hspace:1024}}
 ....
 
@@ -346,7 +349,7 @@ When `MPTE.L`=1 and `MPTE.N`=1, the leaf `MPTE` represents a memory protection
 range that is part of a larger contiguous NAPOT memory protection range comprised
 of 512 pages for RV64 and 1024 pages for RV32. All leaf MPTEs at that level of
 this NAPOT memory protection range have the same value for L, N, PERMS and V
-bits. Further, the XWR access type permssion tuples in the PERMS field of such
+bits. Thus, the XWR access type permission tuples in the PERMS field of such
 PTEs are identical.
 
 Such MPTEs behave identically to leaf MPTEs in the MPT access permission lookup
