@@ -16,6 +16,7 @@ The following MPT extensions are defined:
 * Smmptnlnapot - NAPOT Memory Protection Table (RV64 only)
 
 These MPT extensions depend on `Smsdid`.
+Smmpt34, Smmpt43, Smmpt52 and Smmpt64 depend on `Smmptnapot`.
 
 === Smmpt34: Page-Based Memory Protection System
 
@@ -137,8 +138,6 @@ though for an implicit load or store, not for the original access type. However,
 any exception is always reported for the original access type (instruction,
 load, or store/AMO).
 
-If Smmptnapot is not implemented, bit 31 in a leaf MPTE remains reserved.
-
 Any level of MPTE may be a leaf MPTE, so in addition to providing access type
 permissions to 4 KiB pages, Smmpt34 supports 32 MiB megapages.
 
@@ -166,9 +165,11 @@ follows:
    to the original access type. Otherwise, let _a_ = _mpte.PPN_ x PAGESIZE and
    go to step 2.
 
-5. A leaf _mpte_ has been found. Let _pi_ be the NUMPGINRANGE (For Smmpt34,
-   NUMPGINRANGE is 3) most significant bits of the range offset. Let
-   _XWR=PERMS[pi*3+2:pi*3]_. Determine if the requested memory access is allowed
+5. A leaf _mpte_ has been found. If i > 0, the bits _pa.pn[i-1]_ are included
+   in the range offset, else for i = 0, the range offset is specified in the
+   _pa_. Let _pi_ be the NUMPGINRANGE (For Smmpt34, NUMPGINRANGE is 3) most
+   significant bits of the range offset. Let _XWR=PERMS[pi*3+2:pi*3]_.
+   Determine if the requested memory access is allowed
    by the _XWR_ bits, given the effective privilege mode and MXR field of the
    `mstatus` register. If not, stop and raise an access-fault exception
    corresponding to the original access type, else the requested memory access
@@ -254,8 +255,7 @@ range determined by that MPTE.
 ], config:{lanes: 2, hspace:1024}}
 ....
 
-If Smmptnapot is not implemented, bit 63 in a leaf MPTE remains reserved. If
-Smmptnlnapot is not implemented, bit 63 in a non-leaf MPTE remains reserved.
+If Smmptnlnapot is not implemented, bit 63 in a non-leaf MPTE remains reserved.
 
 Any level of MPTE may be a leaf MPTE, so in addition to providing access type
 permissions to 4 KiB pages, Smmpt43 supports 32 MiB _megapages_, 16 GiB
@@ -380,9 +380,13 @@ The scheme supports caching a single access-type permission entry representing a
 access-type permission entry representing a 4 MiB memory range. These contigous
 memory range sizes represent large/huge page sizes used commonly by memory
 allocators.
+
+A single MPTE entry covers a 64 KiB address range, so a separate 64 KiB NAPOT
+PTE is not needed. One MPTE with all XWR permissions being identical provides
+the 64 KiB region support.
 ====
 
-If SmmptNapot extension is implemented then one of Smmpt34, Smmpt43, Smmpt52,
+If Smmptnapot extension is implemented then one of Smmpt34, Smmpt43, Smmpt52,
 or Smmpt64 extensions must be implemented.
 
 === Smmptnlnapot - NAPOT Memory Protection Table
