@@ -406,14 +406,14 @@ The following Non-leaf `MPTE` encodings are defined when _mpte_.N is 1.
 |===
 | *_i_* a| *_mpte.PPN[8:0]_* a| *Description* a| *_mpte.napot_bits_*
 |    0  a|       x xxxx xxxx a| Reserved      a| -
-|  > 0  a|       x 1xxx xxxx a| Reserved      a| -
-|  > 0  a|       x x1xx xxxx a| Reserved      a| -
-|  > 0  a|       x Xx1x xxxx a| Reserved      a| -
-|  > 0  a|       x xxx1 xxxx a| Reserved      a| -
-|  > 0  a|       x xxxx 1xxx a| Reserved      a| -
-|  > 0  a|       x xxxx x1xx a| Reserved      a| -
-|  > 0  a|       x xxxx xx1x a| Reserved      a| -
 |  > 0  a|       x xxxx xxx1 a| Reserved      a| -
+|  > 0  a|       x xxxx xx1x a| Reserved      a| -
+|  > 0  a|       x xxxx x1xx a| Reserved      a| -
+|  > 0  a|       x xxxx 1xxx a| Reserved      a| -
+|  > 0  a|       x xxx1 xxxx a| Reserved      a| -
+|  > 0  a|       x xx1x xxxx a| Reserved      a| -
+|  > 0  a|       x x1xx xxxx a| Reserved      a| -
+|  > 0  a|       x 1xxx xxxx a| Reserved      a| -
 |  > 0  a|       1 0000 0000 a| 2 MiB contiguous next-level MPT a| 9
 |  > 0  a|       0 xxxx xxxx a| Reserved      a| -
 |===
