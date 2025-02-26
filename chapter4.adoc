@@ -404,14 +404,11 @@ The following Non-leaf `MPTE` encodings are defined when _mpte_.N is 1.
 .Non-leaf `MPTE` encodings when _mpte_.N=1
 [width="100%",cols="10%,30%,30%,30%",options="header",]
 |===
-| *_i_* a| *_mpte.PPN[i]_*  a| *Description*        a|*_mpte.napot_bits_*
-| < 2   a| x xxxx xxxx xxxx a| Reserved             a| -
-|   2   a| x xxx1 0000 0000 a| 2 MiB contiguous L2  a| 9
-|   2   a| x xxx0 xxxx xxxx a| Reserved             a| -
-|   3   a| x xxx1 0000 0000 a| 2 MiB L3             a| 9
-|   3   a| x xxx0 xxxx xxxx a| Reserved             a| -
-|   4   a| x 1000 0000 0000 a| 16 MiB contiguous L4 a| 12
-|   4   a| x 0xxx xxxx xxxx a| Reserved             a| -
+| *_i_* a| *_mpte.PPN[8:0]_* a| *Description* a| *_mpte.napot_bits_*
+|    0  a|       x xxxx xxxx a| Reserved      a| -
+|  > 0  a|       x 1xxx xxxx a| Reserved      a| -
+|  > 0  a|       1 0000 0000 a| 2 MiB contiguous next-level MPT a| 9
+|  > 0  a|       0 xxxx xxxx a| Reserved      a| -
 |===
 
 Such MPTEs behave identically to non-leaf MPTEs in the MPT access permission
@@ -426,12 +423,12 @@ lookup process described in <<MPT-lookup>>, except that:
    the original access type must be raised.
  * Implicit reads of non-leaf NAPOT MPTEs may create MPT walk cache entries
    mapping _a_ + _j_*PTESIZE to a copy of _mpte_ in which
-   _mpte[i][pte.napot_bits-1:0]_ is replaced by _pn[i][mpte.napot_bits-1:0]_,
-   for any and all _j_ such that _j_ >> _napot_bits_ = _pn[i].napot_bits_.
+   _mpte.ppn[mpte.napot_bits-1:0]_ is replaced by _pa.pn[i][mpte.napot_bits-1:0]_,
+   for any and all _j_ such that _j_ >> _napot_bits_ = _pa.pn[i]_ >> _napot_bits_.
 
 [NOTE]
 ====
-Some implementations may cache non-leaf MPTE to accelerate the MPT access-type
+Some implementations may cache non-leaf MPTEs to accelerate the MPT access-type
 permission lookup process using MPT walk caches. Such implementations may then
 use the MPTE that was implicitly accessed as one or more entries representing
 a contingous set of non-leaf MPTEs at that level. This compaction helps relieve
