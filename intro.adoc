@@ -45,7 +45,8 @@ operating in the context of a supervisor domain to facilitate physical address
 protection fences on a per supervisor domain basis. Supervisor domains must rely
 on a TCB which consists of the RDSM (software) and hardware (hart, SoC,
 Root-of-trust) that enforces the isolation properties for the supervisor domain.
-The RDSM may utilize PMP/ `Smepmp` and/or the `Smmpt` (Machine-level Memory Protection Tables)
+The RDSM may utilize PMP/ `Smepmp` and/or the `Smmpt` (Machine-level Memory
+Protection Tables)
 extension described in this specification to isolate physical memory between
 supervisor domains. Isolation of the workloads within a supervisor domain is the
 responsibility of the OS/hypervisor managing the supervisor domain, here
