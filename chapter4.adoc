@@ -419,13 +419,13 @@ The following Non-leaf `MPTE` encodings are defined when _mpte_.N is 1.
 |===
 
 Such MPTEs behave identically to non-leaf MPTEs in the MPT access permission
-lookup process described in <<MPT-lookup>>, except that:
+lookup process described in <<MPT_ACC_LKUP>>, except that:
 
- * If the encoding in _mpte_ is valid according to table <<Smmpt-napot>>,
+ * If the encoding in _mpte_ is valid according to <<Smmpt-napot>>,
    then instead of returning the original value of the _mpte_, implicit read
    of a non-leaf NAPOT _mpte_ returns a copy of `mpte` in which
-   _mpte.ppn[i][mpte.napot_bits-1:0]_ are replaced by
-   _pn[i][mpte.napot_bits-1:0]_. If the encoding in _mpte_ is reserved
+   _mpte.ppn[mpte.napot_bits-1:0]_ are replaced by
+   _pa.pn[i][mpte.napot_bits-1:0]_. If the encoding in _mpte_ is reserved
    according to <<Smmpt-napot>> then an access-fault exception corresponding to
    the original access type must be raised.
  * Implicit reads of non-leaf NAPOT MPTEs may create MPT walk cache entries
