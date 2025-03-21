@@ -226,8 +226,8 @@ registers. The bit 16 in `mip` and `sip` is called `LSDEIP` and the same bit in
 delegation of `LSDEI` to S-mode. This interrupt cannot be delegated to
 VS-mode and bit 16 of `hideleg` is read-only zero.
 
-The `mip.LSDEIP` bit is 1 if and only if the bitwise logical AND of CSRs
-`msdeip` and `msdeie` is nonzero in any bit. The `sip.LSDEIP` bit is 0 if
+The `mip.LSDEIP` bit is set to 1 if the bitwise logical AND of CSRs
+`msdeip` and `msdeie` is nonzero in any bit. The `sip.LSDEIP` bit is set to 0 if
 `LSDEI` is not delegated to S-mode otherwise it returns the value of the
 `mip.LSDEIP` when read.
 
