@@ -42,6 +42,8 @@ interrupt domain of the IMSIC.
 Interrupt controllers other than APLIC and/or IMSIC that support multiple
 supervisor interrupt domains may also serve a supervisor domain.
 
+
+[[SD-IMSIC]]
 === IMSIC Extension for Supervisor Domains
 
 The IMSIC is extended to support multiple *supervisor interrupt domains*, where
@@ -83,10 +85,13 @@ Where:
   much larger,
 * `I` is an integer constant such that `I \geq j + E`, and is usually much
   larger,
-* `B` is the base address.
+* `B` is the base address for supervisor-level interrupt files of the IMSIC.
 
 Refer to cite:[AIA] for the detailed definitions of constants `g`, `h`, `j`,
 `E`, `C`, and `B`.
+
+The constant `I` represents the number of bits needed to encode the address
+range occupied by one supervisor interrupt domain.
 
 [NOTE]
 ====
@@ -139,14 +144,31 @@ supervisor interrupt domain implements guest interrupt files then the
 `vsiselect` and `vsireg` CSRs access the registers of any guest interrupt file
 determined by `hstatus.VGEIN`.
 
-=== APLIC Extension for Supervisor Domains
+[[SD-APLIC]]
+=== APLIC for Supervisor Domains
 
-The `smsiaddrcfg` register is extended to add a low child index shift `LIXS`
-field at bit position 27:24. The `LIXS` field is used in determination of 
-MSI target address for a supervisor interrupt domain. 
+The APLIC supports the concept of multiple interrupt domains where each
+interrupt domain may be associated with a subset of RISC-V harts at one
+privilege level. To support the Supervisor Domain use cases, the APLIC
+must support multiple supervisor-level interrupt domains. A supervisor-level
+interrupt domain in the APLIC may be then associated with a Supervisor Domain by
+configuring it in _direct delivery mode_ or when the hart uses an IMSIC by
+configuring it in _MSI delivery mode_.
 
+When an APLIC supervisor-level interrupt domain is configured in _MSI delivery
+mode_, the PPN help in the  `smsiadddrcfg` register should be configured as:
 
+[latexmath]
+++++
+(B + s \times 2^I) \gg 12
+++++
 
+Where:
+
+* `s` is the _supervisor interrupt domain number_ (`SDIN`),
+* `B` is the base address.
+* `I` number of bits needed to encode address range occupied by on supervisor
+  interrupt domain (See <<SD-IMSIC>>).
 
 
 [[SDI]]
