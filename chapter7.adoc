@@ -340,16 +340,15 @@ enabling such supervisor domains to voluntarily yield execution in response to
 pending interrupts for the other supervisor domains.
 ====
 
-=== "Smgirfp" : Standard Extension for partitioning guest interrupt register files
+=== "Smirfd" : Standard Extension for delegation of IMSIC interrupt register files
 
-The `Smgirfp` extension enables sharing of guest interrupt register files in the
-supervisor interrupt domain in an IMSIC among one or more supervisor domains by 
-partitioning the available guest interrupt register files among the supervisor
-domains. When such partitioning is used, only one of the supervisor domains
-sharing the guest interrupt register files a IMSIC supervisor interrupt domain
-may be associated with the supervisor level interrupt file in that domain. 
+The `Smirfd` extension enables partitioning of the interrupt register files in
+the supervisor interrupt domain in an IMSIC among one or more supervisor
+domains. When a supervisor interrupt domain is shared by multiple supervisor
+domains, only one of the supervisor domains may be associated with the
+supervisor-level interrupt file in that supervisor interrupt domain. 
 
-The `Smgirfp` extension depends on `Smaia`.
+The `Smirfd` extension depends on `Smaia`.
 
 To support the partitioning, the extension introduces a MXLEN-bit read-write 
 `mgirfp` register formatted for MXLEN=64 as shown in <<MGIRFP>>. When MXLEN=32,
