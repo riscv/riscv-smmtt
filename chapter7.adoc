@@ -26,13 +26,13 @@ forward the interrupt to the relevant supervisor domain. The efficiency of
 handling external interrupts by a supervisor domain can be enhanced if the
 external interrupts could be directly assigned to the supervisor domain <<SDI>>.
 Such direct delivery of external interrupts necessitates an interrupt
-controller that can be linked to such supervisor domains. 
+controller that can be linked to such supervisor domains.
 
 To accommodate such supervisor domains, this specification extends the IMSIC
 and APLIC specified by the RISC-V Advanced Interrupt Architecture (AIA)
 specification cite:[AIA] to support multiple supervisor interrupt domains,
 enabling an individual supervisor interrupt domain to be associated with each
-such supervisor domain. 
+such supervisor domain.
 
 In some systems, a supervisor interrupt domain in both an APLIC and an IMSIC may
 be associated with a supervisor domain, with the supervisor interrupt domain of
@@ -56,50 +56,31 @@ A supervisor interrupt domain in an IMSIC consists of:
 Each supervisor interrupt domain in an IMSIC is identified by a *supervisor
 interrupt domain number* (`SIDN`).
 
-The supervisor interrupt domains of an IMSIC may implement differing numbers of
-guest interrupt files. Let `GEILEN~max~` denote the maximum number of guest
-interrupt files implemented among all supervisor interrupt domains within the
-IMSIC. Then, an integer constant `F` is defined such that the smallest value of
-`F` satisfies:
-
-[latexmath]
-++++
-F = \lceil \log_2(\text{GEILEN}_{\text{max}} + 1) \rceil + 12
-++++
-
 The memory page address of interrupt files shall follow the formula:
 
 [latexmath]
 ++++
-\text{Address} = s \times 2^I + g \times 2^E + B + h \times 2^F
+\text{Address} = s \times 2^I + g \times 2^E + B + h \times 2^D
 ++++
 
 Where:
 
 * `s` is the _supervisor interrupt domain number_ (`SDIN`),
-* `g` is a _group number_,
-* `h` is a _hart number_ relative to the group,
-* `j` is the number of bits needed to represent any _group number_,
-* `F` is defined as above,
-* `E` is an integer constant such that `E \geq k + \max(C, F)`, but typically
-  much larger,
-* `I` is an integer constant such that `I \geq j + E`, and is usually much
+* `I` is an integer constant such that `I >= (j + E)`, and is usually much
   larger,
+* `g` is a _group number_,
+* `E` is an integer constant such that `E >= k + max(C, D)`, but typically
+  much larger,
+* `k` is the number of bits needed to represent any hart number,
+* `j` is the number of bits needed to represent any _group number_,
+* `h` is a _hart number_ relative to the group,
 * `B` is the base address for supervisor-level interrupt files of the IMSIC.
 
-Refer to cite:[AIA] for the detailed definitions of constants `g`, `h`, `j`,
-`E`, `C`, and `B`.
+Refer to cite:[AIA] for the detailed definitions of constants `g`, `E`, `k`,
+`C`, `D`, `j`, `h`, and `B`.
 
 The constant `I` represents the number of bits needed to encode the address
 range occupied by one supervisor interrupt domain.
-
-[NOTE]
-====
-This specification replaces the constant `D` defined by cite:[AIA] with `F`. This
-ensures that while the number of guest interrupt files implemented by a
-supervisor interrupt domain may vary, the space occupied in the address space by
-each supervisor interrupt domain is identical.
-====
 
 If the largest supervisor interrupt domain number is `s~max~`, then `sn` -- the
 number of bits needed to represent any supervisor interrupt domain number -- is
@@ -110,11 +91,12 @@ defined as:
 sn = \lceil \log_2(s_{\text{max}} + 1) \rceil
 ++++
 
-Besides being a multiple of `2^{j+E}`, the value of `B` should be chosen such that:
+Besides being a multiple of `2^{j+E}^`, the value of `B` should be chosen such
+that:
 
 [latexmath]
 ++++
-\left( (2^{sn} - 1) \times 2^I \right) \,\&\, B = 0
+\left( (2^{sn} - 1) \times 2^I \right) \mathbin{\&} B = 0
 ++++
 
 This ensures that the address expression:
@@ -145,7 +127,7 @@ supervisor interrupt domain implements guest interrupt files then the
 determined by `hstatus.VGEIN`.
 
 [[SD-APLIC]]
-=== APLIC for Supervisor Domains
+=== APLIC Extension for Supervisor Domains
 
 The APLIC supports the concept of multiple interrupt domains where each
 interrupt domain may be associated with a subset of RISC-V harts at one
@@ -155,21 +137,39 @@ interrupt domain in the APLIC may be then associated with a Supervisor Domain by
 configuring it in _direct delivery mode_ or when the hart uses an IMSIC by
 configuring it in _MSI delivery mode_.
 
-When an APLIC supervisor-level interrupt domain is configured in _MSI delivery
-mode_, the PPN help in the  `smsiadddrcfg` register should be configured as:
+To support supervisor domains, the `smsiaddrcfgh` register is extended with
+a new parameter called `LCXS` (Low Child Index Shift) to help determine the
+addresses to write outgoing MSIs. The extended `smsiaddrcfgh` has the following
+format:
 
 [latexmath]
 ++++
-(B + s \times 2^I) \gg 12
+\begin{array}{ll}
+\hspace*{2em}\text{bits 28:24} & \text{LCXS (WARL)} \\
+\hspace*{2em}\text{bits 22:20} & \text{LHXS (WARL)} \\
+\hspace*{2em}\text{bits 11:0}  & \text{High Base PPN (WARL)}
+\end{array}
 ++++
 
-Where:
+If `CI` is the Child Index from the `source[i]` corresponding to an interrupt
+source `_i_` then the MSI target address is thus computed as follows:
 
-* `s` is the _supervisor interrupt domain number_ (`SDIN`),
-* `B` is the base address.
-* `I` number of bits needed to encode address range occupied by on supervisor
-  interrupt domain (See <<SD-IMSIC>>).
+[latexmath]
+++++
+\begin{aligned}
+\hspace*{2em} \text{MSI address} &= \left( \text{Base PPN}
+\,\mid\, ( \text{CI} \ll \text{CIXS})
+\,\mid\, (g \ll (\text{HHXS} + 12))
+\,\mid\, (h \ll \text{LHXS})
+\,\mid\, \text{Guest Index} \right) \ll 12
+\end{aligned}
+++++
 
+The parameter `CIXS` relates to the constant `I` specified in section <<SD-IMSIC>>
+as: `CIXS = (I - 12)`.
+
+Refer to cite:[AIA] for the detailed definitions of constants `HHXS`, `g`,
+`LHXS`, and Guest Index.
 
 [[SDI]]
 === "Smsdia" : Standard Extension for Supervisor Domain Interrupt Assignment
