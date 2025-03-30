@@ -185,7 +185,6 @@ decisions. To facilitate this functionality, the `Smsdia` extension introduces
 the `msdeip` and `msdeie` CSRs, along with an local supervisor domain external
 interrupt (`LSDEI`).
 
-
 ==== Machine supervisor domain configuration (`msdcfg`)
 
 The `msdcfg` is a 32-bit read/write register, formatted as shown in <<MSDCFG>>.
@@ -228,7 +227,7 @@ rules apply:
   of the corresponding guest interrupt file.
 
 When the supervisor interrupt domain selected by `msdcfg.SIDN` is an implemented
-supervisor interrupt doamin, is not zero, and is an APLIC, the following rules
+supervisor interrupt domain, is not zero, and is an APLIC, the following rules
 apply:
 
 * The S-level external interrupt pending signal of the selected APLIC supervisor
@@ -351,12 +350,12 @@ supervisor-level interrupt file in that supervisor interrupt domain.
 The `Smirfd` extension depends on `Smaia`.
 
 To support the partitioning, the extension introduces a MXLEN-bit read-write 
-`mgirfp` register formatted for MXLEN=64 as shown in <<MGIRFP>>. When MXLEN=32,
-`mgirfph` is a 32-bit read-only register which aliases bits 63:32 of `mgirfp`.
-When MXLEN=64, `mgirfph` does not exist.
+`mgirfd` register formatted for MXLEN=64 as shown in <<MGIRFD>>. When MXLEN=32,
+`mgirfdh` is a 32-bit read-only register which aliases bits 63:32 of `mgirfd`.
+When MXLEN=64, `mgirfdh` does not exist.
 
-[[MGIRFP]]
-.`mgirfp` register for RV64
+[[MGIRFD]]
+.`mgirfd` register for RV64
 
 [wavedrom, , ]
 ....
@@ -369,10 +368,11 @@ When MXLEN=64, `mgirfph` does not exist.
 The `S` bit when set to 1 enables access to the supervisor-level interrupt file
 in the supervisor interrupt domain selected by `msdcfg.SIDN`. Each bit of the
 `GIRF` field when set to 1 enables access to the Guest interrupt file in the
-supervisor interrupt domain selected by `msdcfg.SIDN`. The `GIRF` bits
-corresponding to unimplemented Guest interrupt files are read-only zero.
+supervisor interrupt domain selected by `msdcfg.SIDN`. If `GEILEN` is nonzero,
+bit `GEILEN:0` shall be writeable in `mgirfd`, and all other bit positions shall
+be read-only zeros.
 
-If the `S` bit of `mgirfp` is 1 and the supervisor interrupt domain selected by
+If the `S` bit of `mgirfd` is 1 and the supervisor interrupt domain selected by
 `msdcfg.SIDN` is an implemented supervisor interrupt domain, and is not zero,
 and is an IMSIC, then:
 
@@ -381,7 +381,7 @@ and is an IMSIC, then:
 * The `siselect` and `stopei` CSRs operate on the registers of the
   supervisor-level interrupt register file in the selected supervisor interrupt
 
-If the `S` bit of `mgirfp` is 0 then:
+If the `S` bit of `mgirfd` is 0 then:
 
 * The S-level external interrupt pending signal indicated in `mip.SEIP` is 0.
 * All non-custom values of `siselect` that access IMSIC registers designate an
@@ -393,16 +393,19 @@ If supervisor interrupt domain selected by `msdcfg.SIDN` is an implemented
 supervisor interrupt domain, and is not zero, and is an IMSIC, then the VS-level
 external interrupt pending signals of the guest interrupt files of selected
 supervisor interrupt domain are indicated in the `hgeip` CSR if the bit
-corresponding to those guest interrupt files in `mgirfp` is 1 else they are
+corresponding to those guest interrupt files in `mgirfd` is 1 else they are
 indicated as 0.
 
-If bit of `mgirfp` selected by `hstatus.VGEIN` is 1 and the supervisor interrupt
+If bit of `mgirfd` selected by `hstatus.VGEIN` is 1 and the supervisor interrupt
 domain selected by `msdcfg.SIDN` is an implemented supervisor interrupt domain,
 and is not zero, and is an IMSIC, then the `vsiselect` and `vstopei` CSRs operate
 on the registers of the corresponding guest interrupt file.
 
-If bit of `mgirfp` selected by `hstatus.VGEIN` is 1 and the supervisor interrupt
+If bit of `mgirfd` selected by `hstatus.VGEIN` is 1 and the supervisor interrupt
 domain selected by `msdcfg.SIDN` is an implemented supervisor interrupt domain,
 and is not zero, and is an IMSIC, then the `vsiselect` and `vstopei` CSRs operate
 as-if the `hstatus.VGEIN` is not the number of an implemented guest external
 interrupt.
+
+When `Smirfd` is implemented, `hip.SGEIP` is 1 if and only if the bitwise
+logical-AND of CSRs `hgeip`, `hgeie`, and `mgirfd` is nonzero in any bit.
