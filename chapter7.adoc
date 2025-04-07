@@ -103,14 +103,14 @@ This ensures that the address expression:
 
 [latexmath]
 ++++
-s \times 2^I + g \times 2^E + B + h \times 2^F
+s \times 2^I + g \times 2^E + B + h \times 2^D
 ++++
 
 is equivalent to the bitwise composition:
 
 [latexmath]
 ++++
-s \times 2^I \,|\, g \times 2^E \,|\, B \,|\, h \times 2^F
+s \times 2^I \,|\, g \times 2^E \,|\, B \,|\, h \times 2^D
 ++++
 
 The `Smsdia` extension provides the mechanism to select a supervisor interrupt
@@ -266,8 +266,8 @@ APLIC, the bit __i__ indicates the state of the S-level external interrupt
 pending signal provided by the supervisor interrupt domain in that APLIC.
 
 When the supervisor interrupt domain identified by __i__ is implemented by an
-IMSIC, the bit __i__ indicates the logical OR interrupt signals from all the
-interrupt files implemented by that supervisor interrupt domain.
+IMSIC, the bit __i__ indicates the logical OR of the interrupt signals from all
+the interrupt files implemented by that supervisor interrupt domain.
 
 The summary of external interrupts pending in a supervisor interrupt domain is
 visible in the `msdeip` register even when `msdcfg.SIDN` is not the valid number
@@ -368,8 +368,8 @@ bit `GEILEN:0` shall be writeable in `mgirfd`, and all other bit positions shall
 be read-only zeros.
 
 If the `S` bit of `mgirfd` is 1 and the supervisor interrupt domain selected by
-`msdcfg.SIDN` is an implemented supervisor interrupt domain, and is not zero,
-and is an IMSIC, then:
+`msdcfg.SIDN` is an implemented supervisor interrupt domain, and is an IMSIC,
+then:
 
 * The S-level external interrupt pending signal of supervisor-level interrupt
   file of the selected supervisor interrupt domain is indicated in `mip.SEIP`.
@@ -385,22 +385,20 @@ If the `S` bit of `mgirfd` is 0 then:
   instruction exception.
 
 If supervisor interrupt domain selected by `msdcfg.SIDN` is an implemented
-supervisor interrupt domain, and is not zero, and is an IMSIC, then the VS-level
-external interrupt pending signals of the guest interrupt files of selected
-supervisor interrupt domain are indicated in the `hgeip` CSR if the bit
-corresponding to those guest interrupt files in `mgirfd` is 1 else they are
-indicated as 0.
+supervisor interrupt domain, and is an IMSIC, then the VS-level external
+interrupt pending signals of the guest interrupt files of selected supervisor
+interrupt domain are indicated in the `hgeip` CSR if the bit corresponding to
+those guest interrupt files in `mgirfd` is 1 else they are indicated as 0.
 
 If bit of `mgirfd` selected by `hstatus.VGEIN` is 1 and the supervisor interrupt
 domain selected by `msdcfg.SIDN` is an implemented supervisor interrupt domain,
-and is not zero, and is an IMSIC, then the `vsiselect` and `vstopei` CSRs operate
-on the registers of the corresponding guest interrupt file.
+and is an IMSIC, then the `vsiselect` and `vstopei` CSRs operate on the
+registers of the corresponding guest interrupt file.
 
-If bit of `mgirfd` selected by `hstatus.VGEIN` is 1 and the supervisor interrupt
+If bit of `mgirfd` selected by `hstatus.VGEIN` is 0 and the supervisor interrupt
 domain selected by `msdcfg.SIDN` is an implemented supervisor interrupt domain,
-and is not zero, and is an IMSIC, then the `vsiselect` and `vstopei` CSRs operate
-as-if the `hstatus.VGEIN` is not the number of an implemented guest external
-interrupt.
+and is an IMSIC, then the `vsiselect` and `vstopei` CSRs operate as-if the
+`hstatus.VGEIN` is not the number of an implemented guest external interrupt.
 
 When `Smirfd` is implemented, `hip.SGEIP` is 1 if and only if the bitwise
 logical-AND of CSRs `hgeip`, `hgeie`, and `mgirfd` is nonzero in any bit.
