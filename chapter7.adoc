@@ -397,7 +397,7 @@ If `eff-GEILEN` is nonzero, then:
 * Bits `eff-GEILEN:1` of `hgeie` shall be writable. All other bit positions in
   both `hgeip` and `hgeie` shall be read-only zeros.
 
-* Bit `i` (where `1 ≤ i ≤ eff-GEILEN`) of the `hgeip` CSR indicates the interrupt
+* Bit `i` (where `1 <= i <= eff-GEILEN`) of the `hgeip` CSR indicates the interrupt
   pending signal of the guest interrupt file corresponding to bit position `p`,
   where `p` is the position of the pass:normal[`i`]pass:[th] 1-bit in `mgirfd`,
   for the supervisor interrupt domain.
@@ -410,3 +410,4 @@ If `eff-GEILEN` is nonzero, then:
 * If `VGEIN` is zero or greater than `eff-GEILEN`, then the `vsiselect` and
   `vstopei` CSRs operate as if `hstatus.VGEIN` does not specify the number of an
   implemented guest external interrupt.
+
