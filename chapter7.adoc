@@ -364,19 +364,20 @@ The `S` bit when set to 1 enables access to the supervisor-level interrupt file
 in the supervisor interrupt domain selected by `msdcfg.SIDN`. Each bit of the
 `GIRF` field when set to 1 enables access to the Guest interrupt file in the
 supervisor interrupt domain selected by `msdcfg.SIDN`. If `GEILEN` is nonzero,
-bit `GEILEN:0` shall be writeable in `mgirfd`, and all other bit positions shall
+bit `GEILEN-1:0` shall be writeable in `GIRF`, and all other bit positions shall
 be read-only zeros.
 
 If the `S` bit of `mgirfd` is 1 and the supervisor interrupt domain selected by
-`msdcfg.SIDN` is an implemented supervisor interrupt domain, and is an IMSIC,
-then:
+`msdcfg.SIDN` is an implemented supervisor interrupt domain, then:
 
 * The S-level external interrupt pending signal of supervisor-level interrupt
   file of the selected supervisor interrupt domain is indicated in `mip.SEIP`.
 * The `siselect` and `stopei` CSRs operate on the registers of the
   supervisor-level interrupt register file in the selected supervisor interrupt
+  domain.
 
-If the `S` bit of `mgirfd` is 0 then:
+If the `S` bit of `mgirfd` is 0 or the supervisor domain selected by
+`msdcfg.SIDN` is not an implemented supervisor interrupt domain, then:
 
 * The S-level external interrupt pending signal indicated in `mip.SEIP` is 0.
 * All non-custom values of `siselect` that access IMSIC registers designate an
@@ -384,21 +385,29 @@ If the `S` bit of `mgirfd` is 0 then:
   register, attempts from M-mode or HS-mode to access `sireg` raise an illegal
   instruction exception.
 
-If supervisor interrupt domain selected by `msdcfg.SIDN` is an implemented
-supervisor interrupt domain, and is an IMSIC, then the VS-level external
-interrupt pending signals of the guest interrupt files of selected supervisor
-interrupt domain are indicated in the `hgeip` CSR if the bit corresponding to
-those guest interrupt files in `mgirfd` is 1 else they are indicated as 0.
+If the supervisor interrupt domain selected by `msdcfg.SIDN` is an implemented
+supervisor interrupt domain, then the effective `GEILEN`, denoted `eff-GEILEN`,
+equals the number of bits set to 1 in `mgirfd.GIRF`. Otherwise, `eff-GEILEN` is
+0.
 
-If bit of `mgirfd` selected by `hstatus.VGEIN` is 1 and the supervisor interrupt
-domain selected by `msdcfg.SIDN` is an implemented supervisor interrupt domain,
-and is an IMSIC, then the `vsiselect` and `vstopei` CSRs operate on the
-registers of the corresponding guest interrupt file.
+When `eff-GEILEN` is 0, all bits of `hgeip` and `hgeie` are read-only zeros, and
+the only legal value supported by `hstatus.VGEIN` is 0.
 
-If bit of `mgirfd` selected by `hstatus.VGEIN` is 0 and the supervisor interrupt
-domain selected by `msdcfg.SIDN` is an implemented supervisor interrupt domain,
-and is an IMSIC, then the `vsiselect` and `vstopei` CSRs operate as-if the
-`hstatus.VGEIN` is not the number of an implemented guest external interrupt.
+If `eff-GEILEN` is nonzero, then:
 
-When `Smirfd` is implemented, `hip.SGEIP` is 1 if and only if the bitwise
-logical-AND of CSRs `hgeip`, `hgeie`, and `mgirfd` is nonzero in any bit.
+* Bits `eff-GEILEN:1` of `hgeie` shall be writable. All other bit positions in
+  both `hgeip` and `hgeie` shall be read-only zeros.
+
+* Bit `i` (where `1 ≤ i ≤ eff-GEILEN`) of the `hgeip` CSR indicates the interrupt
+  pending signal of the guest interrupt file corresponding to bit position `p`,
+  where `p` is the position of the pass:normal[`i`]pass:[th] 1-bit in `mgirfd`,
+  for the supervisor interrupt domain.
+
+* If `VGEIN` is nonzero and less than or equal to `eff-GEILEN`, and `g` is
+  the bit position of the pass:normal[`VGEIN`]pass:[th] 1-bit in `mgirfd`, then
+  the `vsiselect` and `vstopei` CSRs operate on the registers of the
+  pass:normal[`g`]pass:[th] guest interrupt file of the IMSIC.
+
+* If `VGEIN` is zero or greater than `eff-GEILEN`, then the `vsiselect` and
+  `vstopei` CSRs operate as if `hstatus.VGEIN` does not specify the number of an
+  implemented guest external interrupt.
