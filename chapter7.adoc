@@ -117,13 +117,13 @@ The `Smsdia` extension provides the mechanism to select a supervisor interrupt
 domain in an IMSIC as a source of S- and VS-level external interrupts for a
 hart. The interrupt signal from the selected supervisor interrupt domains
 supervisor-level interrupt file appears as bit `SEIP` in `mip` and `sip`. The
-interrupt signals from any guest interrupt files of the selected supervisor
+interrupt signals from any _guest interrupt files_ of the selected supervisor
 interrupt domain appear as active bits in the hypervisor CSR `hgeip`.
 
 The `siselect` and `sireg` CSRs access the registers of the supervisor-level
 interrupt file in the selected supervisor interrupt domain. If the selected
-supervisor interrupt domain implements guest interrupt files then the
-`vsiselect` and `vsireg` CSRs access the registers of any guest interrupt file
+supervisor interrupt domain implements _guest interrupt files_ then the
+`vsiselect` and `vsireg` CSRs access the registers of any _guest interrupt file_
 determined by `hstatus.VGEIN`.
 
 [[SD-APLIC]]
@@ -218,11 +218,11 @@ supervisor interrupt domain, and is an IMSIC, the following rules apply:
 * The `siselect` and `stopei` CSRs operate on the registers of the
   supervisor-level interrupt register file in the selected supervisor interrupt
   domain.
-* The VS-level external interrupt pending signals of the guest interrupt files
+* The VS-level external interrupt pending signals of the _guest interrupt files_
   of selected supervisor interrupt domain are indicated in the `hgeip` CSR.
-* The `hstatus.VGEIN` selects a guest interrupt file in the selected supervisor
+* The `hstatus.VGEIN` selects a _guest interrupt file_ in the selected supervisor
   interrupt domain and `vsiselect` and `vstopei` CSRs operate on the registers
-  of the corresponding guest interrupt file.
+  of the corresponding _guest interrupt file_.
 
 When the supervisor interrupt domain selected by `msdcfg.SIDN` is an implemented
 supervisor interrupt domain, and is an APLIC, the following rules apply:
@@ -357,18 +357,20 @@ When MXLEN=64, `mgirfdh` does not exist.
 ....
 
 The `S` bit when set to 1 enables access to the supervisor-level interrupt file
-in the supervisor interrupt domain selected by `msdcfg.SIDN`. Each bit of the
-`GIRF` field when set to 1 enables access to the Guest interrupt file in the
-supervisor interrupt domain selected by `msdcfg.SIDN`. If `GEILEN` is nonzero,
-bit `GEILEN-1:0` shall be writeable in `GIRF`, and all other bit positions shall
-be read-only zeros.
+in the supervisor interrupt domain selected by `msdcfg.SIDN`. 
+
+If the H extension is also implemented, then each bit of the `GIRF` field when
+set to 1 enables access to the _guest interrupt files_ in the supervisor
+interrupt domain selected by `msdcfg.SIDN`. If `GEILEN` is nonzero, bit
+`GEILEN-1:0` shall be writeable in `GIRF`, and all other bit positions shall be
+read-only zeros.
 
 If the `S` bit of `mgirfd` is 1 and the supervisor interrupt domain selected by
 `msdcfg.SIDN` is an implemented supervisor interrupt domain, then:
 
 * The S-level external interrupt pending signal of supervisor-level interrupt
   file of the selected supervisor interrupt domain is indicated in `mip.SEIP`.
-* The `siselect` and `stopei` CSRs operate on the registers of the
+* The `siselect`, `sireg`, and `stopei` CSRs operate on the registers of the
   supervisor-level interrupt register file in the selected supervisor interrupt
   domain.
 
@@ -378,33 +380,38 @@ If the `S` bit of `mgirfd` is 0 or the supervisor domain selected by
 * The S-level external interrupt pending signal indicated in `mip.SEIP` is 0.
 * All non-custom values of `siselect` that access IMSIC registers designate an
   _inaccessible_ register. When `siselect` holds the number of an _inaccessible_
-  register, attempts from M-mode or HS-mode to access `sireg` raise an illegal
+  register, attempts from M-mode or S/HS-mode to access `sireg` raise an illegal
   instruction exception.
+* Access to `stopei` from M-mode or S/HS-mode raises an illegal instruction
+  exception.
 
-If the supervisor interrupt domain selected by `msdcfg.SIDN` is an implemented
-supervisor interrupt domain, then:
+If the hypervisor extension is also implemented and the supervisor interrupt
+domain selected by `msdcfg.SIDN` is an implemented supervisor interrupt domain,
+then:
 
-* The VS-level external interrupt pending signals of the guest interrupt files
+* The VS-level external interrupt pending signals of the _guest interrupt files_
   of the selected supervisor interrupt domain are indicated in the `hgeip` CSR
   if the bit corresponding to their guest external interrupt number in `mgirfd`
   is 1 else they are indicated as 0.
 
-* Bits `GEILEN:1` of `hgeie` are writable if the bit at same position in in
-  `mgirfd` is 1. All other bits are read-only zeroes.
+* Bits `GEILEN:1` of `hgeie` are writable if the bit at same position in `mgirfd`
+  is 1. All other bits of `hgeie` are read-only zeroes.
 
 * If `hstatus.VGEIN` is not 0 and the bit selected by `VGEIN` in `mgirfd` is 1
-  then the `vsiselect` and `vstopei` CSRs operate on the registers of the guest
-  interrupt file selected by `VGEIN`. If `VGEIN` is 0 or the the bit selected by
-  `VGEIN` in `mgirfd` is 0 then the `vsiselect` and `vstopei` CSRs operate as-if
-  the `VGEIN` is the number of an unimplemented guest external interrupt.
+  then the `vsiselect`, `vsireg`, and `vstopei` CSRs operate on the registers of
+  the _guest interrupt file_ selected by `VGEIN`. If `VGEIN` is 0 or the the bit
+  selected by `VGEIN` in `mgirfd` is 0 then the `vsiselect`, `vsireg`, and
+  `vstopei` CSRs operate as-if the `VGEIN` is the number of an unimplemented
+  guest external interrupt.
 
-If the supervisor interrupt domain selected by `msdcfg.SIDN` is not an
-implemented supervisor interrupt domain, then:
+If the hypervisor extension is also implemented and the supervisor interrupt
+domain selected by `msdcfg.SIDN` is not an implemented supervisor interrupt
+domain, then:
 
 * The `hgeip` and `hgeie` CSRs are read-only zeros.
 
-* The `vsiselect` and `vstopei` CSRs operate as-if the `VGEIN` is the number of
-  an unimplemented guest external interrupt for all values of `VGEIN`.
+* The `vsiselect`, `vsireg`, and `vstopei` CSRs operate as-if the `VGEIN` is the
+  number of an unimplemented guest external interrupt for all values of `VGEIN`.
 
 When `Smirfd` is implemented, `hip.SGEIP` is 1 if and only if the bitwise
 logical-AND of CSRs `hgeip`, `hgeie`, and `mgirfd` is nonzero in any bit.
@@ -417,14 +424,15 @@ that participates in the delegation is a donor domain that initially has access
 to all the interrupt files. 
 
 Such donor supervisor domain may then donate, either temporarily or permanently,
-one or more of the interrupt register files (usually guest interrupt files) to a
-receipient supervisor domain by invoking an SBI functions provided by the RDSM.
+one or more of the interrupt register files (usually _guest interrupt files_) to
+a receipient supervisor domain by invoking an SBI functions provided by the RDSM.
 The donor domain does not expect to access the donated interrupt files once they
 have been delegated by the RDSM to the receipient domain.
 
 The recepient domains must not expect the donated interrupt files to be
 contiguously laid out in memory, or expect the corresponding bits in `hgeip` and
-`hgeie` to be contigous, or expect to use a supervisor-level interrupt file.
+`hgeie` to be contigous, or expect to use a supervisor-level interrupt file when
+not delegated.
 
 The memory location of the delegated interrupt files and their guest external
 interrupt numbers are provided to the receipient supervisor domains by the RDSM
