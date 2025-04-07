@@ -414,16 +414,20 @@ logical-AND of CSRs `hgeip`, `hgeie`, and `mgirfd` is nonzero in any bit.
 The `Smirfd` is intended to be used to delegate interrupt files to enlightened
 (a.k.a para-virtualized) supervisor domains. Usually one of the supervisor domain
 that participates in the delegation is a donor domain that initially has access
-to all the interrupt files. Such supervisor domain may then donate, either
-temporarily or permanently, one or more of the interrupt register files (usually
-guest interrupt files) to a receipient supervisor domain by invoking an SBI
-functions provided by the RDSM. The donor domain does not expect to access the
-donated interrupt files once they have been delegated by the RDSM to the
-receipient domain. The recepient domains must not expect the donated interrupt
-files to be contiguously laid out in memory, or expect the corresponding bits in
-`hgeip` and `hgeie` to be contigous, or expect to use a supervisor-level
-interrupt file. The memory location of the delegated interrupt files and their
-guest external interrupt numbers are provided to the receipient domain by the
-RDSM through software mechanisms such as SBI and device tree.
+to all the interrupt files. 
+
+Such donor supervisor domain may then donate, either temporarily or permanently,
+one or more of the interrupt register files (usually guest interrupt files) to a
+receipient supervisor domain by invoking an SBI functions provided by the RDSM.
+The donor domain does not expect to access the donated interrupt files once they
+have been delegated by the RDSM to the receipient domain.
+
+The recepient domains must not expect the donated interrupt files to be
+contiguously laid out in memory, or expect the corresponding bits in `hgeip` and
+`hgeie` to be contigous, or expect to use a supervisor-level interrupt file.
+
+The memory location of the delegated interrupt files and their guest external
+interrupt numbers are provided to the receipient supervisor domains by the RDSM
+through software mechanisms such as SBI and device tree.
 ====
 
