@@ -234,7 +234,7 @@ supervisor interrupt domain, and is an APLIC, the following rules apply:
 ====
 The `Smsdia` extension provides for directly associating a supervisor interrupt
 domain with up to 63 supervisor domains. The RDSM may emulate interrupt
-controllers for additional supervisor domains. 
+controllers for additional supervisor domains.
 
 To emulate an IMSIC supervisor interrupt domain, the RDSM may use the illegal
 instruction trap facilitated by AIA-added state-enbale bits to
@@ -335,15 +335,12 @@ pending interrupts for the other supervisor domains.
 
 === "Smirfd" : Standard Extension for delegation of IMSIC interrupt register files
 
-The `Smirfd` extension enables partitioning of the interrupt register files in
-the supervisor interrupt domain in an IMSIC among one or more supervisor
-domains. When a supervisor interrupt domain is shared by multiple supervisor
-domains, only one of the supervisor domains may be associated with the
-supervisor-level interrupt file in that supervisor interrupt domain. 
+The `Smirfd` extension enables delegation of the interrupt register files in
+the supervisor interrupt domain in an IMSIC to a supervisor domain.
 
 The `Smirfd` extension depends on `Smaia`.
 
-To support the partitioning, the extension introduces a MXLEN-bit read-write 
+To support the delegation, the extension introduces a MXLEN-bit read-write
 `mgirfd` register formatted for MXLEN=64 as shown in <<MGIRFD>>. When MXLEN=32,
 `mgirfdh` is a 32-bit read-only register which aliases bits 63:32 of `mgirfd`.
 When MXLEN=64, `mgirfdh` does not exist.
@@ -385,29 +382,48 @@ If the `S` bit of `mgirfd` is 0 or the supervisor domain selected by
   instruction exception.
 
 If the supervisor interrupt domain selected by `msdcfg.SIDN` is an implemented
-supervisor interrupt domain, then the effective `GEILEN`, denoted `eff-GEILEN`,
-equals the number of bits set to 1 in `mgirfd.GIRF`. Otherwise, `eff-GEILEN` is
-0.
+supervisor interrupt domain, then:
 
-When `eff-GEILEN` is 0, all bits of `hgeip` and `hgeie` are read-only zeros, and
-the only legal value supported by `hstatus.VGEIN` is 0.
+* The VS-level external interrupt pending signals of the guest interrupt files
+  of the selected supervisor interrupt domain are indicated in the `hgeip` CSR
+  if the bit corresponding to their guest external interrupt number in `mgirfd`
+  is 1 else they are indicated as 0.
 
-If `eff-GEILEN` is nonzero, then:
+* Bits `GEILEN:1` of `hgeie` are writable if the bit at same position in in
+  `mgirfd` is 1. All other bits are read-only zeroes.
 
-* Bits `eff-GEILEN:1` of `hgeie` shall be writable. All other bit positions in
-  both `hgeip` and `hgeie` shall be read-only zeros.
+* If `hstatus.VGEIN` is not 0 and the bit selected by `VGEIN` in `mgirfd` is 1
+  then the `vsiselect` and `vstopei` CSRs operate on the registers of the guest
+  interrupt file selected by `VGEIN`. If `VGEIN` is 0 or the the bit selected by
+  `VGEIN` in `mgirfd` is 0 then the `vsiselect` and `vstopei` CSRs operate as-if
+  the `VGEIN` is the number of an unimplemented guest external interrupt.
 
-* Bit `i` (where `1 <= i <= eff-GEILEN`) of the `hgeip` CSR indicates the interrupt
-  pending signal of the guest interrupt file corresponding to bit position `p`,
-  where `p` is the position of the pass:normal[`i`]pass:[th] 1-bit in `mgirfd`,
-  for the supervisor interrupt domain.
+If the supervisor interrupt domain selected by `msdcfg.SIDN` is not an
+implemented supervisor interrupt domain, then:
 
-* If `VGEIN` is nonzero and less than or equal to `eff-GEILEN`, and `g` is
-  the bit position of the pass:normal[`VGEIN`]pass:[th] 1-bit in `mgirfd`, then
-  the `vsiselect` and `vstopei` CSRs operate on the registers of the
-  pass:normal[`g`]pass:[th] guest interrupt file of the IMSIC.
+* The `hgeip` and `hgeie` CSRs are read-only zeros.
 
-* If `VGEIN` is zero or greater than `eff-GEILEN`, then the `vsiselect` and
-  `vstopei` CSRs operate as if `hstatus.VGEIN` does not specify the number of an
-  implemented guest external interrupt.
+* The `vsiselect` and `vstopei` CSRs operate as-if the `VGEIN` is the number of
+  an unimplemented guest external interrupt for all values of `VGEIN`.
+
+When `Smirfd` is implemented, `hip.SGEIP` is 1 if and only if the bitwise
+logical-AND of CSRs `hgeip`, `hgeie`, and `mgirfd` is nonzero in any bit.
+
+[NOTE]
+====
+The `Smirfd` is intended to be used to delegate interrupt files to enlightened
+(a.k.a para-virtualized) supervisor domains. Usually one of the supervisor domain
+that participates in the delegation is a donor domain that initially has access
+to all the interrupt files. Such supervisor domain may then donate, either
+temporarily or permanently, one or more of the interrupt register files (usually
+guest interrupt files) to a receipient supervisor domain by invoking an SBI
+functions provided by the RDSM. The donor domain does not expect to access the
+donated interrupt files once they have been delegated by the RDSM to the
+receipient domain. The recepient domains must not expect the donated interrupt
+files to be contiguously laid out in memory, or expect the corresponding bits in
+`hgeip` and `hgeie` to be contigous, or expect to use a supervisor-level
+interrupt file. The memory location of the delegated interrupt files and their
+guest external interrupt numbers are provided to the receipient domain by the
+RDSM through software mechanisms such as SBI and device tree.
+====
 
