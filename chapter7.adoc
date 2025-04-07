@@ -142,27 +142,26 @@ a new parameter called `LCXS` (Low Child Index Shift) to help determine the
 addresses to write outgoing MSIs. The extended `smsiaddrcfgh` has the following
 format:
 
-[latexmath]
-++++
-\begin{array}{ll}
-\hspace*{2em}\text{bits 28:24} & \text{LCXS (WARL)} \\
-\hspace*{2em}\text{bits 22:20} & \text{LHXS (WARL)} \\
-\hspace*{2em}\text{bits 11:0}  & \text{High Base PPN (WARL)}
-\end{array}
-++++
+[cols="1,1", frame=none, grid=none]
+|===
+|   bits 28:24 | LCXS (WARL)
+|   bits 22:20 | LHXS (WARL)
+|   bits 11:0  | High Base PPN (WARL)
+|===
 
 If `CI` is the Child Index from the `source[i]` corresponding to an interrupt
 source `_i_` then the MSI target address is thus computed as follows:
 
 [latexmath]
 ++++
-\begin{aligned}
-\hspace*{2em} \text{MSI address} &= \left( \text{Base PPN}
-\,\mid\, ( \text{CI} \ll \text{CIXS})
-\,\mid\, (g \ll (\text{HHXS} + 12))
-\,\mid\, (h \ll \text{LHXS})
-\,\mid\, \text{Guest Index} \right) \ll 12
-\end{aligned}
+\text{MSI address} =
+\left(
+  \text{Base PPN}
+  \mid ( \text{CI} \ll \text{CIXS} )
+  \mid ( g \ll (\text{HHXS} + 12) )
+  \mid ( h \ll \text{LHXS} )
+  \mid \text{Guest Index}
+\right) \ll 12
 ++++
 
 The parameter `CIXS` relates to the constant `I` specified in section <<SD-IMSIC>>
