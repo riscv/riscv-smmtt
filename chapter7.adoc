@@ -386,7 +386,7 @@ If the `S` bit of `mirfd` is 0 or the _supervisor interrupt domain_ selected by
   exception.
 
 If the hypervisor extension is also implemented and the _supervisor interrupt
-domain_ selected by `msdcfg.SIDN` is an implemented then:
+domain_ selected by `msdcfg.SIDN` is implemented then:
 
 * The VS-level external interrupt pending signals of the _guest interrupt files_
   of the selected _supervisor interrupt domain_ are indicated in the `hgeip` CSR
