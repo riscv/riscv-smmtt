@@ -374,8 +374,8 @@ If the `S` bit of `mirfd` is 1 and the _supervisor interrupt domain_ selected by
   supervisor-level interrupt register file in the selected _supervisor interrupt
   domain_.
 
-If the `S` bit of `mirfd` is 0 or the supervisor domain selected by
-`msdcfg.SIDN` is not an implemented then:
+If the `S` bit of `mirfd` is 0 or the _supervisor interrupt domain_ selected by
+`msdcfg.SIDN` is not implemented then:
 
 * The S-level external interrupt pending signal indicated in `mip.SEIP` is 0.
 * All non-custom values of `siselect` that access IMSIC registers designate an
@@ -404,7 +404,7 @@ domain_ selected by `msdcfg.SIDN` is an implemented then:
   guest external interrupt.
 
 If the hypervisor extension is also implemented and the _supervisor interrupt
-domain_ selected by `msdcfg.SIDN` is not an implemented then:
+domain_ selected by `msdcfg.SIDN` is not implemented then:
 
 * The `hgeip` and `hgeie` CSRs are read-only zeros.
 
