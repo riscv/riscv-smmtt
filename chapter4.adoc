@@ -8,15 +8,28 @@ privilege modes less than M.
 
 The following MPT extensions are defined:
 
+MPT extensions with read-write-execute access permissions:
 * Smmpt34 - Page-based 34-bit memory protection system (RV32 only)
 * Smmpt43 - Page-based 43-bit memory protection system (RV64 only)
 * Smmpt52 - Page-based 52-bit memory protection system (RV64 only)
 * Smmpt64 - Page-based 64-bit memory protection system (RV64 only)
+
+MPT extensions with 1-bit access permission:
+* Smmpt1bp34 - Page-based 34-bit memory protection system with 1-bit
+  permission (RV32 only)
+* Smmpt1bp44 - Page-based 44-bit memory protection system with 1-bit
+permission (RV64 only)
+* Smmpt1bp53 - Page-based 53-bit memory protection system with 1-bit
+permission (RV64 only)
+* Smmpt1bp64 - Page-based 64-bit memory protection system with 1-bit
+permission (RV64 only)
+
 * Smmptnapot - NAPOT Access-Type Permission Granularity (RV32 and R64)
 * Smmptnlnapot - NAPOT Memory Protection Table (RV64 only)
 
 These MPT extensions depend on `Smsdid`.
 Smmpt34, Smmpt43, Smmpt52 and Smmpt64 depend on `Smmptnapot`.
+Smmpt1bp34, Smmpt1bp44, Smmpt1bp53, Smmpt1bp64 depend on `Smmptnapot`.
 
 === Smmpt34: Page-Based Memory Protection System
 
@@ -141,6 +154,68 @@ load, or store/AMO).
 Any level of MPTE may be a leaf MPTE, so in addition to providing access type
 permissions to 4 KiB pages, Smmpt34 supports 32 MiB megapages.
 
+=== Smmpt1bp34: Page-Based Memory Protection System with 1-bit permission
+
+The RV32 Memory Protection Table provides 1-bit memory access permission for
+pages in a 34-bit supervisor physical address (SPA) space. The SPA is
+partitioned into a page number (`pn`) and a range offset. When the Smmpt1bp34
+mode is selected in the `MODE` field of `mmpt`, the access type permissions for
+a supervisor physical address are determined using a two-level memory
+protection table.
+
+[caption="Figure {counter:image}: ", reftext="Figure {image}"]
+[title="RV32 Supervisor Physical Address", id=rv32-spa-1bp]
+[wavedrom, ,svg]
+....
+{reg: [
+  {bits:  15, name: 'range offset', attr: '16'},
+  {bits:  10, name: 'pn[0]',        attr: '10' },
+  {bits:  9,  name: 'pn[1]',        attr: '8'},
+], config:{lanes: 1, hspace:1024}}
+....
+
+The root memory protection table has 2^8^ memory-protection-table entries
+(MPTEs) and the memory protection tables linked to the root table have 2^10^
+MPTEs. Each MPTE is a four byte value. Each memory protection table,
+including the root MPT, must always be aligned to a page boundary.
+
+If the MPTE points to the next level of the memory protection table, it is a
+non-leaf MPTE, else it is a leaf MPTE. A leaf MPTE provides 1-bit access
+permission for sixteen pages in the address range determined by that MPTE. When
+the permission bit is 1, read, write and execute access are permitted; When the
+permission bit is 0, read, write and execute access is not permitted.
+
+The format of a non-leaf MPTE entry is shown in <<rv32-mpte>> and that of a leaf
+MPTE entry in <<rv32-mpte-1bp-leaf>>.
+
+[caption="Figure {counter:image}: ", reftext="Figure {image}"]
+[title="`Smmpt1bp34` leaf `MPTE`", id="rv32-mpte-1bp-leaf"]
+[wavedrom, ,svg]
+....
+{reg: [
+  {bits:  1, name: 'V'},
+  {bits:  1, name: 'L=1'},
+  {bits:  5, name: 'RESERVED'},
+  {bits: 16, name: 'PERMS'},
+  {bits:  8, name: 'RESERVED'},
+  {bits:  1, name: 'N'},
+], config:{lanes: 2, hspace:1024}}
+....
+
+Specification of the `V`, `RESERVED` and `L` bit is the same as <<Smmpt34>>.
+
+A leaf `Smmpt1bp34` MPTE holds sixteen 1-bit permission bits - one for each
+page in the range determined by that MPTE. When this bit is 1, the MPT provides
+read, write, and execute permissions and when the bit is 0, read, write, and
+execute access are all not permitted. The most significant 4 bits of the range
+offset identify a page in that range and are used to identify the 1-bit access
+permission for an access to that page.
+
+Access permission check rules are the same as <<Smmpt34>>.
+
+Any level of MPTE may be a leaf MPTE, so in addition to providing access type
+permissions to 4 KiB pages, Smmpt1bp34 supports 64 MiB megapages.
+
 [[MPT_ACC_LKUP]]
 ==== MPT access type permissions lookup process
 Access type permissions for a physical address PA are determined as
@@ -167,13 +242,14 @@ follows:
 
 5. A leaf _mpte_ has been found. If i > 0, the bits _pa.pn[i-1]_ are included
    in the range offset, else for i = 0, the range offset is specified in the
-   _pa_. Let _pi_ be the NUMPGINRANGE (For Smmpt34, NUMPGINRANGE is 3) most
-   significant bits of the range offset. Let _XWR=PERMS[pi*3+2:pi*3]_.
-   Determine if the requested memory access is allowed
-   by the _XWR_ bits, given the effective privilege mode and MXR field of the
+   _pa_. Let _pi_ be the NUMPGINRANGE (For Smmpt34, NUMPGINRANGE is 3; For
+   Smmpt1bp34, NUMPGINRANGE is 4) most significant bits of the range offset.
+   Let _perms=PERMS[pi*3+2:pi*3]_ for Smmpt[34|43|52|64]; _perms=PERMS[pi]_ for
+   Smmpt1bp[34|44|53|64]. Determine if the requested memory access is permitted
+   by the _perms_ bits, given the effective privilege mode and MXR field of the
    `mstatus` register. If not, stop and raise an access-fault exception
    corresponding to the original access type, else the requested memory access
-   is allowed.
+   is permitted.
 
 Implicit accesses to MPT by this process are checked by PMP/Smepmp as implicit
 M-mode accesses. The endianness of such implicit accesses is controlled by
@@ -265,6 +341,67 @@ The algorithm to determine access type permissions for a page is same as in
 <<MPT_ACC_LKUP>>, except LEVELS equals 3, MPTESIZE equals 8, and NUMPGINRANGE
 equals 4.
 
+=== Smmpt1bp44: Page-Based 44-bit Memory Protection System with 1-bit permission
+
+This section describes a page-based memory protection system for RV64, which
+supports a 44-bit supervisor physical address space. The design of Smmpt1bp44
+follows the overall scheme of Smmpt1bp34, and this section details only the
+differences between the schemes.
+
+Smmpt1bp44 supports a 44-bit physical address space, divided into pages. The
+Smmpt1bp44 address is partitioned as shown in  <<rv64-spa-Smmpt43>>. The system
+physical address must have bits 44 and higher all equal to 0, or else an
+access-fault exception corresponding to the original access type will occur. The
+Smmpt1bp44 memory protection table has three levels.
+
+[caption="Figure {counter:image}: ", reftext="Figure {image}"]
+[title="Smmpt1bp44 Supervisor Physical Address", id=rv64-spa-Smmpt1bp44]
+[wavedrom, ,svg]
+....
+{reg: [
+  {bits:  16, name: 'range offset', attr: '17'},
+  {bits:  9,  name: 'pn[0]',        attr: '9' },
+  {bits:  9,  name: 'pn[1]',        attr: '9'},
+  {bits:  9,  name: 'pn[2]',        attr: '9'},
+], config:{lanes: 1, hspace:1024}}
+....
+
+The Smmpt1bp44 memory protection tables contain 2^9^ memory protection table
+entries (MPTEs). Each Smmpt1bp44 MPTE is an eight byte value. A page table is
+exactly the size of a page and must always be aligned to a page boundary.
+The physical page number of the root memory protection table is stored in the
+`mmpt` register's PPN field.
+
+The format of a non-leaf MPTE entry is shown in <<rv64-mpte>> and that of a leaf
+MPTE entry in <<rv64-mpte-1bp-leaf>>.
+
+A leaf MPTE provides access type permissions for thirty two pages in the address
+range determined by that MPTE.
+
+[caption="Figure {counter:image}: ", reftext="Figure {image}"]
+[title="Smmpt43 leaf `MPTE` entry", id="rv64-mpte-1bp-leaf"]
+[wavedrom, ,svg]
+....
+{reg: [
+  {bits:   1, name: 'V'},
+  {bits:   1, name: 'L=1'},
+  {bits:  24, name: 'RESERVED'},
+  {bits:  32, name: 'PERMS'},
+  {bits:   5, name: 'RESERVED'},
+  {bits:   1, name: 'N'},
+], config:{lanes: 2, hspace:1024}}
+....
+
+If Smmptnlnapot is not implemented, bit 63 in a non-leaf MPTE remains reserved.
+
+Any level of MPTE may be a leaf MPTE, so in addition to providing access type
+permissions to 4 KiB pages, Smmpt1bp44 supports 64 MiB _megapages_, 32 GiB
+_gigapages_, and 16 TB _terapages_.
+
+The algorithm to determine access type permissions for a page is same as in
+<<MPT_ACC_LKUP>>, except LEVELS equals 3, MPTESIZE equals 8, and NUMPGINRANGE
+equals 5.
+
 === Smmpt52: Page-Based 52-bit Memory Protection System
 
 This section describes a page-based memory protection system for RV64 that
@@ -306,6 +443,48 @@ _gigapages_, 8 TB _terapages_, and 4 PB _petapages_.
 The algorithm to determine access type permissions for a page is same as in
 <<MPT_ACC_LKUP>>, except LEVELS equals 4, MPTESIZE equals 8, and NUMPGINRANGE
 equals 4.
+
+=== Smmpt1bp53: Page-Based 53-bit Memory Protection System with 1-bit permission
+
+This section describes a page-based memory protection system for RV64 that
+supports 53-bit physical address spaces. It closely follows the design of
+Smmpt1bp44, simply adding an additional level of page table, and so this section
+only details the differences between the two schemes.
+
+Smmpt1bp53 supports a 53-bit physical address space, divided into pages. The
+Smmpt1bp53 address is partitioned as shown in  <<rv64-spa-Smmpt1bp53>>. The
+system physical address must have bits 53 and higher all equal to 0, or else an
+access-fault exception corresponding to the original access type will occur. The
+Smmpt1bp53 memory protection table has four levels.
+
+[caption="Figure {counter:image}: ", reftext="Figure {image}"]
+[title="Smmpt1bp53 Supervisor Physical Address", id=rv64-spa-Smmpt1bp53]
+[wavedrom, ,svg]
+....
+{reg: [
+  {bits:  16, name: 'range offset', attr: '17'},
+  {bits:  9,  name: 'pn[0]',        attr: '9' },
+  {bits:  9,  name: 'pn[1]',        attr: '9'},
+  {bits:  9,  name: 'pn[2]',        attr: '9'},
+  {bits:  9,  name: 'pn[3]',        attr: '9'},
+], config:{lanes: 1, hspace:1024}}
+....
+
+The Smmpt1bp53 memory protection tables contain 2^9^ memory protection table
+entries (MPTEs). Each MPTE is an eight byte value. A page table is exactly the
+size of a page and must always be aligned to a page boundary. The physical page
+number of the root memory protection table is stored in the `mmpt` register's
+PPN field.
+
+The MPTE formats for Smmpt1bp53 are identical to that of Smmpt1bp44.
+
+Any level of MPTE may be a leaf MPTE, so in addition to providing access type
+permissions to 4 KiB pages, Smmpt1bp53 supports 64 MiB _megapages_, 32 GiB
+_gigapages_, 16 TB _terapages_, and 8 PB _petapages_.
+
+The algorithm to determine access type permissions for a page is same as in
+<<MPT_ACC_LKUP>>, except LEVELS equals 4, MPTESIZE equals 8, and NUMPGINRANGE
+equals 5.
 
 === Smmpt64: Page-Based 64-bit Memory Protection System
 
@@ -352,13 +531,58 @@ The algorithm to determine access type permissions for a page is same as in
 <<MPT_ACC_LKUP>>, except LEVELS equals 5, MPTESIZE equals 8, and NUMPGINRANGE
 equals 4.
 
+=== Smmpt1bp64: Page-Based 64-bit Memory Protection System
+
+This section describes a page-based memory protection system for RV64 that
+supports 64-bit physical address spaces. It closely follows the design of
+Smmpt1bp53, simply adding an additional level of page table, and so this section
+only details the differences between the two schemes.
+
+Smmpt1bp64 supports a 64-bit physical address space, divided into pages. The
+Smmpt1bp64 address is partitioned as shown in  <<rv64-spa-Smmpt1bp64>>. The
+Smmpt1bp64 memory protection table has five levels.
+
+[caption="Figure {counter:image}: ", reftext="Figure {image}"]
+[title="Smmpt1bp64 Supervisor Physical Address", id=rv64-spa-Smmpt1bp64]
+[wavedrom, ,svg]
+....
+{reg: [
+  {bits:  16, name: 'range offset', attr: '17'},
+  {bits:  9,  name: 'pn[0]',        attr: '9' },
+  {bits:  9,  name: 'pn[1]',        attr: '9'},
+  {bits:  9,  name: 'pn[2]',        attr: '9'},
+  {bits:  9,  name: 'pn[3]',        attr: '9'},
+  {bits:  12, name: 'pn[4]',        attr: '11'},
+], config:{lanes: 1, hspace:1024}}
+....
+
+The Smmpt1bp64 root memory protection table contain 2^11^ memory protection
+table entries (MPTEs). Each MPTE is an eight bytes value. The root memory
+protection table is 16 KiB instead of the usual 4 KiB and must be aligned to a
+16 KiB boundary. The physical page number of the root memory protection table is
+stored in the `mmpt` register's PPN field.
+
+The non-root Smmpt1bp64 memory protection tables contain 2^9^ MPTEs, eight bytes
+each. The non-root memory protection table is exactly the size of a page and
+must always be aligned to a page boundary.
+
+The MPTE formats for Smmpt1bp64 are identical to that of Smmpt1bp53.
+
+Any level of MPTE may be a leaf MPTE, so in addition to providing access type
+permissions to 4 KiB pages, Smmpt1bp64 supports 64 MiB _megapages_, 32 GiB
+_gigapages_, 16 TB _terapages_, 8 PB _petapages_, and 4 EB _exapages_.
+
+The algorithm to determine access type permissions for a page is same as in
+<<MPT_ACC_LKUP>>, except LEVELS equals 5, MPTESIZE equals 8, and NUMPGINRANGE
+equals 5.
+
 === Smmptnapot - NAPOT Access-Type Permission Granularity
 
 When `MPTE.L`=1 and `MPTE.N`=1, the leaf `MPTE` represents a memory protection
 range that is part of a larger contiguous NAPOT memory protection range comprised
 of 512 pages for RV64 and 1024 pages for RV32. All leaf MPTEs at that level of
 this NAPOT memory protection range have the same value for L, N, PERMS and V
-bits. Thus, the XWR access type permission tuples in the PERMS field of such
+bits. Thus, the access permissions in the PERMS field of such
 PTEs are identical.
 
 Such MPTEs behave identically to leaf MPTEs in the MPT access permission lookup
@@ -382,17 +606,19 @@ memory range sizes represent large/huge page sizes used commonly by memory
 allocators.
 
 A single MPTE entry covers a 64 KiB address range, so a separate 64 KiB NAPOT
-PTE is not needed. One MPTE with all XWR permissions being identical provides
+PTE is not needed. One MPTE with all permissions being identical provides
 the 64 KiB region support.
 ====
 
-If Smmptnapot extension is implemented then one of Smmpt34, Smmpt43, Smmpt52,
-or Smmpt64 extensions must be implemented.
+If Smmptnapot extension is implemented then one of Smmpt34, Smmpt1bp34, Smmpt43,
+Smmpt1bp44, Smmpt52, Smmpt1bpt53, Smmpt64 or Smmpt1bp64 extensions must be
+implemented.
 
 === Smmptnlnapot - NAPOT Memory Protection Table
 
 The Smmptnlnapot extension supports NAPOT non-leaf MPTEs. This extension is
-RV64 only, and depends on one of Smmpt43, Smmpt52 or Smmpt64.
+RV64 only, and depends on one of Smmpt43, Smmpt1bp44, Smmpt52, Smmpt1bp53,
+Smmpt1bp64 or Smmpt64.
 
 For RV64, when the `MPTE.L`=0 and `MPTE.N`=1, the non-leaf `MPTE`
 is part of a range of MPTEs at that level of MPT with the same value for
