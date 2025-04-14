@@ -9,12 +9,14 @@ privilege modes less than M.
 The following MPT extensions are defined:
 
 MPT extensions with read-write-execute access permissions:
+
 * Smmpt34 - Page-based 34-bit memory protection system (RV32 only)
 * Smmpt43 - Page-based 43-bit memory protection system (RV64 only)
 * Smmpt52 - Page-based 52-bit memory protection system (RV64 only)
 * Smmpt64 - Page-based 64-bit memory protection system (RV64 only)
 
 MPT extensions with 1-bit access permission:
+
 * Smmpt1bp34 - Page-based 34-bit memory protection system with 1-bit
   permission (RV32 only)
 * Smmpt1bp44 - Page-based 44-bit memory protection system with 1-bit
@@ -23,6 +25,8 @@ permission (RV64 only)
 permission (RV64 only)
 * Smmpt1bp64 - Page-based 64-bit memory protection system with 1-bit
 permission (RV64 only)
+
+MPT NAPOT extensions
 
 * Smmptnapot - NAPOT Access-Type Permission Granularity (RV32 and R64)
 * Smmptnlnapot - NAPOT Memory Protection Table (RV64 only)
@@ -379,7 +383,7 @@ A leaf MPTE provides access type permissions for thirty two pages in the address
 range determined by that MPTE.
 
 [caption="Figure {counter:image}: ", reftext="Figure {image}"]
-[title="Smmpt43 leaf `MPTE` entry", id="rv64-mpte-1bp-leaf"]
+[title="Smmpt1bp44 leaf `MPTE` entry", id="rv64-mpte-1bp-leaf"]
 [wavedrom, ,svg]
 ....
 {reg: [
