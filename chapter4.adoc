@@ -172,9 +172,9 @@ protection table.
 [wavedrom, ,svg]
 ....
 {reg: [
-  {bits:  15, name: 'range offset', attr: '16'},
+  {bits:  16, name: 'range offset', attr: '16'},
   {bits:  10, name: 'pn[0]',        attr: '10' },
-  {bits:  9,  name: 'pn[1]',        attr: '8'},
+  {bits:  8,  name: 'pn[1]',        attr: '8'},
 ], config:{lanes: 1, hspace:1024}}
 ....
 
@@ -363,7 +363,7 @@ Smmpt1bp44 memory protection table has three levels.
 [wavedrom, ,svg]
 ....
 {reg: [
-  {bits:  16, name: 'range offset', attr: '17'},
+  {bits:  17, name: 'range offset', attr: '17'},
   {bits:  9,  name: 'pn[0]',        attr: '9' },
   {bits:  9,  name: 'pn[1]',        attr: '9'},
   {bits:  9,  name: 'pn[2]',        attr: '9'},
@@ -466,7 +466,7 @@ Smmpt1bp53 memory protection table has four levels.
 [wavedrom, ,svg]
 ....
 {reg: [
-  {bits:  16, name: 'range offset', attr: '17'},
+  {bits:  17, name: 'range offset', attr: '17'},
   {bits:  9,  name: 'pn[0]',        attr: '9' },
   {bits:  9,  name: 'pn[1]',        attr: '9'},
   {bits:  9,  name: 'pn[2]',        attr: '9'},
@@ -551,12 +551,12 @@ Smmpt1bp64 memory protection table has five levels.
 [wavedrom, ,svg]
 ....
 {reg: [
-  {bits:  16, name: 'range offset', attr: '17'},
+  {bits:  17, name: 'range offset', attr: '17'},
   {bits:  9,  name: 'pn[0]',        attr: '9' },
   {bits:  9,  name: 'pn[1]',        attr: '9'},
   {bits:  9,  name: 'pn[2]',        attr: '9'},
   {bits:  9,  name: 'pn[3]',        attr: '9'},
-  {bits:  12, name: 'pn[4]',        attr: '11'},
+  {bits:  11, name: 'pn[4]',        attr: '11'},
 ], config:{lanes: 1, hspace:1024}}
 ....
 

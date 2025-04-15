@@ -77,8 +77,10 @@ protection scheme described in Section 3.7 of the RISC-V privileged architecture
 specification cite:[ISA]. The remaining fields in `mmpt` (`SDID`, `PPN`) must be
 set to zeros.
 |1 |`Smmpt34` |Page-based memory protection for up to 34-bit physical address
-spaces.
-|2-3 |- |`_Reserved_`
+spaces with xwr permissions.
+|2 |`Smmpt1bp34` |Page-based memory protection for up to 34-bit physical address
+spaces with 1-bit permission.
+|3 |- |`_Reserved_`
 |===
 
 .Encoding of `mmpt` `MODE` field for `XLEN=64`.
@@ -90,12 +92,18 @@ protection scheme described in Section 3.7 of the RISC-V privileged architecture
 specification cite:[ISA]. The remaining fields in `mmpt` (`SDID`, `PPN`) must be
 set to zeros.
 |1 |`Smmpt43` |Page-based memory protection for up to 43-bit physical address
-spaces.
+spaces with xwr permissions.
 |2 |`Smmpt52` |Page-based memory protection for up to 52-bit physical address
-spaces.
+spaces with xwr permissions.
 |3 |`Smmpt64` |Page-based memory protection for up to 64-bit physical address
+spaces with xwr permissions.
+|4 |`Smmpt1bp44` |Page-based memory protection for up to 44-bit physical address
+spaces with 1-bit permission.
+|5 |`Smmpt1bp53` |Page-based memory protection for up to 53-bit physical address
 spaces.
-|4-15 |- |`_Reserved_`
+|6 |`Smmpt1bp64` |Page-based memory protection for up to 64-bit physical address
+spaces.
+|7-15 |- |`_Reserved_`
 |===
 
 Implementations are not required to support all defined `MODE` settings. A write
