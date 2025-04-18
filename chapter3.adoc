@@ -255,7 +255,7 @@ and hgatp.VMID when HFENCE.GVMA executed.
 
 For HFENCE.VVMA, the guest-virtual address argument is within the context of
 the current virtual machine identified by the combination of the ASID value
-specified in rs2, the VMID field of CSR hgatp, and the SDID field of CSR mmpt.
+in rs2, the VMID field of CSR hgatp, and the SDID field of CSR mmpt.
 Executing an HFENCE.VVMA guarantees that any previous stores already visible to
 the current hart are ordered before all implicit reads by that hart done for
 VS-stage address translations for instructions that are subsequent to the
