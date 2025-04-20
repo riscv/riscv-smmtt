@@ -280,8 +280,8 @@ capabilities of the supervisor domain when associated with a hart.
 The following extensions use the `msdcfg` register to specify additional
 configuration for supervisor domains:
 
-. `Smsdia` uses `msdcfg.SDICN` to specify the active configuration for
-  the supervisor domain interrupt controller associated with the hart.
+. `Smsdia` uses `msdcfg.SIDN` to identify the _supervisor interrupt domain_
+  associated with the hart.
 . `Smsdedbg` specifies the `msdcfg.SDEDBGALW` bit to manage
   external-debug for a supervisor domain.
 . `Smsdetrc` specifies the `msdcfg.SDETRCALW` bit to manage
@@ -299,10 +299,10 @@ respective sections in this specification.
 ....
 {reg: [
   {bits:  6, name:  'SDICN'},
-  {bits:  1, name:  'SSM'},
   {bits:  1, name:  'SDEDBGALW'},
   {bits:  1, name:  'SDETRCALW'},
   {bits:  11, name: 'WPRI'},
+  {bits:  1, name:  'SSM'},
   {bits:  4, name:  'SRL'},
   {bits:  4, name:  'SML'},
   {bits:  4, name:  'SQRID'},
