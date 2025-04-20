@@ -149,8 +149,9 @@ format:
     bits 11:0      High Base PPN (WARL)
 ....
 
-If `CI` is the Child Index from the `source[i]` corresponding to an interrupt
-source `_i_` then the MSI target address is thus computed as follows:
+Let `CI` be the Child Index from the `sourcecfg[i]` corresponding to an
+interrupt source `_i_`. The MSI target target address for this interrupt source
+is then computed as follows:
 
 [latexmath]
 ++++
