@@ -414,6 +414,13 @@ domain_ selected by `msdcfg.SIDN` is not implemented then:
 When `Smirfdeleg` is implemented, `hip.SGEIP` is 1 if and only if the bitwise
 logical-AND of CSRs `hgeip`, `hgeie`, and `mirfd` is nonzero in any bit.
 
+When `Smirfdeleg` is implemented, the `msdeip` bit corresponding to _supervisor
+interrupt domain_ identified by `msdcfg.SIDN` is the logical OR of the interrupt
+signals from the interrupt files of that _supervisor interrupt domain_ that are
+not delegated by `mirfd`. Bits of `msdeip` corresponding to all other
+_supervisor interrupt domains_ are the logical OR of all the interrupt signals
+from the corresponding _supervisor interrupt_domain_ in the IMSIC.
+
 [NOTE]
 ====
 The `Smirfdeleg` is intended to be used to delegate interrupt files to
