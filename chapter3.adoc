@@ -247,15 +247,15 @@ mmpt.SDID and the hgatp.VMID is the same as when the SFENCE.VMA executed.
 
 For HFENCE.GVMA, the guest-physical address argument is within the context of
 the current virtual machine idenfied by the combination of the SDID field of the
-CSR mmpt and the VMID field of CSR hgatp. Executing an HFENCE.GVMA guarantees
+CSR mmpt and the VMID value in rs2. Executing an HFENCE.GVMA guarantees
 that any previous stores already visible to the current hart are ordered before
 all implicit reads by that hart done for G-stage address translation for
 instructions that follow the HFENCE.GVMA, and execute with the same mmpt.SDID
 and hgatp.VMID when HFENCE.GVMA executed.
 
 For HFENCE.VVMA, the guest-virtual address argument is within the context of
-the current virtual machine identified by the combination of the ASID specified
-in the vsatp, the VMID field of CSR hgatp, and the SDID field of CSR mmpt.
+the current virtual machine identified by the combination of the ASID value
+in rs2, the VMID field of CSR hgatp, and the SDID field of CSR mmpt.
 Executing an HFENCE.VVMA guarantees that any previous stores already visible to
 the current hart are ordered before all implicit reads by that hart done for
 VS-stage address translations for instructions that are subsequent to the
