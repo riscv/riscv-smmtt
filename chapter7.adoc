@@ -150,7 +150,7 @@ format:
 ....
 
 Let `CI` be the Child Index from the `sourcecfg[i]` corresponding to an
-interrupt source `_i_`. The MSI target target address for this interrupt source
+interrupt source `_i_`. The MSI target address for this interrupt source
 is then computed as follows:
 
 [latexmath]
@@ -423,7 +423,7 @@ interrupt domain_ identified by `msdcfg.SIDN` is the logical OR of the interrupt
 signals from the interrupt files of that _supervisor interrupt domain_ that are
 not delegated by `mirfd`. Bits of `msdeip` corresponding to all other
 _supervisor interrupt domains_ are the logical OR of all the interrupt signals
-from the corresponding _supervisor interrupt_domain_ in the IMSIC.
+from the corresponding _supervisor interrupt domain_ in the IMSIC.
 
 [NOTE]
 ====
