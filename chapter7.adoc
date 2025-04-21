@@ -149,8 +149,9 @@ format:
     bits 11:0      High Base PPN (WARL)
 ....
 
-If `CI` is the Child Index from the `source[i]` corresponding to an interrupt
-source `_i_` then the MSI target address is thus computed as follows:
+Let `CI` be the Child Index from the `sourcecfg[i]` corresponding to an
+interrupt source `_i_`. The MSI target address for this interrupt source
+is then computed as follows:
 
 [latexmath]
 ++++
@@ -262,11 +263,14 @@ _supervisor interrupt domain_ numbered __i__.
 
 When the _supervisor interrupt domain_ identified by __i__ is implemented by an
 APLIC, the bit __i__ indicates the state of the S-level external interrupt
-pending signal provided by the supervisor interrupt domain in that APLIC.
+pending signal provided by the supervisor interrupt domain in that APLIC if
+__i__ is not equal to `msdcfg.SIDN`. The bit corresponding to `msdcfg.SIDN` is
+0.
 
 When the _supervisor interrupt domain_ identified by __i__ is implemented by an
 IMSIC, the bit __i__ indicates the logical OR of the interrupt signals from all
-the interrupt files implemented by that supervisor interrupt domain.
+the interrupt files implemented by that supervisor interrupt domain if __i__ is
+not equal to `msdcfg.SIDN`. The bit corresponding to `msdcfg.SIDN` is 0.
 
 The summary of external interrupts pending in a _supervisor interrupt domain_ is
 visible in the `msdeip` register even when `msdcfg.SIDN` is not the valid number
@@ -413,6 +417,13 @@ domain_ selected by `msdcfg.SIDN` is not implemented then:
 
 When `Smirfdeleg` is implemented, `hip.SGEIP` is 1 if and only if the bitwise
 logical-AND of CSRs `hgeip`, `hgeie`, and `mirfd` is nonzero in any bit.
+
+When `Smirfdeleg` is implemented, the `msdeip` bit corresponding to _supervisor
+interrupt domain_ identified by `msdcfg.SIDN` is the logical OR of the interrupt
+signals from the interrupt files of that _supervisor interrupt domain_ that are
+not delegated by `mirfd`. Bits of `msdeip` corresponding to all other
+_supervisor interrupt domains_ are the logical OR of all the interrupt signals
+from the corresponding _supervisor interrupt domain_ in the IMSIC.
 
 [NOTE]
 ====

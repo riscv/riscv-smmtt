@@ -138,11 +138,11 @@ range of values for `RCID` and `MCID`.
 [wavedrom, , ]
 ....
 {reg: [
-  {bits:  6, name: 'SDICN'},
-  {bits:  1, name: 'SSM'},
+  {bits:  6, name: 'SIDN'},
   {bits:  1, name: 'SDEDBGALW'},
   {bits:  1, name: 'SDETRCALW'},
   {bits:  11, name: 'WPRI'},
+  {bits:  1, name: 'SSM'},
   {bits:  4, name: 'SRL'},
   {bits:  4, name: 'SML'},
   {bits:  4, name: 'SQRID'},
