@@ -3,10 +3,10 @@
 == `Smsdid`: Supervisor Domain Identifier and Protection Register
 
 `Smsdid` defines an interface to program the active supervisor domain under
-which a hart is operating and the configuration of the active supervisor domain.
-The interface consists of M-mode CSRs `msdcfg` and `mmpt`. `msdcfg` always
-exists but may be read-only zero if none of the optional extensions that are
-configured via fields of this CSR are implemented.
+which a hart is operating and configuration for supervisor domain-related
+extensions. The interface consists of M-mode CSRs `msdcfg` and `mmpt`. Both CSRs
+must be implemented; `msdcfg` may be read-only zero if none of the optional
+extensions that are configured via fields of this CSR are implemented.
 
 The SDID programmed via the `mmpt` CSR is a local identifier for the
 hart and may be used to tag hart-local resources to access-control data
@@ -296,8 +296,8 @@ configuration for supervisor domains:
 Details of `Smsdia`, `Smsdedbg`, `Smsdetrc` and `Smqosid` are described in their
 respective sections in this specification. For any optional extensions not
 implemented, the corresponding configuration bits in `msdcfg` are to be treated
-as WPRI. Hence if no optional extensions are implemented, this CSR becomes
-read-only zero.
+as read-only zero. Hence if no optional extensions are implemented, this CSR
+becomes read-only zero.
 
 [caption="Register {counter:rimage}: ", reftext="Register {rimage}"]
 [title="`msdcfg` register"]
