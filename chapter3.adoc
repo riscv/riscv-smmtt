@@ -2,9 +2,13 @@
 [[Smsdid]]
 == `Smsdid`: Supervisor Domain Identifier and Protection Register
 
-`Smsdid` defines an interface to program the active supervisor domain under
-which a hart is operating. The interface consists of M-mode CSRs `msdcfg` and
-`mmpt`. The SDID programmed via this interface is a local identifier for the
+`Smsdid` defines an interface to program the configuration for
+supervisor-domain-related extensions. The interface consists of M-mode CSRs
+`msdcfg` and `mmpt`. When `Smsdid` is implemented, both CSRs must be
+implemented; `msdcfg` may be read-only zero if none of the optional supervisor
+domain extensions are implemented.
+
+The SDID programmed via the `mmpt` CSR is a local identifier for the
 hart and may be used to tag hart-local resources to access-control data
 associated with the supervisor domain. The SDID is unique only to a hart, hence
 the SDID must not be used to tag downstream transactions that are globally
@@ -290,7 +294,10 @@ configuration for supervisor domains:
   the RDSM to manage QoS controls for supervisor domains.
 
 Details of `Smsdia`, `Smsdedbg`, `Smsdetrc` and `Smqosid` are described in their
-respective sections in this specification.
+respective sections in this specification. For any optional extensions not
+implemented, the corresponding configuration bits in `msdcfg` are read-only
+zero. Hence if no optional extensions are implemented, this CSR becomes
+read-only zero.
 
 [caption="Register {counter:rimage}: ", reftext="Register {rimage}"]
 [title="`msdcfg` register"]
@@ -298,7 +305,7 @@ respective sections in this specification.
 [wavedrom, ,svg]
 ....
 {reg: [
-  {bits:  6, name:  'SDICN'},
+  {bits:  6, name:  'SIDN'},
   {bits:  1, name:  'SDEDBGALW'},
   {bits:  1, name:  'SDETRCALW'},
   {bits:  11, name: 'WPRI'},
