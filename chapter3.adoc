@@ -88,7 +88,7 @@ spaces.
 |===
 
 .Encoding of `mmpt` `MODE` field for `XLEN=64`.
-[width="100%",cols="14%,14%,72%", options="header", id=mpt-64]
+[width="100%",cols="10%,14%,76%", options="header", id=mpt-64]
 |===
 |Value |Name |Description
 |0 |`Bare` | No page-based memory protection beyond the physical memory
