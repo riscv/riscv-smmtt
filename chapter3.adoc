@@ -82,7 +82,9 @@ specification cite:[ISA]. The remaining fields in `mmpt` (`SDID`, `PPN`) must be
 set to zeros.
 |1 |`Smmpt34` |Page-based memory protection for up to 34-bit physical address
 spaces.
-|2-3 |- |`_Reserved_`
+|2 |- |`_Reserved for future standard use._`
+|3 |- |`_Designated for custom use._` 
+
 |===
 
 .Encoding of `mmpt` `MODE` field for `XLEN=64`.
@@ -99,7 +101,8 @@ spaces.
 spaces.
 |3 |`Smmpt64` |Page-based memory protection for up to 64-bit physical address
 spaces.
-|4-15 |- |`_Reserved_`
+|4-13 |- |`_Reserved for future standard use._`
+|14-15 |- |`_Designated for custom use._` 
 |===
 
 Implementations are not required to support all defined `MODE` settings. A write
