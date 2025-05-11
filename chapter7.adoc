@@ -100,8 +100,8 @@ interrupt domain appear as active bits in the hypervisor CSR `hgeip`.
 The `siselect` and `sireg` CSRs access the registers of the supervisor-level
 interrupt file in the selected _supervisor interrupt domain_. If the selected
 _supervisor interrupt domain_ implements _guest interrupt files_ then the
-`vsiselect` and `vsireg` CSRs access the registers of any _guest interrupt file_
-determined by `hstatus.VGEIN`.
+`vsiselect` and `vsireg` CSRs access the registers of a _guest interrupt file_,
+of that _supervisor interrupt domain_, as determined by `hstatus.VGEIN`.
 
 [[SD-APLIC]]
 === APLIC Extension for Supervisor Domains
@@ -114,10 +114,10 @@ interrupt domain in the APLIC may be then associated with a Supervisor Domain by
 configuring it in _direct delivery mode_ or when the hart uses an IMSIC by
 configuring it in _MSI delivery mode_.
 
-To support supervisor domains, the `smsiaddrcfgh` register is extended with
-a new parameter called `CIXS` (Child Index Shift) to help determine the
-addresses to write outgoing MSIs. The extended `smsiaddrcfgh` has the following
-format:
+To support supervisor domains in MSI delivery mode, the `smsiaddrcfgh` register
+is extended with a new parameter called `CIXS` (Child Index Shift) to help
+determine the addresses to write outgoing MSIs. The extended `smsiaddrcfgh` has
+the following format:
 
 [literal]
 ....
