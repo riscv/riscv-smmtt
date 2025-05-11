@@ -2,13 +2,8 @@
 [[Smsdia]]
 == Supervisor Domain Interrupt Assignment
 
-Interrupts that occur during the execution of a supervisor domain typically
-cause a trap to the RDSM in M-mode by default. The RDSM may redirect traps
-back to a supervisor domain using the `MRET` instruction. Additionally, the
-RDSM may assert a _virtual interrupt_ to a supervisor domain. Such _virtual
-interrupts_ might be asserted as part of handling a real interrupt, such as a
-RAS interrupt, or they may have no direct connection to any actual interrupt
-event.
+Interrupts that occur during the execution of a supervisor domain cause a trap
+to the RDSM in M-mode by default.
 
 To increase performance, the RDSM can delegate the handling of certain
 interrupts, like the timer interrupt or the local performance counter
@@ -16,6 +11,11 @@ overflow interrupt (LCOFI), to the supervisor domain by setting the
 appropriate `mideleg` bits. This delegation could necessitate the RDSM to
 context switch additional state related to such delegated interrupts,
 including `stimecmp` and the HPM CSRs.
+
+Additionally, the RDSM may assert a _virtual interrupt_ to a supervisor domain.
+Such _virtual interrupts_ might be asserted as part of handling a real
+interrupt, such as a RAS interrupt, or they may have no direct connection to
+any actual interrupt event.
 
 Some supervisor domains may have devices assigned to them for I/O operations.
 Devices designed to carry out I/O operations typically signal the completion
@@ -25,8 +25,6 @@ to the RDSM. The RDSM, in the course of handling an external interrupt, should
 forward the interrupt to the relevant supervisor domain. The efficiency of
 handling external interrupts by a supervisor domain can be enhanced if the
 external interrupts could be directly assigned to the supervisor domain <<SDI>>.
-Such direct delivery of external interrupts necessitates an interrupt
-controller that can be linked to such supervisor domains.
 
 To accommodate such supervisor domains, this specification extends the IMSIC
 and APLIC specified by the RISC-V Advanced Interrupt Architecture (AIA)
@@ -41,7 +39,6 @@ _supervisor interrupt domain_ of the IMSIC.
 
 Interrupt controllers other than APLIC and/or IMSIC that support multiple
 _supervisor interrupt domains_ may also serve a supervisor domain.
-
 
 [[SD-IMSIC]]
 === IMSIC Extension for Supervisor Domains
@@ -361,7 +358,7 @@ of `mirfd`.  When MXLEN=64, the `mirfdh` register does not exist.
 ....
 
 The `S` bit when set to 1 enables access to the supervisor-level interrupt file
-in the _supervisor interrupt domain_ selected by `msdcfg.SIDN`. 
+in the _supervisor interrupt domain_ selected by `msdcfg.SIDN`.
 
 If the H extension is also implemented, then each bit of the `GIRF` field when
 set to 1 enables access to the _guest interrupt files_ in the supervisor
