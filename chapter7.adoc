@@ -48,7 +48,7 @@ each _supervisor interrupt domain_ may be associated with a supervisor domain.
 A _supervisor interrupt domain_ in an IMSIC consists of:
 
 * A supervisor-level interrupt file.
-* Optionally, one or more guest-level interrupt files.
+* Optionally, one or more guest interrupt files.
 
 Each _supervisor interrupt domain_ in an IMSIC is identified by a *supervisor
 interrupt domain number* (`SIDN`).
