@@ -115,14 +115,15 @@ configuring it in _direct delivery mode_ or when the hart uses an IMSIC by
 configuring it in _MSI delivery mode_.
 
 To support supervisor domains in MSI delivery mode, the `smsiaddrcfgh` register
-is extended with a new parameter called `DXS` (Domain Index Shift) to help
-determine the addresses to write outgoing MSIs. The extended `smsiaddrcfgh` has
-the following format:
+is extended with two new parameters called `DXS` (Domain Index Shift) and
+`DXW` (Domain Index Width) to help determine the addresses to write outgoing
+MSIs. The extended `smsiaddrcfgh` has the following format:
 
 [literal]
 ....
     bits 28:24     DXS (WARL)
     bits 22:20     LHXS (WARL)
+    bits 18:16     DXW (WARL)
     bits 11:0      High Base PPN (WARL)
 ....
 
@@ -132,10 +133,12 @@ is then computed as follows:
 
 [latexmath]
 ++++
+n = \text{CI} \mathbin{\&} \left( 2^{\text{DXW}} - 1 \right)
+\\
 \text{MSI address} =
 \left(
   \text{Base PPN}
-  \mid ( \text{CI} \ll \text{DXS} )
+  \mid ( n \ll \text{DXS} )
   \mid ( g \ll (\text{HHXS} + 12) )
   \mid ( h \ll \text{LHXS} )
   \mid \text{Guest Index}
@@ -145,7 +148,7 @@ is then computed as follows:
 The parameter `DXS` relates to the constant `I` specified in section <<SD-IMSIC>>
 as: `DXS = (I - 12)`.
 
-Refer to cite:[AIA] for the detailed definitions of constants `HHXS`, `g`,
+Refer to cite:[AIA] for the detailed definitions of constants `HHXS`, `g`, `h`,
 `LHXS`, and Guest Index.
 
 [[SDI]]
