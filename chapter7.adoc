@@ -184,7 +184,7 @@ If there is only a single _supervisor interrupt domain_ connected to the hart,
 then `SIDN` may be read-only zero.
 
 When `SIDN` is not the number of an implemented _supervisor interrupt domain_
-then the following rules apply to all privilege modes:
+then the following rules apply:
 
 * The S-level external interrupt pending signal indicated in `mip.SEIP` is 0.
 * All non-custom values of `siselect` that access IMSIC registers designate an
