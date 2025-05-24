@@ -247,14 +247,11 @@ _supervisor interrupt domain_ numbered __i__.
 
 When the _supervisor interrupt domain_ identified by __i__ is implemented by an
 APLIC, the bit __i__ indicates the state of the S-level external interrupt
-pending signal provided by the supervisor interrupt domain in that APLIC if
-__i__ is not equal to `msdcfg.SIDN`. The bit corresponding to `msdcfg.SIDN` is
-0.
+pending signal provided by the supervisor interrupt domain in that APLIC.
 
 When the _supervisor interrupt domain_ identified by __i__ is implemented by an
 IMSIC, the bit __i__ indicates the logical OR of the interrupt signals from all
-the interrupt files implemented by that supervisor interrupt domain if __i__ is
-not equal to `msdcfg.SIDN`. The bit corresponding to `msdcfg.SIDN` is 0.
+the interrupt files implemented by that supervisor interrupt domain.
 
 The summary of external interrupts pending in a _supervisor interrupt domain_ is
 visible in the `msdeip` register even when `msdcfg.SIDN` is not the valid number
