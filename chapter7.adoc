@@ -223,6 +223,14 @@ instruction trap facilitated by AIA-added state-enbale bits to
 `mstateen0/mstateen0h` for emulation purposes.
 ====
 
+==== Hypervisor Guest External Interrupt Registers (`hgeip` and `hgeie`)
+
+When the H extension is also implemented, the implementation must internally
+maintain an array of registers that hold the state of the `hgeip` and `hgeie`
+CSRs, with one pair of registers per implemented supervisor interrupt domain
+number. The `hgeip` and `hgeie` CSRs access the element of this array
+corresponding to the value of `msdcfg.SIDN`.
+
 ==== Machine supervisor domain external interrupt pending (`msdeip/msdeiph`)
 
 The `msdeip` is a MXLEN-bit read-only register, formatted for MXLEN=64 as
@@ -247,8 +255,20 @@ APLIC, the bit __i__ indicates the state of the S-level external interrupt
 pending signal provided by the supervisor interrupt domain in that APLIC.
 
 When the _supervisor interrupt domain_ identified by __i__ is implemented by an
-IMSIC, the bit __i__ indicates the logical OR of the interrupt signals from all
-the interrupt files implemented by that supervisor interrupt domain.
+IMSIC, the bit __i__ must be one if and only if either: (a) the incoming SEIP
+for _supervisor interrupt domain_ __i__ is asserted, or (b) the bitwise logical
+AND of the internal `hgeip` and `hgeie` for _supervisor interrupt domain_ __i__
+is not zero (in other words, the same value that SGEIP would have for that
+_supervisor interrupt domain_ __i__).
+
+When the _supervisor interrupt domain_ identified by __i__ is implemented by an
+IMSIC, bit __i__ must be set to one if and only if either of the following
+conditions holds:
+
+* the SEIP signal for _supervisor interrupt domain_ __i__ is asserted; or
+* the bitwise logical AND of the internal `hgeip` and `hgeie` registers for
+  _supervisor interrupt domain_ __i__ is nonzero (i.e., the value that SGEIP
+  would have for that domain).
 
 The summary of external interrupts pending in a _supervisor interrupt domain_ is
 visible in the `msdeip` register even when `msdcfg.SIDN` is not the valid number
