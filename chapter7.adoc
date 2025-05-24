@@ -171,10 +171,14 @@ _supervisor interrupt domains_ associated with a hart as the active supervisor
 interrupt domain for S- and VS-level external interrupts when `SIDN` is the
 number of an implemented _supervisor interrupt domain_.
 
+If there are N implemented _supervisor interrupt domains_, they are numbered
+from 0 to N − 1, and the maximum implemented _supervisor interrupt domain
+number_ is N − 1.
+
 The `SIDN` field is a WLRL field that must be able to hold a value between 0
-and the maximum implemented _supervisor interrupt domains_, inclusive. If there
-is only a single _supervisor interrupt domain_ connected to the hart, then `SIDN`
-may be read-only zero.
+and the maximum implemented _supervisor interrupt domain number_, inclusive.
+If there is only a single _supervisor interrupt domain_ connected to the hart,
+then `SIDN` may be read-only zero.
 
 When `SIDN` is not the number of an implemented _supervisor interrupt domain_
 then the following rules apply to all privilege modes:
