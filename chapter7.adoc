@@ -258,13 +258,6 @@ APLIC, the bit __i__ indicates the state of the S-level external interrupt
 pending signal provided by the supervisor interrupt domain in that APLIC.
 
 When the _supervisor interrupt domain_ identified by __i__ is implemented by an
-IMSIC, the bit __i__ must be one if and only if either: (a) the incoming SEIP
-for _supervisor interrupt domain_ __i__ is asserted, or (b) the bitwise logical
-AND of the internal `hgeip` and `hgeie` for _supervisor interrupt domain_ __i__
-is not zero (in other words, the same value that SGEIP would have for that
-_supervisor interrupt domain_ __i__).
-
-When the _supervisor interrupt domain_ identified by __i__ is implemented by an
 IMSIC, bit __i__ must be set to one if and only if either of the following
 conditions holds:
 
