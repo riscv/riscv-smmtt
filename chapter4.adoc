@@ -301,7 +301,7 @@ The MPTE formats for Smmpt52 are identical to that of Smmpt43.
 
 Any level of MPTE may be a leaf MPTE, so in addition to providing access type
 permissions to 4 KiB pages, Smmpt52 supports 2 MiB _megapages_, 1 GiB
-_gigapages_, 512 GiB _gigapages_, and 256 TB _terapages_.
+_gigapages_, 512 GiB _gigapages_, and 256 TiB _terapages_.
 
 The algorithm to determine access type permissions for a page is same as in
 <<MPT_ACC_LKUP>>, except LEVELS equals 4, MPTESIZE equals 8, and NUMPGINRANGE
@@ -346,7 +346,7 @@ The MPTE formats for Smmpt64 are identical to that of Smmpt52.
 
 Any level of MPTE may be a leaf MPTE, so in addition to providing access type
 permissions to 4 KiB pages, Smmpt54 supports 2 MiB _megapages_, 1 GiB
-_gigapages_, 512 GiB _gigapages_, 256 TB _terapages_, and 128 PB _petapages_.
+_gigapages_, 512 GiB _gigapages_, 256 TiB _terapages_, and 128 PiB _petapages_.
 
 The algorithm to determine access type permissions for a page is same as in
 <<MPT_ACC_LKUP>>, except LEVELS equals 5, MPTESIZE equals 8, and NUMPGINRANGE
