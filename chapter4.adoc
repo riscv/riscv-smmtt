@@ -139,7 +139,7 @@ any exception is always reported for the original access type (instruction,
 load, or store/AMO).
 
 Any level of MPTE may be a leaf MPTE, so in addition to providing access type
-permissions to 4 KiB pages, Smmpt34 supports 32 MiB megapages.
+permissions to 4 KiB pages, Smmpt34 supports 4 MiB _megapages_.
 
 [[MPT_ACC_LKUP]]
 ==== MPT access type permissions lookup process
@@ -258,8 +258,8 @@ range determined by that MPTE.
 If Smmptnlnapot is not implemented, bit 63 in a non-leaf MPTE remains reserved.
 
 Any level of MPTE may be a leaf MPTE, so in addition to providing access type
-permissions to 4 KiB pages, Smmpt43 supports 32 MiB _megapages_, 16 GiB
-_gigapages_, and 8 TB _terapages_.
+permissions to 4 KiB pages, Smmpt43 supports 2 MiB _megapages_, 1 GiB
+_gigapages_, and 512 GiB _gigapages_.
 
 The algorithm to determine access type permissions for a page is same as in
 <<MPT_ACC_LKUP>>, except LEVELS equals 3, MPTESIZE equals 8, and NUMPGINRANGE
@@ -300,8 +300,8 @@ PPN field.
 The MPTE formats for Smmpt52 are identical to that of Smmpt43.
 
 Any level of MPTE may be a leaf MPTE, so in addition to providing access type
-permissions to 4 KiB pages, Smmpt52 supports 32 MiB _megapages_, 16 GiB
-_gigapages_, 8 TB _terapages_, and 4 PB _petapages_.
+permissions to 4 KiB pages, Smmpt52 supports 2 MiB _megapages_, 1 GiB
+_gigapages_, 512 GiB _gigapages_, and 256 TB _terapages_.
 
 The algorithm to determine access type permissions for a page is same as in
 <<MPT_ACC_LKUP>>, except LEVELS equals 4, MPTESIZE equals 8, and NUMPGINRANGE
@@ -345,8 +345,8 @@ must always be aligned to a page boundary.
 The MPTE formats for Smmpt64 are identical to that of Smmpt52.
 
 Any level of MPTE may be a leaf MPTE, so in addition to providing access type
-permissions to 4 KiB pages, Smmpt54 supports 32 MiB _megapages_, 16 GiB
-_gigapages_, 8 TB _terapages_, 4 PB _petapages_, and 2 EB _exapages_.
+permissions to 4 KiB pages, Smmpt54 supports 2 MiB _megapages_, 1 GiB
+_gigapages_, 512 GiB _gigapages_, 256 TB _terapages_, and 128 PB _petapages_.
 
 The algorithm to determine access type permissions for a page is same as in
 <<MPT_ACC_LKUP>>, except LEVELS equals 5, MPTESIZE equals 8, and NUMPGINRANGE
