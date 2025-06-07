@@ -40,6 +40,10 @@ _supervisor interrupt domain_ of the IMSIC.
 Interrupt controllers other than APLIC and/or IMSIC that support multiple
 _supervisor interrupt domains_ may also serve a supervisor domain.
 
+If there are N implemented _supervisor interrupt domains_, they are numbered
+from 0 to N − 1, and the maximum implemented _supervisor interrupt domain
+number_ is N − 1.
+
 [[SD-IMSIC]]
 === IMSIC Extension for Supervisor Domains
 
@@ -174,9 +178,6 @@ _supervisor interrupt domains_ associated with a hart as the active supervisor
 interrupt domain for S- and VS-level external interrupts when `SIDN` is the
 number of an implemented _supervisor interrupt domain_.
 
-If there are N implemented _supervisor interrupt domains_, they are numbered
-from 0 to N − 1, and the maximum implemented _supervisor interrupt domain
-number_ is N − 1.
 
 The `SIDN` field is a WLRL field that must be able to hold a value between 0
 and the maximum implemented _supervisor interrupt domain number_, inclusive.
