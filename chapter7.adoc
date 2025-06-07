@@ -57,7 +57,8 @@ A _supervisor interrupt domain_ in an IMSIC consists of:
 Each _supervisor interrupt domain_ in an IMSIC is identified by a *supervisor
 interrupt domain number* (`SIDN`).
 
-The memory-mapped address of the S-level interrupt file for SIDN `n` and hart
+When all harts are within a single _hart group_ as defined by cite:[AIA],
+the memory-mapped address of the S-level interrupt file for SIDN `n` and hart
 `h`, is:
 
 [latexmath]
@@ -65,20 +66,22 @@ The memory-mapped address of the S-level interrupt file for SIDN `n` and hart
 \text{Address} = B + n \times 2^I + h \times 2^D
 ++++
 
-Recalling that `k` is the number of bits needed to represent any hart number,
-constant `I` must be >= `k + D`.
+Constants `B` and `D` in this formula are specified by cite:[AIA], while `I`
+is a new constant for supervisor interrupt domains. Constant `I` must be
+>= `k + D`, where `k` is the number of bits needed to represent any hart
+number `h`.
 
-If the largest _supervisor interrupt domain_ number is `n~max~`, then `q`
--- the number of bits needed to represent any _supervisor interrupt domain_
-number -- is defined as:
+If the largest _supervisor interrupt domain_ number is stem:[n_{\text{max}}],
+then `q` -- the number of bits needed to represent any _supervisor interrupt
+domain_ number -- is defined as:
 
 [latexmath]
 ++++
 q = \lceil \log_2(n_{\text{max}} + 1) \rceil
 ++++
 
-Address `B` must be aligned to a `2^(q + I)^` address boundary.  (This
-automatically makes `B` also aligned to a `2^(k + D)^` address boundary
+Address `B` must be aligned to a stem:[2^{q + I}] address boundary. (This
+automatically makes `B` also aligned to a stem:[2^{k + D}] address boundary
 as required by the existing cite:[AIA].)
 
 When there are hart groups, the memory-mapped address of the S-level
@@ -90,9 +93,6 @@ interrupt file for group `g`, SIDN `n`, and hart `h` within the group, is:
 ++++
 
 Constant `E` must be >= `max(k + C, q + I)`, but will usually be much larger.
-
-Refer to cite:[AIA] for the detailed definitions of constants `C`, `D`, `g',
-`h`, and `k`.
 
 The `Smsdia` extension provides the mechanism to select a _supervisor interrupt
 domain_ in an IMSIC as a source of S- and VS-level external interrupts for a
