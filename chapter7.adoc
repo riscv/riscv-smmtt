@@ -167,7 +167,7 @@ The RDSM needs a method to be alerted if an external interrupt, whether at the
 S- or VS-level, is pending for any supervisor domains not currently active on a
 hart. The RDSM could leverage this notification to inform its scheduling
 decisions. To facilitate this functionality, the `Smsdia` extension introduces
-the `msdeip` and `msdeie` CSRs, along with an local supervisor domain external
+the `msideip` and `msideie` CSRs, along with an local supervisor domain external
 interrupt (`LSDEI`).
 
 ==== Machine supervisor domain configuration (`msdcfg`)
@@ -234,14 +234,14 @@ CSRs, with one pair of registers per implemented supervisor interrupt domain
 number. The `hgeip` and `hgeie` CSRs access the element of this array
 corresponding to the value of `msdcfg.SIDN`.
 
-==== Machine supervisor domain external interrupt pending (`msdeip/msdeiph`)
+==== Machine supervisor interrupt domain external interrupt pending (`msideip/msideiph`)
 
-The `msdeip` is a 64-bit read-only register, formatted as shown in <<MSDEIP>>.
-When MXLEN=32, `msdeiph` is a 32-bit read-only register which aliases bits
-63:32 of `msdeip`. When MXLEN=64, `msdeiph` does not exist.
+The `msideip` is a 64-bit read-only register, formatted as shown in <<MSDEIP>>.
+When MXLEN=32, `msideiph` is a 32-bit read-only register which aliases bits
+63:32 of `msideip`. When MXLEN=64, `msideiph` does not exist.
 
 [[MSDEIP]]
-.`msdeip` register
+.`msideip` register
 
 [wavedrom, , ]
 ....
@@ -267,16 +267,16 @@ conditions holds:
   would have for that domain).
 
 The summary of external interrupts pending in a _supervisor interrupt domain_ is
-visible in the `msdeip` register even when `msdcfg.SIDN` is not the valid number
+visible in the `msideip` register even when `msdcfg.SIDN` is not the valid number
 of an implemented _supervisor interrupt domain_.
 
-==== Machine supervisor domain external interrupt enable (`msdeie/msdeieh`)
-The `msdeie` is a 64-bit read-write register, formatted as shown in <<MSDEIE>>.
-When MXLEN=32, `msdeieh` is a 32-bit read-write register which aliases bits
-63:32 of `msdeie`. When MXLEN=64, `msdeieh` does not exist.
+==== Machine supervisor domain external interrupt enable (`msideie/msideieh`)
+The `msideie` is a 64-bit read-write register, formatted as shown in <<MSDEIE>>.
+When MXLEN=32, `msideieh` is a 32-bit read-write register which aliases bits
+63:32 of `msideie`. When MXLEN=64, `msideieh` does not exist.
 
 [[MSDEIE]]
-.`msdeie` register
+.`msideie` register
 
 [wavedrom, , ]
 ....
@@ -286,8 +286,8 @@ When MXLEN=32, `msdeieh` is a 32-bit read-write register which aliases bits
 ], config:{lanes: 1, hspace:1024}}
 ....
 
-The `msdeie` CSR selects the subset of _supervisor interrupt domains_ that cause
-a local supervisor domain external interrupt. The enable bits in `msdeie` do not
+The `msideie` CSR selects the subset of _supervisor interrupt domains_ that cause
+a local supervisor domain external interrupt. The enable bits in `msideie` do not
 affect the S- and VS-level external interrupt pending signals from the
 _supervisor interrupt domain_ selected by `msdcfg.SIDN`.
 
@@ -302,7 +302,7 @@ delegation of `LSDEI` to S-mode. This interrupt cannot be delegated to
 VS-mode and bit TBA of `hideleg` is read-only zero.
 
 The `mip.LSDEIP` bit is set to 1 if the bitwise logical AND of CSRs
-`msdeip` and `msdeie` is nonzero in any bit. The `sip.LSDEIP` bit is set to 0 if
+`msideip` and `msideie` is nonzero in any bit. The `sip.LSDEIP` bit is set to 0 if
 `LSDEI` is not delegated to S-mode otherwise it returns the value of the
 `mip.LSDEIP` when read.
 
@@ -319,7 +319,7 @@ a supervisor domain has become ready to run since it was last descheduled. When
 a supervisor domain that has a supervisor domain interrupt controller directly
 assigned to it, the RDSM updates the `msdcfg.SIDN` to select that supervisor
 interrupt domain and may clear the bit corresponding to that supervisor
-interrupt domain in `msdeie` prior to resuming execution of the supervisor
+interrupt domain in `msideie` prior to resuming execution of the supervisor
 domain.
 
 The RDSM may delegate `LSDEI` to a supervisor domain that may be entrusted by
@@ -412,10 +412,10 @@ domain_ selected by `msdcfg.SIDN` is not implemented then:
 When `Smifdeleg` is implemented, `hip.SGEIP` is 1 if and only if the bitwise
 logical-AND of CSRs `hgeip`, `hgeie`, and `mifd` is nonzero in any bit.
 
-When `Smifdeleg` is implemented, the `msdeip` bit corresponding to _supervisor
+When `Smifdeleg` is implemented, the `msideip` bit corresponding to _supervisor
 interrupt domain_ identified by `msdcfg.SIDN` is the logical OR of the interrupt
 signals from the interrupt files of that _supervisor interrupt domain_ that are
-not delegated by `mifd`. Bits of `msdeip` corresponding to all other
+not delegated by `mifd`. Bits of `msideip` corresponding to all other
 _supervisor interrupt domains_ are the logical OR of all the interrupt signals
 from the corresponding _supervisor interrupt domain_ in the IMSIC.
 
