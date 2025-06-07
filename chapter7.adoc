@@ -236,12 +236,12 @@ corresponding to the value of `msdcfg.SIDN`.
 
 ==== Machine supervisor domain external interrupt pending (`msdeip/msdeiph`)
 
-The `msdeip` is a MXLEN-bit read-only register, formatted for MXLEN=64 as
-shown in <<MSDEIP>>. When MXLEN=32, `msdeiph` is a 32-bit read-only register
-which aliases bits 63:32 of `msdeip`. When MXLEN=64, `msdeiph` does not exist.
+The `msdeip` is a 64-bit read-only register, formatted as shown in <<MSDEIP>>.
+When MXLEN=32, `msdeiph` is a 32-bit read-only register which aliases bits
+63:32 of `msdeip`. When MXLEN=64, `msdeiph` does not exist.
 
 [[MSDEIP]]
-.`msdeip` register for RV64
+.`msdeip` register
 
 [wavedrom, , ]
 ....
@@ -271,12 +271,12 @@ visible in the `msdeip` register even when `msdcfg.SIDN` is not the valid number
 of an implemented _supervisor interrupt domain_.
 
 ==== Machine supervisor domain external interrupt enable (`msdeie/msdeieh`)
-The `msdeie` is a MXLEN-bit read-write register, formatted for MXLEN=64 as shown
-in <<MSDEIE>>. When MXLEN=32, `msdeieh` is a 32-bit read-write register which
-aliases bits 63:32 of `msdeie`. When MXLEN=64, `msdeieh` does not exist.
+The `msdeie` is a 64-bit read-write register, formatted as shown in <<MSDEIE>>.
+When MXLEN=32, `msdeieh` is a 32-bit read-write register which aliases bits
+63:32 of `msdeie`. When MXLEN=64, `msdeieh` does not exist.
 
 [[MSDEIE]]
-.`msdeie` register for RV64
+.`msdeie` register
 
 [wavedrom, , ]
 ....
@@ -338,13 +338,13 @@ files within a _supervisor interrupt domain_ in an IMSIC to a supervisor domain.
 
 The `Smifdeleg` extension depends on the `Smaia` extension.
 
-To support delegation, this extension introduces an MXLEN-bit read-write
-register named `mifd`, formatted for MXLEN=64 as shown in <<MIRFD>>.
-When MXLEN=32, `mifdh` is a 32-bit read-only register that aliases bits 63:32
-of `mifd`.  When MXLEN=64, the `mifdh` register does not exist.
+To support delegation, this extension introduces an 64-bit read-write
+register named `mifd`, formatted as shown in <<MIRFD>>. When MXLEN=32, `mifdh` is
+a 32-bit read-only register that aliases bits 63:32 of `mifd`.  When MXLEN=64,
+the `mifdh` register does not exist.
 
 [[MIRFD]]
-.`mifd` register for RV64
+.`mifd` register
 
 [wavedrom, , ]
 ....
