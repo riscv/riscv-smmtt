@@ -24,7 +24,7 @@ interrupts might be aggregated and indicated by an interrupt controller linked
 to the RDSM. The RDSM, in the course of handling an external interrupt, should
 forward the interrupt to the relevant supervisor domain. The efficiency of
 handling external interrupts by a supervisor domain can be enhanced if the
-external interrupts could be directly assigned to the supervisor domain <<SDI>>.
+external interrupts could be directly assigned to the supervisor domain.
 
 To accommodate such supervisor domains, this specification extends the IMSIC
 and APLIC specified by the RISC-V Advanced Interrupt Architecture (AIA)
@@ -94,12 +94,13 @@ interrupt file for group `g`, SIDN `n`, and hart `h` within the group, is:
 
 Constant `E` must be >= `max(k + C, q + I)`, but will usually be much larger.
 
-The `Smsdia` extension provides the mechanism to select a _supervisor interrupt
-domain_ in an IMSIC as a source of S- and VS-level external interrupts for a
-hart. The interrupt signal from the selected _supervisor interrupt domains_
-supervisor-level interrupt file appears as bit `SEIP` in `mip` and `sip`. The
-interrupt signals from any _guest interrupt files_ of the selected supervisor
-interrupt domain appear as active bits in the hypervisor CSR `hgeip`.
+The `Smsdia` extension (<<SDI>>) provides the mechanism to select a
+_supervisor interrupt domain_ in an IMSIC as a source of S- and VS-level
+external interrupts for a hart. The interrupt signal from the selected
+_supervisor interrupt domain's_ supervisor-level interrupt file appears as bit
+`SEIP` in `mip` and `sip`. The interrupt signals from any _guest interrupt
+files_ of the selected supervisor interrupt domain appear as active bits in
+the hypervisor CSR `hgeip`.
 
 The `siselect` and `sireg` CSRs access the registers of the supervisor-level
 interrupt file in the selected _supervisor interrupt domain_. If the selected
@@ -177,7 +178,6 @@ The `SIDN` field selects an interrupt controller among the plurality of
 _supervisor interrupt domains_ associated with a hart as the active supervisor
 interrupt domain for S- and VS-level external interrupts when `SIDN` is the
 number of an implemented _supervisor interrupt domain_.
-
 
 The `SIDN` field is a WLRL field that must be able to hold a value between 0
 and the maximum implemented _supervisor interrupt domain number_, inclusive.
