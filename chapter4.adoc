@@ -57,9 +57,9 @@ MPTE entry in <<rv32-mpte-leaf>>.
 {reg: [
   {bits:  1,  name: 'V'},
   {bits:  1,  name: 'L=0'},
-  {bits:  8,  name: 'RESERVED'},
+  {bits:  8,  name: 'Reserved'},
   {bits:  22, name: 'PPN'},
-], config:{lanes: 2, hspace:1024}}
+], config:{lanes: 1, hspace:1024}}
 ....
 
 [caption="Figure {counter:image}: ", reftext="Figure {image}"]
@@ -69,10 +69,10 @@ MPTE entry in <<rv32-mpte-leaf>>.
 {reg: [
   {bits:  1,  name: 'V'},
   {bits:  1,  name: 'L=1'},
-  {bits:  5,  name: 'RESERVED'},
+  {bits:  5,  name: 'Reserved'},
   {bits:  24, name: 'PERMS'},
   {bits:  1,  name: 'N'},
-], config:{lanes: 2, hspace:1024}}
+], config:{lanes: 1, hspace:1024}}
 ....
 
 The `V` bit indicates if the MPTE is valid; if it is 0, all other bits in the
@@ -234,9 +234,9 @@ range determined by that MPTE.
 {reg: [
   {bits:   1, name: 'V'},
   {bits:   1, name: 'L=0'},
-  {bits:   8, name: 'RESERVED'},
-  {bits:  52, name: 'PPN'},
-  {bits:   1, name: 'RSV'},
+  {bits:   8, name: 'Reserved'},
+  {bits:  44, name: 'PPN'},
+  {bits:   9, name: 'Reserved'},
   {bits:   1, name: 'N'},
 ], config:{lanes: 2, hspace:1024}}
 ....
@@ -248,9 +248,9 @@ range determined by that MPTE.
 {reg: [
   {bits:   1, name: 'V'},
   {bits:   1, name: 'L=1'},
-  {bits:   8, name: 'RESERVED'},
+  {bits:   8, name: 'Reserved'},
   {bits:  48, name: 'PERMS'},
-  {bits:   5, name: 'RESERVED'},
+  {bits:   5, name: 'Reserved'},
   {bits:   1, name: 'N'},
 ], config:{lanes: 2, hspace:1024}}
 ....
