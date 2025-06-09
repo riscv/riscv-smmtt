@@ -419,12 +419,27 @@ domain_ selected by `msdcfg.SIDN` is not implemented then:
 When `Smifdeleg` is implemented, `hip.SGEIP` is 1 if and only if the bitwise
 logical-AND of CSRs `hgeip`, `hgeie`, and `mifd` is nonzero in any bit.
 
-When `Smifdeleg` is implemented, the `msideip` bit corresponding to _supervisor
-interrupt domain_ identified by `msdcfg.SIDN` is the logical OR of the interrupt
-signals from the interrupt files of that _supervisor interrupt domain_ that are
-not delegated by `mifd`. Bits of `msideip` corresponding to all other
-_supervisor interrupt domains_ are the logical OR of all the interrupt signals
-from the corresponding _supervisor interrupt domain_ in the IMSIC.
+When `Smifdeleg` is implemented and `msdgcfg.SIDN` identifies an implemented
+_supervisor interrupt domain_, each bit of `msideip` corresponding to an
+implemented _supervisor interrupt domain_ must be set to one if and only if the
+relevant interrupt source is active.
+
+Specifically:
+
+* For bit `msdcfg.SIDN`, the bit is set to one if and only if either:
+
+** The SEIP signal for _supervisor interrupt domain_ `msdcfg.SIDN` is asserted,
+   and bit S of `mifd` is set to one; or
+** The bitwise AND of `mifd`, `hgeip`, and `hgeie` for _supervisor interrupt
+   domain_ `msdcfg.SIDN` is nonzero (i.e., as `SGEIP` would evaluate for that
+   domain).
+
+* Bits for other implemented _supervisor interrupt domains_ are set to one
+  if and only if either:
+
+** The SEIP signal for that _supervisor interrupt domain_ is asserted; or
+** The bitwise AND of `hgeip` and `hgeie` for that domain is nonzero (i.e., as
+   `SGEIP` would evaluate for that domain).
 
 [NOTE]
 ====
