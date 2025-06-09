@@ -42,8 +42,8 @@ an illegal instruction exception.
 ....
 {reg: [
   {bits:  22, name: 'PPN (WARL)'},
-  {bits:   2, name: 'WPRI'},
   {bits:   6, name: 'SDID (WARL)'},
+  {bits:   2, name: '0 (WARL)'},
   {bits:   2, name: 'MODE (WARL)'},
 ], config:{lanes: 2, hspace:1024}}
 ....
@@ -54,9 +54,10 @@ an illegal instruction exception.
 [wavedrom, ,svg]
 ....
 {reg: [
-  {bits:  52, name: 'PPN (WARL)'},
-  {bits:   2, name: 'WPRI'},
+  {bits:  44, name: 'PPN (WARL)'},
+  {bits:   8, name: '0 (WARL)'},
   {bits:   6, name: 'SDID (WARL)'},
+  {bits:   2, name: '0 (WARL)'},
   {bits:   4, name: 'MODE (WARL)'},
 ], config:{lanes: 2, hspace:1024}}
 ....
@@ -83,7 +84,7 @@ set to zeros.
 |1 |`Smmpt34` |Page-based memory protection for up to 34-bit physical address
 spaces.
 |2 |- |`_Reserved for future standard use._`
-|3 |- |`_Designated for custom use._` 
+|3 |- |`_Designated for custom use._`
 
 |===
 
@@ -102,7 +103,7 @@ spaces.
 |3 |`Smmpt64` |Page-based memory protection for up to 64-bit physical address
 spaces.
 |4-13 |- |`_Reserved for future standard use._`
-|14-15 |- |`_Designated for custom use._` 
+|14-15 |- |`_Designated for custom use._`
 |===
 
 Implementations are not required to support all defined `MODE` settings. A write
@@ -110,8 +111,8 @@ to `mmpt` with an unsupported `MODE` value is not ignored. Instead, the fields
 of `mmpt` are `WARL` in the normal way, when so indicated in <<sdid-32>> and
 <<sdid-64>>.
 
-`mmpt.PPN` refers to the root of the memory protection table when `mmpt.MODE` is not
-`Bare`.
+`mmpt.PPN` refers to the root of the memory protection table when `mmpt.MODE`
+is not `Bare`.
 
 The `mmpt` register is considered active for the purposes of access type
 permission lookup algorithm unless the effective privilege mode is `M`.
@@ -316,6 +317,6 @@ read-only zero.
   {bits:  4, name:  'SRL'},
   {bits:  4, name:  'SML'},
   {bits:  4, name:  'SQRID'},
-], config:{lanes: 4, hspace:1024}}
+], config:{lanes: 2, hspace:1600}}
 ....
 
