@@ -167,8 +167,8 @@ follows:
 
 5. A leaf _mpte_ has been found. If i > 0, the bits _pa.pn[i-1]_ are included
    in the range offset, else for i = 0, the range offset is specified in the
-   _pa_. Let _pi_ be the NUMPGINRANGE (For Smmpt34, NUMPGINRANGE is 3) most
-   significant bits of the range offset. Let _XWR=PERMS[pi*3+2:pi*3]_.
+   _pa_. Let _pi_ be the value of the NUMPGINRANGE most significant bits of the
+   range offset (For Smmpt34, NUMPGINRANGE is 3). Let _XWR=PERMS[pi*3+2:pi*3]_.
    Determine if the requested memory access is allowed
    by the _XWR_ bits, given the effective privilege mode and MXR field of the
    `mstatus` register. If not, stop and raise an access-fault exception
