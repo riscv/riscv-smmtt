@@ -171,7 +171,7 @@ supervisor-level external interrupt or guest external interrupt, is pending for
 any supervisor domains not currently active on a hart. The RDSM could leverage
 this notification to inform its scheduling decisions. To facilitate this
 functionality, the `Smsdia` extension introduces the `msideip` and `msideie`
-CSRs, along with an local supervisor domain external interrupt (`LSDEI`).
+CSRs, along with an machine supervisor domain external interrupt (`MSDEI`).
 
 ==== Machine supervisor domain configuration (`msdcfg`)
 
@@ -292,36 +292,37 @@ When MXLEN=32, `msideieh` is a 32-bit read-write register which aliases bits
 ....
 
 The `msideie` CSR selects the subset of _supervisor interrupt domains_ that cause
-a local supervisor domain external interrupt. The enable bits in `msideie` do not
+a machine supervisor domain external interrupt. The enable bits in `msideie` do not
 affect the supervisor-level external interrupt and guest external interrupt
 pending signals from the _supervisor interrupt domain_ selected by `msdcfg.SIDN`.
 
 ==== Machine and Supervisor Interrupt registers (`mip/mie` and `sip/sie`)
 
-The `Smsdia` extension introduces the local supervisor domain external
-interrupt (`LSDEI`). This interrupt is treated as a standard local
-interrupt that is assigned to bit TBA in the `mip`, `mie`, `sip`, and `sie`
-registers. The bit TBA in `mip` and `sip` is called `LSDEIP` and the same bit in
-`mie` and `sie` is called `LSDEIE`. The `mideleg` register controls the
-delegation of `LSDEI` to S-mode. This interrupt cannot be delegated to
-VS-mode and bit TBA of `hideleg` is read-only zero.
+The `Smsdia` extension introduces the machine supervisor domain external
+interrupt (`MSDEI`). This interrupt is treated as a standard local
+interrupt that is assigned to bit 14 in the `mip`, `mie`, `sip`, and `sie`
+registers. The bit 14 in `mip` and `sip` is called `MSDEIP` and the same bit in
+`mie` and `sie` is called `MSDEIE`. The `mideleg` register controls the
+delegation of `MSDEI` to S-mode. This interrupt cannot be delegated to
+VS-mode and bit 14 of `hideleg` is read-only zero.
 
-The `mip.LSDEIP` bit read-only and is set to 1 if the bitwise logical AND of CSRs
-`msideip` and `msideie` is nonzero in any bit. The `mie.LSDEIE` bit is writable.
+The `mip.MSDEIP` bit read-only and is set to 1 if the bitwise logical AND of CSRs
+`msideip` and `msideie` is nonzero in any bit. The `mie.MSDEIE` bit is writable.
 
-When bit TBA of `mideleg` is zero, `sip.LSDEIP` and `sie.LSDEIE` are read-only
-zeros. Else, `sip.LSDEIP` and `sie.LSDEIE` are aliases of `mip.LSDEIP` and
-`mie.LSDEIE`.
+When bit 14 of `mideleg` is zero, `sip.MSDEIP` and `sie.MSDEIE` are read-only
+zeros. Else, `sip.MSDEIP` and `sie.MSDEIE` are aliases of `mip.MSDEIP` and
+`mie.MSDEIE`.
 
 Multiple simultaneous interrupts destined for different privilege modes are
-handled in decreasing order of destined privilege mode. Multiple simultaneous
-interrupts destined for the same privilege mode are handled in the following
-decreasing default priority order: high-priority RAS event, MEI, MSI, MTI,
-LSDEI, SEI, SSI, STI, SGEI, VSEI, VSSI, VSTI, LCOFI, low-priority RAS event.
+handled in decreasing order of destined privilege mode. For the base Privileged
+ISA's major interrupts (numbers 0-15), multiple simultaneous interrupts destined
+for the same privilege mode are handled in the following decreasing default
+priority order: MEI, MSI, MTI, MSDEI, SEI, SSI, STI, SGEI, VSEI, VSSI, VSTI,
+LCOFI.
 
 [NOTE]
 ====
-The RDSM may use the local supervisor domain external interrupt to determine if
+The RDSM may use the machine supervisor domain external interrupt to determine if
 a supervisor domain has become ready to run since it was last descheduled. When
 a supervisor domain that has a supervisor domain interrupt controller directly
 assigned to it, the RDSM updates the `msdcfg.SIDN` to select that supervisor
@@ -329,7 +330,7 @@ interrupt domain and may clear the bit corresponding to that supervisor
 interrupt domain in `msideie` prior to resuming execution of the supervisor
 domain.
 
-The RDSM may delegate `LSDEI` to a supervisor domain that may be entrusted by
+The RDSM may delegate `MSDEI` to a supervisor domain that may be entrusted by
 the RDSM to get notified about supervisor domain external interrupts pending for
 one or more other supervisor domains. Typically, this use case involves a single
 supervisor domain that is trusted by the RDSM to receive such notifications. The
