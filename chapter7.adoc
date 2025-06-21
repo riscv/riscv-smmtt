@@ -276,7 +276,7 @@ The summary of external interrupts pending in a _supervisor interrupt domain_ is
 visible in the `msideip` register even when `msdcfg.SIDN` is not the valid number
 of an implemented _supervisor interrupt domain_.
 
-==== Machine supervisor domain external interrupt enable (`msideie/msideieh`)
+==== Machine supervisor interrupt domain external interrupt enable (`msideie/msideieh`)
 The `msideie` is a 64-bit read-write register, formatted as shown in <<MSDEIE>>.
 When MXLEN=32, `msideieh` is a 32-bit read-write register which aliases bits
 63:32 of `msideie`. When MXLEN=64, `msideieh` does not exist.
@@ -287,8 +287,7 @@ When MXLEN=32, `msideieh` is a 32-bit read-write register which aliases bits
 [wavedrom, , ]
 ....
 {reg: [
-  {bits:  1, name: '0'},
-  {bits: 63, name: 'Interrupts (WARL)'},
+  {bits: 64, name: 'Interrupts (WARL)'},
 ], config:{lanes: 1, hspace:1024}}
 ....
 
