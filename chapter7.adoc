@@ -393,17 +393,6 @@ then:
   `vstopei` CSRs operate as-if the `VGEIN` is the number of an unimplemented
   guest external interrupt.
 
-If the _supervisor interrupt domain_ selected by `msdcfg.SIDN` is not implemented
-then:
-
-* The `hgeip` and `hgeie` CSRs are read-only zeros.
-
-* The `vsiselect`, `vsireg`, and `vstopei` CSRs operate as-if the `VGEIN` is the
-  number of an unimplemented guest external interrupt for all values of `VGEIN`.
-
-The `hip.SGEIP` bit is 1 if and only if the bitwise logical-AND of CSRs `hgeip`,
-`hgeie`, and `mifd` is nonzero in any bit.
-
 Each bit __i__ of `msideip` corresponding to an implemented _supervisor interrupt
 domain_ must be set to one if and only if the relevant interrupt source is active.
 
@@ -416,15 +405,6 @@ Specifically:
 ** The bitwise AND of `mifd`, `hgeip`, and `hgeie` for _supervisor interrupt
    domain_ `msdcfg.SIDN` is nonzero (i.e., as `SGEIP` would evaluate for that
    domain).
-
-* Otherwise:
-
-** The SEIP signal for that _supervisor interrupt domain_ is asserted; or
-** The bitwise AND of `hgeip` and `hgeie` for that domain is nonzero (i.e., as
-   `SGEIP` would evaluate for that domain).
-
-Bits in `msideip` corresponding to unimplemented _supervisor interrupt domains_
-must be set to zero.
 
 [NOTE]
 ====
