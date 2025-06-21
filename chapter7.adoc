@@ -198,7 +198,7 @@ then the following rules apply:
   instruction exception.
 * Access to CSR `stopei` raises an illegal instruction exception.
 * The `hstatus.vgein` field is read-only zero.
-* `hgeip` is read-only 0.
+* `hgeip` and `hgeie` are read-only 0.
 
 When the _supervisor interrupt domain_ selected by `msdcfg.SIDN` is an
 implemented, and is an IMSIC, the following rules apply:
