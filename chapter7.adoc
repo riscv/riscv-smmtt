@@ -139,7 +139,10 @@ is then computed as follows:
 [latexmath]
 ++++
 n = \text{CI} \mathbin{\&} \left( 2^{\text{DXW}} - 1 \right)
-\\
+++++
+
+[latexmath]
+++++
 \text{MSI address} =
 \left(
   \text{Base PPN}
