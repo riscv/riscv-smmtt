@@ -66,10 +66,10 @@ and hart `h`, is:
 \text{Address} = B + n \times 2^I + h \times 2^D
 ++++
 
-Constants `B` and `D` in this formula are specified by cite:[AIA], while `I`
-is a new constant for supervisor interrupt domains. Constant `I` must be
->= `k + D`, where `k` is the number of bits needed to represent any hart
-number `h`.
+Constants `B`, `C`, and `D` in this later formulas are specified by
+cite:[AIA], while `I` is a new constant for supervisor interrupt domains.
+Constant `I` must be >= `k + D`, where `k` is the number of bits needed
+to represent any hart number `h`.
 
 If the largest _supervisor interrupt domain_ number is stem:[n_{\text{max}}],
 then `q` -- the number of bits needed to represent any _supervisor interrupt
