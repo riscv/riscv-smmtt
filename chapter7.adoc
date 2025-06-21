@@ -369,6 +369,7 @@ The RDSM may use bit 9 of `mvien` to control access to the supervisor-level
 interrupt file in the supervisor interrupt domain selected by `msdcfg.SIDN`.
 ====
 
+
 If the H extension is also implemented, then each bit of the `GIF` field when
 set to 1 enables access to corresponding _guest interrupt file_ in the _supervisor
 interrupt domain_ selected by `msdcfg.SIDN`. If `GEILEN` is nonzero, bit
@@ -393,18 +394,28 @@ then:
   `vstopei` CSRs operate as-if the `VGEIN` is the number of an unimplemented
   guest external interrupt.
 
-Each bit __i__ of `msideip` corresponding to an implemented _supervisor interrupt
-domain_ must be set to one if and only if the relevant interrupt source is active.
+The `mifd.A` bit, when set to 1, enables `msideip` to accumulate all guest
+external interrupts for the supervisor interrupt domain; otherwise, `msideip`
+accumulates only the subset of guest external interrupts determined by
+`mifd.GIF`.
+
+Each bit __i__ of `msideip`, corresponding to an implemented _supervisor
+interrupt domain_, must be set to one if and only if the relevant interrupt
+source is active.
 
 Specifically:
 
 * If __i__ equals `msdcfg.SIDN`, the bit is set to one if and only if either:
 
-** The SEIP signal for _supervisor interrupt domain_ `msdcfg.SIDN` is asserted,
-   and bit `mifd.S` is set to one; or
-** The bitwise AND of `mifd`, `hgeip`, and `hgeie` for _supervisor interrupt
-   domain_ `msdcfg.SIDN` is nonzero (i.e., as `SGEIP` would evaluate for that
-   domain).
+** The logical AND of `mip.SEIP` and bit 9 of `mvien` (for SEI) is one
+   (true); or
+
+** The bitwise logical AND of the following three components of the _supervisor
+   interrupt domain_ is nonzero:
+   *** the _internal_ `hgeip`,
+   *** the _internal_ `hgeie`, and
+   *** the _logical complement_ of `mifd` if `mifd.A` is 0; otherwise, a value
+       of all 1s.
 
 [NOTE]
 ====
