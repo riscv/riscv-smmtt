@@ -378,13 +378,13 @@ interrupt domain_ selected by `msdcfg.SIDN`. If `GEILEN` is nonzero, bit
 If the _supervisor interrupt domain_ selected by `msdcfg.SIDN` is implemented
 then:
 
-* The guest external interrupt pending signals of the _guest interrupt files_
-  of the selected _supervisor interrupt domain_ are indicated in the `hgeip` CSR
-  if the bit corresponding to their guest external interrupt number in `mifd`
-  is 1 else they are indicated as 0.
+* Bits `GEILEN:1` of `hgeip` are read-only aliases of the same bits in the
+  internal `hgeip` register selected by `msdcfg.SIDN` if the bit at the same
+  position in `mifd` is 1. All other bits of `hgeip` are zero.
 
-* Bits `GEILEN:1` of `hgeie` are writable if the bit at same position in `mifd`
-  is 1. All other bits of `hgeie` are read-only zeroes.
+* Bits `GEILEN:1` of `hgeie` are writable aliases of the same bits in the
+  internal `hgeie` register selected by `msdcfg.SIDN` if the bit at the same
+  position in `mifd` is 1. All other bits of `hgeie` are read-only zero.
 
 * If `hstatus.VGEIN` is not 0 and the bit selected by `VGEIN` in `mifd` is 1
   then the `vsiselect`, `vsireg`, and `vstopei` CSRs operate on the registers of
