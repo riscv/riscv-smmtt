@@ -12,8 +12,8 @@ The following MPT extensions are defined:
 * Smmpt43 - Page-based 43-bit memory protection system (RV64 only)
 * Smmpt52 - Page-based 52-bit memory protection system (RV64 only)
 * Smmpt64 - Page-based 64-bit memory protection system (RV64 only)
-* Smmptnapot - NAPOT Access-Type Permission Granularity (RV32 and R64)
-* Smmptnlnapot - NAPOT Memory Protection Table (RV64 only)
+* Smmptnapot<g> - NAPOT Access-Type Permission Granularity Extensions (RV32 and
+  RV64)
 
 These MPT extensions depend on `Smsdid`.
 Smmpt34, Smmpt43, Smmpt52 and Smmpt64 depend on `Smmptnapot`.
@@ -55,7 +55,7 @@ MPTE entry in <<rv32-mpte-leaf>>.
 [wavedrom, ,svg]
 ....
 {reg: [
-  {bits:  1,  name: 'V'},
+  {bits:  1,  name: 'V=1'},
   {bits:  1,  name: 'L=0'},
   {bits:  8,  name: 'Reserved'},
   {bits:  22, name: 'PPN'},
@@ -63,16 +63,39 @@ MPTE entry in <<rv32-mpte-leaf>>.
 ....
 
 [caption="Figure {counter:image}: ", reftext="Figure {image}"]
-[title="`Smmpt34` leaf `MPTE`", id="rv32-mpte-leaf"]
+[title="`Smmpt34` non-NAPOT leaf `MPTE`", id="rv32-mpte-leaf"]
 [wavedrom, ,svg]
 ....
 {reg: [
-  {bits:  1,  name: 'V'},
+  {bits:  1,  name: 'V=1'},
   {bits:  1,  name: 'L=1'},
+  {bits:  1,  name: 'N=0'},
   {bits:  5,  name: 'Reserved'},
-  {bits:  24, name: 'PERMS'},
-  {bits:  1,  name: 'N'},
-], config:{lanes: 1, hspace:1024}}
+  {bits:  3,  name: 'XWR[0]'},
+  {bits:  3,  name: 'XWR[1]'},
+  {bits:  3,  name: 'XWR[2]'},
+  {bits:  3,  name: 'XWR[3]'},
+  {bits:  3,  name: 'XWR[4]'},
+  {bits:  3,  name: 'XWR[5]'},
+  {bits:  3,  name: 'XWR[6]'},
+  {bits:  3,  name: 'XWR[7]'},
+], config:{lanes: 4, hspace:1024}}
+....
+
+[caption="Figure {counter:image}: ", reftext="Figure {image}"]
+[title="`Smmpt34` NAPOT leaf `MPTE`", id="rv32-mpte-leaf"]
+[wavedrom, ,svg]
+....
+{reg: [
+  {bits:  1,  name: 'V=1'},
+  {bits:  1,  name: 'L=1'},
+  {bits:  1,  name: 'N=0'},
+  {bits:  5,  name: 'Reserved'},
+  {bits:  3,  name: 'XWR'},
+  {bits:  1,  name: 'Reserved'},
+  {bits:  4,  name: 'G'},
+  {bits: 16,  name: 'Reserved'},
+], config:{lanes: 4, hspace:1024}}
 ....
 
 The `V` bit indicates if the MPTE is valid; if it is 0, all other bits in the
@@ -106,6 +129,12 @@ with store instructions that modify MPTEs.
 ====
 
 When the `L` bit is set to 0, the entry is a non-leaf MPTE, else it is a leaf MPTE.
+
+When `MPTE.L`=1 and `MPTE.N`=1, the leaf `MPTE` represents a memory protection
+range that is part of a larger contiguous NAPOT memory protection range comprised
+of `2^(G+1)` MPTEs. All leaf MPTEs at that level of this NAPOT memory protection
+range have the same value for L, N, XWR and V bits. The encodings 9-15 of `G` are
+reserved.
 
 A non-leaf MPTE holds the PPN of the next level of the memory protection table.
 
@@ -165,15 +194,18 @@ follows:
    to the original access type. Otherwise, let _a_ = _mpte.PPN_ x PAGESIZE and
    go to step 2.
 
-5. A leaf _mpte_ has been found. If i > 0, the bits _pa.pn[i-1]_ are included
-   in the range offset, else for i = 0, the range offset is specified in the
-   _pa_. Let _pi_ be the value of the NUMPGINRANGE most significant bits of the
-   range offset (For Smmpt34, NUMPGINRANGE is 3). Let _XWR=PERMS[pi*3+2:pi*3]_.
-   Determine if the requested memory access is allowed
-   by the _XWR_ bits, given the effective privilege mode and MXR field of the
-   `mstatus` register. If not, stop and raise an access-fault exception
-   corresponding to the original access type, else the requested memory access
-   is allowed.
+5. If N=0, a non-napot leaf _mpte_ has been found. If i > 0, the bits
+   _pa.pn[i-1]_ are included in the range offset, else for i = 0, the range
+   offset is specified in the _pa_. Let _pi_ be the value of the NUMPGINRANGE
+   most significant bits of the range offset (For Smmpt34, NUMPGINRANGE is 3).
+   Let _XWR=mpte.XWR[pi]_.
+
+6. If N=1, a napot leaf _mpte_ has been found. The _XWR=mpte.XWR_.
+
+7. Determine if the requested memory access is allowed by the _XWR_ bits, given
+   the effective privilege mode and MXR field of the `mstatus` register. If not,
+   stop and raise an access-fault exception corresponding to the original access
+   type, else the requested memory access is allowed.
 
 Implicit accesses to MPT by this process are checked by PMP/Smepmp as implicit
 M-mode accesses. The endianness of such implicit accesses is controlled by
@@ -234,28 +266,57 @@ range determined by that MPTE.
 {reg: [
   {bits:   1, name: 'V'},
   {bits:   1, name: 'L=0'},
-  {bits:   8, name: 'Reserved'},
+  {bits:   1, name: 'N=0'},
+  {bits:   7, name: 'Reserved'},
   {bits:  44, name: 'PPN'},
-  {bits:   9, name: 'Reserved'},
-  {bits:   1, name: 'N'},
+  {bits:  10, name: 'Reserved'},
 ], config:{lanes: 2, hspace:1024}}
 ....
 
 [caption="Figure {counter:image}: ", reftext="Figure {image}"]
-[title="Smmpt43 leaf `MPTE` entry", id="rv64-mpte-leaf"]
+[title="Smmpt43 non-NAPOT leaf `MPTE` entry", id="rv64-mpte-leaf"]
 [wavedrom, ,svg]
 ....
 {reg: [
   {bits:   1, name: 'V'},
   {bits:   1, name: 'L=1'},
-  {bits:   8, name: 'Reserved'},
-  {bits:  48, name: 'PERMS'},
+  {bits:   1, name: 'N=0'},
   {bits:   5, name: 'Reserved'},
-  {bits:   1, name: 'N'},
-], config:{lanes: 2, hspace:1024}}
+  {bits:   3, name: 'XWR[0]'},
+  {bits:   3, name: 'XWR[1]'},
+  {bits:   3, name: 'XWR[2]'},
+  {bits:   3, name: 'XWR[3]'},
+  {bits:   3, name: 'XWR[4]'},
+  {bits:   3, name: 'XWR[5]'},
+  {bits:   3, name: 'XWR[6]'},
+  {bits:   3, name: 'XWR[7]'},
+  {bits:   3, name: 'XWR[8]'},
+  {bits:   3, name: 'XWR[9]'},
+  {bits:   3, name: 'XWR[10]'},
+  {bits:   3, name: 'XWR[11]'},
+  {bits:   3, name: 'XWR[12]'},
+  {bits:   3, name: 'XWR[13]'},
+  {bits:   3, name: 'XWR[14]'},
+  {bits:   3, name: 'XWR[15]'},
+  {bits:   8, name: 'Reserved'},
+], config:{lanes: 4, hspace:1024}}
 ....
 
-If Smmptnlnapot is not implemented, bit 63 in a non-leaf MPTE remains reserved.
+[caption="Figure {counter:image}: ", reftext="Figure {image}"]
+[title="Smmpt43 NAPOT leaf `MPTE` entry", id="rv64-mpte-leaf"]
+[wavedrom, ,svg]
+....
+{reg: [
+  {bits:   1, name: 'V'},
+  {bits:   1, name: 'L=1'},
+  {bits:   1, name: 'N=0'},
+  {bits:   5, name: 'Reserved'},
+  {bits:   3, name: 'XWR'},
+  {bits:   1, name: '0'},
+  {bits:   4, name: 'G'},
+  {bits:  48, name: 'Reserved'},
+], config:{lanes: 4, hspace:1024}}
+....
 
 Any level of MPTE may be a leaf MPTE, so in addition to providing access type
 permissions to 4 KiB pages, Smmpt43 supports 2 MiB _megapages_, 1 GiB
@@ -352,98 +413,9 @@ The algorithm to determine access type permissions for a page is same as in
 <<MPT_ACC_LKUP>>, except LEVELS equals 5, MPTESIZE equals 8, and NUMPGINRANGE
 equals 4.
 
-=== Smmptnapot - NAPOT Access-Type Permission Granularity
+=== Smmptnapot* - NAPOT Access-Type Permission Granularity Extensions
 
-When `MPTE.L`=1 and `MPTE.N`=1, the leaf `MPTE` represents a memory protection
-range that is part of a larger contiguous NAPOT memory protection range comprised
-of 512 pages for RV64 and 1024 pages for RV32. All leaf MPTEs at that level of
-this NAPOT memory protection range have the same value for L, N, PERMS and V
-bits. Thus, the XWR access type permission tuples in the PERMS field of such
-PTEs are identical.
-
-Such MPTEs behave identically to leaf MPTEs in the MPT access permission lookup
-process described in <<MPT_ACC_LKUP>>, except that:
-
-* For RV32, the `N` bit may be set to 1 in the level 0 leaf MPTEs.
-* For RV64, the `N` bit may be set to 1 in the leaf MPTEs.
-
-[NOTE]
-====
-The motivation of NAPOT MPTE is that access-type permissions for one or more
-entries representing the contigous region may be cached as a single cache entry
-as if it were a single (large) page. This compaction can relieve access-type
-permission caches. The scheme allows an implementation to not take advantage of
-this property and simply cache the access-type permissions for pages seperately.
-
-The scheme supports caching a single access-type permission entry representing a
-2 MiB or a 1 GiB memory range for RV64. For RV32, it supports caching a single
-access-type permission entry representing a 4 MiB memory range. These contigous
-memory range sizes represent large/huge page sizes used commonly by memory
-allocators.
-
-A single MPTE entry covers a 64 KiB address range, so a separate 64 KiB NAPOT
-PTE is not needed. One MPTE with all XWR permissions being identical provides
-the 64 KiB region support.
-====
-
-If Smmptnapot extension is implemented then one of Smmpt34, Smmpt43, Smmpt52,
-or Smmpt64 extensions must be implemented.
-
-=== Smmptnlnapot - NAPOT Memory Protection Table
-
-The Smmptnlnapot extension supports NAPOT non-leaf MPTEs. This extension is
-RV64 only, and depends on one of Smmpt43, Smmpt52 or Smmpt64.
-
-For RV64, when the `MPTE.L`=0 and `MPTE.N`=1, the non-leaf `MPTE`
-is part of a range of MPTEs at that level of MPT with the same value for
-the L, N, PPN, and V bits.
-
-The following Non-leaf `MPTE` encodings are defined when _mpte_.N is 1.
-
-[[Smmpt-napot]]
-.Non-leaf `MPTE` encodings when _mpte_.N=1
-[width="100%",cols="10%,30%,30%,30%",options="header",]
-|===
-| *_i_* a| *_mpte.PPN[8:0]_* a| *Description* a| *_mpte.napot_bits_*
-|    0  a|       x xxxx xxxx a| Reserved      a| -
-|  > 0  a|       x xxxx xxx1 a| Reserved      a| -
-|  > 0  a|       x xxxx xx1x a| Reserved      a| -
-|  > 0  a|       x xxxx x1xx a| Reserved      a| -
-|  > 0  a|       x xxxx 1xxx a| Reserved      a| -
-|  > 0  a|       x xxx1 xxxx a| Reserved      a| -
-|  > 0  a|       x xx1x xxxx a| Reserved      a| -
-|  > 0  a|       x x1xx xxxx a| Reserved      a| -
-|  > 0  a|       x 1xxx xxxx a| Reserved      a| -
-|  > 0  a|       1 0000 0000 a| 2 MiB contiguous next-level MPT a| 9
-|  > 0  a|       0 xxxx xxxx a| Reserved      a| -
-|===
-
-Such MPTEs behave identically to non-leaf MPTEs in the MPT access permission
-lookup process described in <<MPT_ACC_LKUP>>, except that:
-
- * If the encoding in _mpte_ is valid according to <<Smmpt-napot>>,
-   then instead of returning the original value of the _mpte_, implicit read
-   of a non-leaf NAPOT _mpte_ returns a copy of `mpte` in which
-   _mpte.ppn[mpte.napot_bits-1:0]_ are replaced by
-   _pa.pn[i][mpte.napot_bits-1:0]_. If the encoding in _mpte_ is reserved
-   according to <<Smmpt-napot>> then an access-fault exception corresponding to
-   the original access type must be raised.
- * Implicit reads of non-leaf NAPOT MPTEs may create MPT walk cache entries
-   mapping _a_ + _j_*PTESIZE to a copy of _mpte_ in which
-   _mpte.ppn[mpte.napot_bits-1:0]_ is replaced by _pa.pn[i][mpte.napot_bits-1:0]_,
-   for any and all _j_ such that _j_ >> _napot_bits_ = _pa.pn[i]_ >> _napot_bits_.
-
-[NOTE]
-====
-Some implementations may cache non-leaf MPTEs to accelerate the MPT access-type
-permission lookup process using MPT walk caches. Such implementations may then
-use the MPTE that was implicitly accessed as one or more entries representing
-a contingous set of non-leaf MPTEs at that level. This compaction helps relieve
-MPT walk cache pressure in some scenarios. Simpler implementations may simply
-create a single entry in their page walk cache using the transformed mpte value
-returned by the implicit access to the mpte.
-
-Depending on the need, the NAPOT scheme may be extended to other levels of the
-MPT in the future.
-====
-
+When Smmptnapot<g>, where `g` ranges from 0 to 8, extension is implemented,
+then the value of `g` is supported in the `G` field of a NAPOT leaf MPTE. If
+Smmptnapot<g> is not implemented, then the encoding `g` in the `G` field of a
+NAPOT leaf MPTE is reserved.
