@@ -66,7 +66,7 @@ and hart `h`, is:
 \text{Address} = B + n \times 2^I + h \times 2^D
 ++++
 
-Constants `B`, `C`, and `D` in this later formulas are specified by
+Constants `B`, `C`, and `D` in this and later formulas are specified by
 cite:[AIA], while `I` is a new constant for supervisor interrupt domains.
 Constant `I` must be >= `k + D`, where `k` is the number of bits needed
 to represent any hart number `h`.
@@ -171,7 +171,7 @@ supervisor-level external interrupt or guest external interrupt, is pending for
 any supervisor domains not currently active on a hart. The RDSM could leverage
 this notification to inform its scheduling decisions. To facilitate this
 functionality, the `Smsdia` extension introduces the `msideip` and `msideie`
-CSRs, along with an machine supervisor domain external interrupt (`MSDEI`).
+CSRs, along with a machine supervisor domain external interrupt (`MSDEI`).
 
 ==== Machine supervisor domain configuration (`msdcfg`)
 
@@ -339,21 +339,20 @@ enabling such supervisor domains to voluntarily yield execution in response to
 pending interrupts for the other supervisor domains.
 ====
 
-=== "Smifdeleg" : Standard Extension for Delegation of IMSIC Guest Interrupt Files
+=== "Smgeien/Ssgeien" : Standard Extension for Machine Guest External Interrupt Enables
 
-The `Smifdeleg` extension enables delegating a subset of the guest interrupt
+The `Smgeien` extension enables access to a subset of the guest interrupt
 files within a _supervisor interrupt domain_ in an IMSIC to a supervisor domain.
 
-The `Smifdeleg` extension depends on the `Smaia` extension. When `Smifdeleg` is
-implemented, the bit 9 of `mviend` must be writable.
+The `Smgeien` extension depends on the `Smaia`, `Ssaia`, and the H extension. When
+`Smgeien` is implemented, the bit 9 of `mvien` must be writable.
 
-To support delegation, this extension introduces an 64-bit read-write
-register named `mifd`, formatted as shown in <<MIFD>>. When MXLEN=32, `mifdh` is
-a 32-bit read-write register that aliases bits 63:32 of `mifd`.  When MXLEN=64,
-the `mifdh` register does not exist.
+This extension introduces an 64-bit read-write register named `mgeien`, formatted as
+shown in <<MGEIEN>>. When MXLEN=32, `mgeienh` is a 32-bit read-write register that
+aliases bits 63:32 of `mgeien`. When MXLEN=64, the `mgeienh` register does not exist.
 
-[[MIFD]]
-.`mifd` register
+[[MGEIEN]]
+.`mgeien` register
 
 [wavedrom, , ]
 ....
@@ -366,38 +365,40 @@ the `mifdh` register does not exist.
 [NOTE]
 ====
 The RDSM may use bit 9 of `mvien` to control access to the supervisor-level
-interrupt file in the supervisor interrupt domain selected by `msdcfg.SIDN`.
+interrupt file in the _supervisor interrupt domain_ selected by `msdcfg.SIDN`.
 ====
 
+Each bit of the `GIF` field when set to 1 enables access to corresponding _guest
+interrupt file_ in the _supervisor interrupt domain_ selected by `msdcfg.SIDN`.
+If `GEILEN` is nonzero, bit `GEILEN:1` shall be writeable in `mgeien`, and all
+other bit positions of the `GIRF` field shall be read-only zeros.
 
-If the H extension is also implemented, then each bit of the `GIF` field when
-set to 1 enables access to corresponding _guest interrupt file_ in the _supervisor
-interrupt domain_ selected by `msdcfg.SIDN`. If `GEILEN` is nonzero, bit
-`GEILEN:1` shall be writeable in `mifd`, and all other bit positions of the
-`GIRF` field shall be read-only zeros.
+For a supervisor-level environment, extension `Ssgeien` is essentially the same
+as `Smgeien` except excluding the machine-level CSRs and behavior not directly
+visible to supervisor level.
 
 If the _supervisor interrupt domain_ selected by `msdcfg.SIDN` is implemented
 then:
 
 * Bits `GEILEN:1` of `hgeip` are read-only aliases of the same bits in the
   internal `hgeip` register selected by `msdcfg.SIDN` if the bit at the same
-  position in `mifd` is 1. All other bits of `hgeip` are zero.
+  position in `mgeien` is 1. All other bits of `hgeip` are zero.
 
 * Bits `GEILEN:1` of `hgeie` are writable aliases of the same bits in the
   internal `hgeie` register selected by `msdcfg.SIDN` if the bit at the same
-  position in `mifd` is 1. All other bits of `hgeie` are read-only zero.
+  position in `mgeien` is 1. All other bits of `hgeie` are read-only zero.
 
-* If `hstatus.VGEIN` is not 0 and the bit selected by `VGEIN` in `mifd` is 1
+* If `hstatus.VGEIN` is not 0 and the bit selected by `VGEIN` in `mgeien` is 1
   then the `vsiselect`, `vsireg`, and `vstopei` CSRs operate on the registers of
   the _guest interrupt file_ selected by `VGEIN`. If `VGEIN` is 0 or the the bit
-  selected by `VGEIN` in `mifd` is 0 then the `vsiselect`, `vsireg`, and
+  selected by `VGEIN` in `mgeien` is 0 then the `vsiselect`, `vsireg`, and
   `vstopei` CSRs operate as-if the `VGEIN` is the number of an unimplemented
   guest external interrupt.
 
-The `mifd.A` bit, when set to 1, enables `msideip` to accumulate all guest
+The `mgeien.A` bit, when set to 1, enables `msideip` to accumulate all guest
 external interrupts for the supervisor interrupt domain; otherwise, `msideip`
 accumulates only the subset of guest external interrupts determined by
-`mifd.GIF`.
+`mgeien.GIF`. It is strongly recommended that the bit `mgeien.A` be writable.
 
 Each bit __i__ of `msideip`, corresponding to an implemented _supervisor
 interrupt domain_, must be set to one if and only if the relevant interrupt
@@ -414,30 +415,30 @@ Specifically:
    interrupt domain_ is nonzero:
    *** the _internal_ `hgeip`,
    *** the _internal_ `hgeie`, and
-   *** the _logical complement_ of `mifd` if `mifd.A` is 0; otherwise, a value
-       of all 1s.
+   *** the _logical complement_ of `mgeien` if `mgeien.A` is 0; otherwise, a
+       value of all 1s.
 
 [NOTE]
 ====
-The `Smifdeleg` is intended to be used to delegate interrupt files to
-enlightened (a.k.a. para-virtualized) supervisor domains. Usually, one of the
-supervisor domains participating in the delegation is a donor domain that
-initially has access to all the interrupt files.
+The `Smgeien` extension is intended for use cases involving a pair of supervisor
+domains that share the interrupt files in a _supervisor interrupt domain_.
 
-Such a donor supervisor domain may then donate, either temporarily or
-permanently, one or more of the interrupt files (usually _guest
-interrupt files_) to a recipient supervisor domain by invoking SBI functions
-provided by the RDSM. The donor domain does not expect to access the donated
-interrupt files once they have been delegated by the RDSM to the recipient
-domain.
+Typically, one of the supervisor domains participating in the scheme acts as
+a donor domain that initially has access to all the interrupt files. Such a
+donor supervisor domain may then donate one or more interrupt files--usually
+_guest interrupt files--to a recipient supervisor domain, either temporarily
+or permanently, by invoking SBI functions provided by the RDSM. Once the
+interrupt files have been made accessible to the recipient domain by the RDSM,
+the donor domain is not expected to access them.
 
-The recipient domains must not assume the donated interrupt files are
-contiguously laid out in memory, nor expect the corresponding bits in `hgeip`
-and `hgeie` to be contiguous, nor expect to use a supervisor-level interrupt
-file.
+Recipient domains must not assume that the donated interrupt files are
+contiguously laid out in memory, nor should they expect the corresponding bits
+in `hgeip` and `hgeie` to be contiguous. Furthermore, a recipient must not
+assume it can use a supervisor-level interrupt file unless it has been
+explicitly made accessible. This modified behavior is indicated by the `Ssgeien`
+extension.
 
-The memory locations of the delegated interrupt files and their guest external
-interrupt numbers are provided to the recipient supervisor domains by the RDSM
-through software mechanisms such as SBI.
+The memory locations of the accessible guest interrupt files, along with their
+guest external interrupt numbers, are communicated to recipient supervisor
+domains by the RDSM through software mechanisms such as SBI.
 ====
-
