@@ -200,7 +200,7 @@ follows:
    most significant bits of the range offset (For Smmpt34, NUMPGINRANGE is 3).
    Let _XWR=mpte.XWR[pi]_.
 
-6. If N=1, a napot leaf _mpte_ has been found. The _XWR=mpte.XWR_.
+6. If N=1, a NAPOT leaf _mpte_ has been found. The _XWR=mpte.XWR_.
 
 7. Determine if the requested memory access is allowed by the _XWR_ bits, given
    the effective privilege mode and MXR field of the `mstatus` register. If not,
