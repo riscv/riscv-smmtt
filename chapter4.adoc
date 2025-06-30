@@ -194,7 +194,7 @@ follows:
    to the original access type. Otherwise, let _a_ = _mpte.PPN_ x PAGESIZE and
    go to step 2.
 
-5. If N=0, a non-napot leaf _mpte_ has been found. If i > 0, the bits
+5. If N=0, a non-NAPOT leaf _mpte_ has been found. If i > 0, the bits
    _pa.pn[i-1]_ are included in the range offset, else for i = 0, the range
    offset is specified in the _pa_. Let _pi_ be the value of the NUMPGINRANGE
    most significant bits of the range offset (For Smmpt34, NUMPGINRANGE is 3).
