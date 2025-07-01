@@ -371,7 +371,7 @@ interrupt file in the _supervisor interrupt domain_ selected by `msdcfg.SIDN`.
 Each bit of the `GIF` field when set to 1 enables access to corresponding _guest
 interrupt file_ in the _supervisor interrupt domain_ selected by `msdcfg.SIDN`.
 If `GEILEN` is nonzero, bit `GEILEN:1` shall be writeable in `mgeien`, and all
-other bit positions of the `GIRF` field shall be read-only zeros.
+other bit positions of the `GIF` field shall be read-only zeros.
 
 For a supervisor-level environment, extension `Ssgeien` is essentially the same
 as `Smgeien` except excluding the machine-level CSRs and behavior not directly
@@ -420,8 +420,8 @@ Specifically:
 
 [NOTE]
 ====
-The `Smgeien` extension is intended for use cases involving a pair of supervisor
-domains that share the interrupt files in a _supervisor interrupt domain_.
+The `Smgeien` extension is intended for use cases involving supervisor domains
+that share the guest interrupt files in a _supervisor interrupt domain_.
 
 Typically, one of the supervisor domains participating in the scheme acts as
 a donor domain that initially has access to all the interrupt files. Such a
@@ -435,7 +435,7 @@ Recipient domains must not assume that the donated interrupt files are
 contiguously laid out in memory, nor should they expect the corresponding bits
 in `hgeip` and `hgeie` to be contiguous. Furthermore, a recipient must not
 assume it can use a supervisor-level interrupt file unless it has been
-explicitly made accessible. This modified behavior is indicated by the `Ssgeien`
+explicitly made accessible. This behavior is indicated by the `Ssgeien`
 extension.
 
 The memory locations of the accessible guest interrupt files, along with their
