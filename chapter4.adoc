@@ -438,4 +438,4 @@ The algorithm to determine access type permissions for a page is same as in
 <<MPT_ACC_LKUP>>, except LEVELS equals 5, MPTESIZE equals 8, and NUMPGINRANGE
 equals 4.
 
-The encodings 0-3 and 5-15 of `G` are reserved for Smmpt43.
+The encodings 0-3 and 5-15 of `G` are reserved for Smmpt64.
