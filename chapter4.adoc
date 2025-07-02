@@ -12,11 +12,8 @@ The following MPT extensions are defined:
 * Smmpt43 - Page-based 43-bit memory protection system (RV64 only)
 * Smmpt52 - Page-based 52-bit memory protection system (RV64 only)
 * Smmpt64 - Page-based 64-bit memory protection system (RV64 only)
-* Smmptnapot<g> - NAPOT Access-Type Permission Granularity Extensions (RV32 and
-  RV64)
 
 These MPT extensions depend on `Smsdid`.
-Smmpt34, Smmpt43, Smmpt52 and Smmpt64 depend on `Smmptnapot`.
 
 === Smmpt34: Page-Based Memory Protection System
 
@@ -133,8 +130,22 @@ When the `L` bit is set to 0, the entry is a non-leaf MPTE, else it is a leaf MP
 When `MPTE.L`=1 and `MPTE.N`=1, the leaf `MPTE` represents a memory protection
 range that is part of a larger contiguous NAPOT memory protection range comprised
 of `2^(G+1)` MPTEs. All leaf MPTEs at that level of this NAPOT memory protection
-range have the same value for L, N, XWR and V bits. The encodings 9-15 of `G` are
-reserved.
+range have the same value for L, N, XWR and V bits. The encodings 0-5 and 7-15
+of `G` are reserved for Smmpt34.
+
+[NOTE]
+====
+The motivation of NAPOT MPTE is that access-type permissions for one or more
+entries representing the contigous region may be cached as a single cache entry
+as if it were a single (large) page. This compaction can relieve access-type
+permission caches. The scheme allows an implementation to not take advantage of
+this property and simply cache the access-type permissions for pages seperately.
+
+The encoding of G=6 supports caching a single access-type permission entry
+representing a 4 MiB address range. Depending on need, the NAPOT scheme may be
+extended to other page sizes in the future. The encoding is designed to
+accommodate other NAPOT sizes should that need arise.
+====
 
 A non-leaf MPTE holds the PPN of the next level of the memory protection table.
 
@@ -326,6 +337,18 @@ The algorithm to determine access type permissions for a page is same as in
 <<MPT_ACC_LKUP>>, except LEVELS equals 3, MPTESIZE equals 8, and NUMPGINRANGE
 equals 4.
 
+The encodings 0-3 and 5-15 of `G` are reserved for Smmpt43.
+
+[NOTE]
+====
+The encoding of G=4 supports caching a single access-type permission entry
+representing a 2 MiB or a 1 GiB address range. These contigous address range
+sizes represent large/huge page sizes used commonly by memory allocators.
+
+Depending on need, the NAPOT scheme may be extended to other page sizes in
+the future.
+====
+
 === Smmpt52: Page-Based 52-bit Memory Protection System
 
 This section describes a page-based memory protection system for RV64 that
@@ -367,6 +390,8 @@ _gigapages_, 512 GiB _gigapages_, and 256 TiB _terapages_.
 The algorithm to determine access type permissions for a page is same as in
 <<MPT_ACC_LKUP>>, except LEVELS equals 4, MPTESIZE equals 8, and NUMPGINRANGE
 equals 4.
+
+The encodings 0-3 and 5-15 of `G` are reserved for Smmpt43.
 
 === Smmpt64: Page-Based 64-bit Memory Protection System
 
@@ -413,9 +438,4 @@ The algorithm to determine access type permissions for a page is same as in
 <<MPT_ACC_LKUP>>, except LEVELS equals 5, MPTESIZE equals 8, and NUMPGINRANGE
 equals 4.
 
-=== Smmptnapot* - NAPOT Access-Type Permission Granularity Extensions
-
-When Smmptnapot<g>, where `g` ranges from 0 to 8, extension is implemented,
-then the value of `g` is supported in the `G` field of a NAPOT leaf MPTE. If
-Smmptnapot<g> is not implemented, then the encoding `g` in the `G` field of a
-NAPOT leaf MPTE is reserved.
+The encodings 0-3 and 5-15 of `G` are reserved for Smmpt43.
