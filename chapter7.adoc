@@ -398,7 +398,7 @@ then:
 The `mgeien.A` bit, when set to 1, enables `msideip` to accumulate all guest
 external interrupts for the supervisor interrupt domain; otherwise, `msideip`
 accumulates only the subset of guest external interrupts determined by
-`mgeien.GIF`. It is strongly recommended that the bit `mgeien.A` be writable.
+`mgeien.GIF`.
 
 Each bit __i__ of `msideip`, corresponding to an implemented _supervisor
 interrupt domain_, must be set to one if and only if the relevant interrupt
