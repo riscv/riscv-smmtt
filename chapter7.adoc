@@ -343,13 +343,15 @@ pending interrupts for the other supervisor domains.
 
 The `Smgeien` extension enables access to a subset of the guest interrupt
 files within a _supervisor interrupt domain_ in an IMSIC to a supervisor domain.
+The `Smgeien` extension depends on the `Smsdia` extension.
 
-The `Smgeien` extension depends on the `Smaia`, `Ssaia`, and the H extension. When
-`Smgeien` is implemented, the bit 9 of `mvien` must be writable.
+The `Smgeien` extension depends on the `Smaia`, `Ssaia`, and the H extension.
+When `Smgeien` is implemented, the bit 9 of `mvien` must be writable.
 
-This extension introduces an 64-bit read-write register named `mgeien`, formatted as
-shown in <<MGEIEN>>. When MXLEN=32, `mgeienh` is a 32-bit read-write register that
-aliases bits 63:32 of `mgeien`. When MXLEN=64, the `mgeienh` register does not exist.
+This extension introduces an 64-bit read-write WARL register named `mgeien`,
+formatted as shown in <<MGEIEN>>. When MXLEN=32, `mgeienh` is a 32-bit read-write
+WARL register that aliases bits 63:32 of `mgeien`. When MXLEN=64, the `mgeienh`
+register does not exist.
 
 [[MGEIEN]]
 .`mgeien` register
@@ -358,7 +360,7 @@ aliases bits 63:32 of `mgeien`. When MXLEN=64, the `mgeienh` register does not e
 ....
 {reg: [
   {bits:  1, name: 'A'},
-  {bits: 63, name: 'GIF (WARL)'},
+  {bits: 63, name: 'GIF'},
 ], config:{lanes: 1, hspace:1024}}
 ....
 
