@@ -240,8 +240,8 @@ tables and the latency of memory protection table traversals. Smmpt64 increases
 the physical address space to 64 bits.
 ====
 
-Smmpt43 supports a 43-bit physical address space, divided into pages. The
-Smmpt43 address is partitioned as shown in  <<rv64-spa-Smmpt43>>. The system
+Smmpt43 supports a 43-bit supervisor physical address space, divided into pages. The
+Smmpt43 address is partitioned as shown in  <<rv64-spa-Smmpt43>>. The supervisor
 physical address must have bits 43 and higher all equal to 0, or else an
 access-fault exception corresponding to the original access type will occur. The
 Smmpt43 memory protection table has three levels.
@@ -352,12 +352,12 @@ the future.
 === Smmpt52: Page-Based 52-bit Memory Protection System
 
 This section describes a page-based memory protection system for RV64 that
-supports 52-bit physical address spaces. It closely follows the design of
+supports 52-bit supervisor physical address spaces. It closely follows the design of
 Smmpt43, simply adding an additional level of page table, and so this section
 only details the differences between the two schemes.
 
-Smmpt52 supports a 52-bit physical address space, divided into pages. The
-Smmpt52 address is partitioned as shown in  <<rv64-spa-Smmpt52>>. The system
+Smmpt52 supports a 52-bit supervisor physical address space, divided into pages. The
+Smmpt52 address is partitioned as shown in  <<rv64-spa-Smmpt52>>. The supervisor
 physical address must have bits 52 and higher all equal to 0, or else an
 access-fault exception corresponding to the original access type will occur. The
 Smmpt52 memory protection table has four levels.
@@ -396,11 +396,11 @@ The encodings 0-3 and 5-15 of `G` are reserved for Smmpt52.
 === Smmpt64: Page-Based 64-bit Memory Protection System
 
 This section describes a page-based memory protection system for RV64 that
-supports 64-bit physical address spaces. It closely follows the design of
+supports 64-bit supervisor physical address spaces. It closely follows the design of
 Smmpt52, simply adding an additional level of page table, and so this section
 only details the differences between the two schemes.
 
-Smmpt64 supports a 64-bit physical address space, divided into pages. The
+Smmpt64 supports a 64-bit supervisor physical address space, divided into pages. The
 Smmpt64 address is partitioned as shown in  <<rv64-spa-Smmpt64>>. The
 Smmpt64 memory protection table has five levels.
 
