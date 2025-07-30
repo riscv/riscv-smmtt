@@ -348,19 +348,28 @@ The `Smgeien` extension depends on the `Smsdia` extension.
 The `Smgeien` extension depends on the `Smaia`, `Ssaia`, and the H extension.
 When `Smgeien` is implemented, the bit 9 of `mvien` must be writable.
 
-This extension introduces an 64-bit read-write WARL register named `mgeien`,
-formatted as shown in <<MGEIEN>>. When MXLEN=32, `mgeienh` is a 32-bit read-write
-WARL register that aliases bits 63:32 of `mgeien`. When MXLEN=64, the `mgeienh`
-register does not exist.
+This extension introduces an MXLEN read-write WARL register named `mgeien`,
+formatted as shown in <<MGEIEN>> for RV64 and in <<MGEIEN32>> for RV32.
 
 [[MGEIEN]]
-.`mgeien` register
+.`mgeien` register for RV64
 
 [wavedrom, , ]
 ....
 {reg: [
   {bits:  1, name: 'A'},
   {bits: 63, name: 'GIF'},
+], config:{lanes: 1, hspace:1024}}
+....
+
+[[MGEIEN]]
+.`mgeien` register for RV32
+
+[wavedrom, , ]
+....
+{reg: [
+  {bits:  1, name: 'A'},
+  {bits: 31, name: 'GIF'},
 ], config:{lanes: 1, hspace:1024}}
 ....
 
