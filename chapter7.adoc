@@ -171,8 +171,7 @@ supervisor-level external interrupt or guest external interrupt, is pending for
 any supervisor domains not currently active on a hart. The RDSM could leverage
 this notification to inform its scheduling decisions. To facilitate this
 functionality, the `Smsdia` extension introduces the `msideip` and `msideie`
-CSRs, along with a machine supervisor interrupt domain external interrupt
-(`MSIDEI`).
+CSRs, along with a machine supervisor domain external interrupt (`MSDEI`).
 
 ==== Machine supervisor domain configuration (`msdcfg`)
 
@@ -299,26 +298,26 @@ pending signals from the _supervisor interrupt domain_ selected by `msdcfg.SIDN`
 
 ==== Machine and Supervisor Interrupt registers (`mip/mie` and `sip/sie`)
 
-The `Smsdia` extension introduces the machine supervisor interrupt domain external
-interrupt (`MSIDEI`). This interrupt is treated as a standard local
+The `Smsdia` extension introduces the machine supervisor domain external
+interrupt (`MSDEI`). This interrupt is treated as a standard local
 interrupt that is assigned to bit 14 in the `mip`, `mie`, `sip`, and `sie`
-registers. The bit 14 in `mip` and `sip` is called `MSIDEIP` and the same bit in
-`mie` and `sie` is called `MSIDEIE`. The `mideleg` register controls the
-delegation of `MSIDEI` to S-mode. This interrupt cannot be delegated to
+registers. The bit 14 in `mip` and `sip` is called `MSDEIP` and the same bit in
+`mie` and `sie` is called `MSDEIE`. The `mideleg` register controls the
+delegation of `MSDEI` to S-mode. This interrupt cannot be delegated to
 VS-mode and bit 14 of `hideleg` is read-only zero.
 
-The `mip.MSIDEIP` bit read-only and is set to 1 if the bitwise logical AND of CSRs
-`msideip` and `msideie` is nonzero in any bit. The `mie.MSIDEIE` bit is writable.
+The `mip.MSDEIP` bit read-only and is set to 1 if the bitwise logical AND of CSRs
+`msideip` and `msideie` is nonzero in any bit. The `mie.MSDEIE` bit is writable.
 
-When bit 14 of `mideleg` is zero, `sip.MSIDEIP` and `sie.MSIDEIE` are read-only
-zeros. Else, `sip.MSIDEIP` and `sie.MSIDEIE` are aliases of `mip.MSIDEIP` and
-`mie.MSIDEIE`.
+When bit 14 of `mideleg` is zero, `sip.MSDEIP` and `sie.MSDEIE` are read-only
+zeros. Else, `sip.MSDEIP` and `sie.MSDEIE` are aliases of `mip.MSDEIP` and
+`mie.MSDEIE`.
 
 Multiple simultaneous interrupts destined for different privilege modes are
 handled in decreasing order of destined privilege mode. For the base Privileged
 ISA's major interrupts (numbers 0-15), multiple simultaneous interrupts destined
 for the same privilege mode are handled in the following decreasing default
-priority order: MEI, MSI, MTI, MSIDEI, SEI, SSI, STI, SGEI, VSEI, VSSI, VSTI,
+priority order: MEI, MSI, MTI, MSDEI, SEI, SSI, STI, SGEI, VSEI, VSSI, VSTI,
 LCOFI.
 
 [NOTE]
@@ -331,7 +330,7 @@ interrupt domain and may clear the bit corresponding to that supervisor
 interrupt domain in `msideie` prior to resuming execution of the supervisor
 domain.
 
-The RDSM may delegate `MSIDEI` to a supervisor domain that may be entrusted by
+The RDSM may delegate `MSDEI` to a supervisor domain that may be entrusted by
 the RDSM to get notified about supervisor domain external interrupts pending for
 one or more other supervisor domains. Typically, this use case involves a single
 supervisor domain that is trusted by the RDSM to receive such notifications. The
