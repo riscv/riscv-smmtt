@@ -381,8 +381,11 @@ interrupt file in the _supervisor interrupt domain_ selected by `msdcfg.SIDN`.
 
 Each bit of the `GIF` field when set to 1 enables access to corresponding _guest
 interrupt file_ in the _supervisor interrupt domain_ selected by `msdcfg.SIDN`.
-If `GEILEN` is nonzero, bit `GEILEN:1` shall be writeable in `mgeien`, and all
-other bit positions of the `GIF` field shall be read-only zeros.
+
+The number of writable bits in mgeien is determined by the maximum `GEILEN`
+value across all supervisor interrupt domains, and this maximum is referred to
+as `MGEILEN`. If `MGEILEN` is nonzero, bits `MGEILEN-1:0` shall be writable in
+`mgeien`. All other bit positions in the `GIF` field shall be read-only zeros.
 
 For a supervisor-level environment, extension `Ssgeien` is essentially the same
 as `Smgeien` except excluding the machine-level CSRs and behavior not directly
