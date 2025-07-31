@@ -325,7 +325,8 @@ Before requesting the `SET_ENTRY` operation using the `control` register,
 software should program the fields of the `operand-0` and `operand-1`
 registers. The `SET_ENTRY` operation utilizes the following fields from the
 `operand-0` and `operand-1` registers: `SRC_IDT`, `SRC_IDM`, `TEE_FLT`,
-`SRC_ID`, `IOMMU_ID`, `IOSDID`, `MPT_MODE`, `SRL`, `SML`, `SQRID` and `PPN`.
+`SRC_ID`, `IOMMU_ID`, `IOSDID`, `MPT_MODE`, `SSRM`, `SSMM`, `SRL`, `SML`,
+`SQRID` and `PPN`.
 
 If multiple rules are programmed to match a transaction, the implementation may
 act based on any one of those matching rules. However, if a transaction does not
@@ -341,9 +342,9 @@ The `GET_ENTRY` operation ignores the contents of both the `operand-0` and
 contents of these registers remain `UNSPECIFIED`. However, upon a successful
 `GET_ENTRY` operation, the configurations of the rule identified by
 `control.RULEID` are provided in the following fields: `SRC_IDT`, `SRC_IDM`,
-`TEE_FLT`, `SRC_ID`, `IOMMU_ID`, `IOSDID`, `MPT_MODE`, `SRL`, `SML`, `SQRID`,
-and `PPN`. The state of all other fields in the `operand-0` and `operand-1`
-registers is `UNSPECIFIED`.
+`TEE_FLT`, `SRC_ID`, `IOMMU_ID`, `IOSDID`, `MPT_MODE`, `SSRM`, `SSMM`, `SRL`,
+`SML`, `SQRID`, and `PPN`. The state of all other fields in the `operand-0`
+and `operand-1` registers is `UNSPECIFIED`.
 
 The contents of `RULEID`, `operand-0` and `operand-1` are disregarded by the
 `IOFENCE` operation.
