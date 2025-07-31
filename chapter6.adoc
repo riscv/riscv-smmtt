@@ -512,12 +512,12 @@ The `IOSDID` field identifies the supervisor domain whose memory is accessed by
 this transaction. When `operand-1.MPT_MODE` is `Bare`, the `SET_ENTRY`
 operations requires the `IOSDID` field to be zero.
 
-The `SRL` and `SML` fields along with `operand-1.SSM` field are used to determine
-the effective `RCID` and `MCID` provided by the IOMMU for device originated
-requests. The determination of the effective `RCID` and `MCID` is as specified
-by <<SMQOSID>>. The `SQRID` identifies the QRI for requests originating from the
-devices and the IOMMU associated with the SD and accompanies the `RCID` and
-`MCID` in the requests made by the device to the QRI.
+The `SRL` and `SML` fields along with `operand-1.SSRM` and `operand-1.SSMM` fields
+are used to determine the effective `RCID` and `MCID` provided by the IOMMU for
+device originated requests. The determination of the effective `RCID` and `MCID`
+is as specified by <<SMQOSID>>. The `SQRID` identifies the QRI for requests
+originating from the devices and the IOMMU associated with the SD and accompanies
+the `RCID` and `MCID` in the requests made by the device to the QRI.
 
 [[OP-1]]
 === Operand 1 register (`operand-1`)
@@ -534,8 +534,9 @@ operations requested through `control.OP`.
   {bits:  1, name: 'PPNV (WARL)'},
   {bits:  1, name: 'S (WARL)'},
   {bits:  1, name: 'IOSDIDV'},
-  {bits:  1, name: 'SSM'},
-  {bits:  2, name: 'WPRI'},
+  {bits:  1, name: 'SSRM'},
+  {bits:  1, name: 'SSMM'},
+  {bits:  1, name: 'WPRI'},
   {bits: 44, name: 'PPN'},
   {bits: 10, name: 'WPRI'}
 ], config:{lanes: 8, hspace:1024}}
