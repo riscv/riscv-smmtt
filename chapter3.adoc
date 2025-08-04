@@ -282,11 +282,11 @@ to the VMID provided in the HINVAL.GVMA or the ASID provided in HINVAL.VVMA.
 
 === Machine supervisor domain configuration (`msdcfg`)
 
-The `msdcfg` is a 32-bit read/write register, formatted as shown in <<MSDCFG>>.
-This CSR is used by M-mode software to specify the active configuration for
-capabilities of the supervisor domain when associated with a hart.
-The following extensions use the `msdcfg` register to specify additional
-configuration for supervisor domains:
+The `msdcfg` is a MXLEN read/write register, formatted as shown in <<MSDCFG>>
+for RV64 and in <<MSDCFG32>> for RV32. This CSR is used by M-mode software to
+specify the active configuration for capabilities of the supervisor domain when
+associated with a hart.  The following extensions use the `msdcfg` register to
+specify additional configuration for supervisor domains:
 
 . `Smsdia` uses `msdcfg.SIDN` to identify the _supervisor interrupt domain_
   associated with the hart.
@@ -294,8 +294,8 @@ configuration for supervisor domains:
   external-debug for a supervisor domain.
 . `Smsdetrc` specifies the `msdcfg.SDETRCALW` bit to manage
   external-trace for a supervisor domain.
-. `Smqosid` specifies the control bits `SSM`, `SRL`, `SML` and `SQRID` to enable
-  the RDSM to manage QoS controls for supervisor domains.
+. `Smqosid` specifies the control bits `SSRM`, `SSMM`, `SRL`, `SML` and `SQRID`
+   to enable the RDSM to manage QoS controls for supervisor domains.
 
 Details of `Smsdia`, `Smsdedbg`, `Smsdetrc` and `Smqosid` are described in their
 respective sections in this specification. For any optional extensions not
@@ -304,7 +304,7 @@ zero. Hence if no optional extensions are implemented, this CSR becomes
 read-only zero.
 
 [caption="Register {counter:rimage}: ", reftext="Register {rimage}"]
-[title="`msdcfg` register"]
+[title="`msdcfg` register for RV64"]
 [id=MSDCFG]
 [wavedrom, ,svg]
 ....
@@ -312,8 +312,28 @@ read-only zero.
   {bits:  6, name:  'SIDN'},
   {bits:  1, name:  'SDEDBGALW'},
   {bits:  1, name:  'SDETRCALW'},
-  {bits:  11, name: 'WPRI'},
-  {bits:  1, name:  'SSM'},
+  {bits:  10, name: 'WPRI'},
+  {bits:  1, name:  'SSRM'},
+  {bits:  1, name:  'SSSM'},
+  {bits:  4, name:  'SRL'},
+  {bits:  4, name:  'SML'},
+  {bits:  4, name:  'SQRID'},
+  {bits:  32, name: 'WPRI'},
+], config:{lanes: 2, hspace:1600}}
+....
+
+[caption="Register {counter:rimage}: ", reftext="Register {rimage}"]
+[title="`msdcfg` register for RV32"]
+[id=MSDCFG32]
+[wavedrom, ,svg]
+....
+{reg: [
+  {bits:  6, name:  'SIDN'},
+  {bits:  1, name:  'SDEDBGALW'},
+  {bits:  1, name:  'SDETRCALW'},
+  {bits:  10, name: 'WPRI'},
+  {bits:  1, name:  'SSRM'},
+  {bits:  1, name:  'SSSM'},
   {bits:  4, name:  'SRL'},
   {bits:  4, name:  'SML'},
   {bits:  4, name:  'SQRID'},
