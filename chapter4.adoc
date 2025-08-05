@@ -282,8 +282,7 @@ range determined by that MPTE.
 {reg: [
   {bits:   1, name: 'V'},
   {bits:   1, name: 'L=0'},
-  {bits:   1, name: 'N=0'},
-  {bits:   7, name: 'Reserved'},
+  {bits:   8, name: 'Reserved'},
   {bits:  44, name: 'PPN'},
   {bits:  10, name: 'Reserved'},
 ], config:{lanes: 2, hspace:1024}}
@@ -335,8 +334,7 @@ range determined by that MPTE.
 ....
 
 Any level of MPTE may be a leaf MPTE, so in addition to providing access type
-permissions to 4 KiB pages, Smmpt43 supports 2 MiB _megapages_, and 1 GiB
-_gigapages_.
+permissions to 4 KiB pages, Smmpt43 supports 2 MiB, and 1 GiB pages.
 
 The algorithm to determine access type permissions for a page is same as in
 <<MPT_ACC_LKUP>>, except LEVELS equals 3, MPTESIZE equals 8, and NUMPGINRANGE
@@ -389,8 +387,7 @@ PPN field.
 The MPTE formats for Smmpt52 are identical to that of Smmpt43.
 
 Any level of MPTE may be a leaf MPTE, so in addition to providing access type
-permissions to 4 KiB pages, Smmpt52 supports 2 MiB _megapages_, 1 GiB
-_gigapages_, and 512 GiB _gigapages_.
+permissions to 4 KiB pages, Smmpt52 supports 2 MiB, 1 GiB, and 512 GiB pages.
 
 The algorithm to determine access type permissions for a page is same as in
 <<MPT_ACC_LKUP>>, except LEVELS equals 4, MPTESIZE equals 8, and NUMPGINRANGE
@@ -436,8 +433,8 @@ must always be aligned to a page boundary.
 The MPTE formats for Smmpt64 are identical to that of Smmpt52.
 
 Any level of MPTE may be a leaf MPTE, so in addition to providing access type
-permissions to 4 KiB pages, Smmpt54 supports 2 MiB _megapages_, 1 GiB
-_gigapages_, 512 GiB _gigapages_, and 256 TiB _terapages_.
+permissions to 4 KiB pages, Smmpt54 supports 2 MiB, 1 GiB, 512 GiB, and 256 TiB
+pages.
 
 The algorithm to determine access type permissions for a page is same as in
 <<MPT_ACC_LKUP>>, except LEVELS equals 5, MPTESIZE equals 8, and NUMPGINRANGE
