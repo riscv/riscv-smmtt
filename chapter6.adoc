@@ -622,7 +622,7 @@ is encompassed by another rule that associates device IDs with an SD.
 [[OP-2]]
 === Operand 2 register (`operand-2`)
 
-The `operand-1` register holds the input operands or the output results of
+The `operand-2` register holds the input operands or the output results of
 operations requested through `control.OP`.
 
 [caption="Register {counter:rimage}: ", reftext="Register {rimage}"]
