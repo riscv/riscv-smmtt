@@ -653,7 +653,7 @@ IOMMU. These fields are inputs to the `SET_ENTRY` operation and outputs of the
 These fields are implemented only if `capabilities.QOSID` is set to 1.
 
 When multiple rules map to the same `IOSDID`, the values of these fields must be
-configured identically across all such rules.
+configured by software identically across all such rules.
 
 The determination of the effective `RCID` and `MCID` is as follows:
 
