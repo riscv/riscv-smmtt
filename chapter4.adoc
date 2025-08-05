@@ -180,7 +180,7 @@ any exception is always reported for the original access type (instruction,
 load, or store/AMO).
 
 Any level of MPTE may be a leaf MPTE, so in addition to providing access type
-permissions to 4 KiB pages, Smmpt34 supports 4 MiB _megapages_.
+permissions to 4 KiB pages, Smmpt34 supports 4 MiB pages.
 
 [[MPT_ACC_LKUP]]
 ==== MPT access type permissions lookup process
