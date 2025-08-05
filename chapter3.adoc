@@ -114,6 +114,10 @@ of `mmpt` are `WARL` in the normal way, when so indicated in <<sdid-32>> and
 `mmpt.PPN` refers to the root of the memory protection table when `mmpt.MODE`
 is not `Bare`.
 
+When `mmpt.MODE` is `Smmpt64`, the root page of the memory protection table must
+be aligned to a 32 KiB boundary. In this mode, bits 2:0 of `mmpt.PPN` always read
+as zero.
+
 The `mmpt` register is considered active for the purposes of access type
 permission lookup algorithm unless the effective privilege mode is `M`.
 
