@@ -198,6 +198,7 @@ of instructions.
 |8     |`control`      |8       |<<CTRL, Control      >>  | No
 |16    |`operand-0`    |8       |<<OP-0, Operand 0    >>  | No
 |24    |`operand-1`    |8       |<<OP-1, Operand 1    >>  | No
+|32    |`operand-2`    |8       |<<OP-2, Operand 2    >>  | Yes
 |===
 
 The reset value is 0 for the following registers fields.
@@ -219,7 +220,8 @@ checker capabilities.
 {reg: [
   {bits:  8, name: 'VER'},
   {bits:  1, name: 'MPTM'},
-  {bits: 39, name: 'WPRI'},
+  {bits:  1, name: 'QOSID'},
+  {bits: 38, name: 'WPRI'},
   {bits: 16, name: 'custom'}
 ], config:{lanes: 4, hspace:1024}}
 ....
@@ -233,6 +235,10 @@ specification reports 0x10.
 The `MPTM` field indicates the supported MPT address protection schemes. If 1,
 then the MPT modes for RV64 are supported else the MPT modes for RV32 are
 supported.
+
+The `QOSID` field indicates whether associating QoS IDs with requests is
+supported; if set to 1, the QoS ID related fields in `operand-2` are
+implemented, otherwise these fields are reserved and read-only zero.
 
 [[CTRL]]
 === Control register (`control`)
@@ -267,15 +273,15 @@ rules and is supported only if explicitly specified by an operation.
 |Operation     | Encoding ^| Description
 |--            | 0         | Reserved for future standard use.
 |`SET_ENTRY`   | 1         | Configure the rule identified by `RULEID` with the
-                             operands specified in `operand-0` and `operand-1`
-                             registers.
+                             operands specified in `operand-0`, `operand-1`, and
+                             `operand-2` registers.
 |`GET_ENTRY`   | 2         | Read the configurations of a rule identified by
                              `RULEID`. On successful completion of the
-                             operation, the `operand-0` and `operand-1`
-                             registers hold the current configurations of the
-                             rule. If the operation is not successful then the
-                             contents of `operand-0` and `operand-1` are
-                             `UNSPECIFIED`.
+                             operation, the `operand-0`, `operand-1`, and
+                             `operand-2` registers hold the current
+                             configurations of the rule. If the operation is not
+                             successful then the contents of `operand-0`,
+                             `operand-1`, `operand-2` are `UNSPECIFIED`.
 |`MPTINVAL`    | 3         | This operation ensures that stores to an MPT are
                              observed by MPTCHK before subsequent implicit
                              reads by MPTCHK to the corresponding MPT.
@@ -322,10 +328,12 @@ provides a status value (<<IOMPTCHK_STS>>) of the requested operation.
 |===
 
 Before requesting the `SET_ENTRY` operation using the `control` register,
-software should program the fields of the `operand-0` and `operand-1`
-registers. The `SET_ENTRY` operation utilizes the following fields from the
-`operand-0` and `operand-1` registers: `SRC_IDT`, `SRC_IDM`, `TEE_FLT`,
-`SRC_ID`, `IOMMU_ID`, `IOSDID`, `MPT_MODE`, `SRL`, `SML`, `SQRID` and `PPN`.
+software should program the fields of the `operand-0`, `operand-1`, and
+`operand-2` registers. The `SET_ENTRY` operation utilizes the following
+fields from the `operand-0`, `operand-1`, and `operand-2` registers:
+`SRC_IDT`, `SRC_IDM`, `TEE_FLT`, `SRC_ID`, `IOMMU_ID`, `IOSDID`,
+`MPT_MODE`, `SSRM`, `SSMM`, `SRL`, `SML`, `SQRID`, `S-RCID`, `S-MCID`,
+and `PPN`. All other fields are ignored.
 
 If multiple rules are programmed to match a transaction, the implementation may
 act based on any one of those matching rules. However, if a transaction does not
@@ -336,30 +344,22 @@ subsequent behavior of the IO Bridge for unmatched transactions remains
 An implementation that performs the requested operation synchronously may
 hardwire the `BUSY` bit to 0.
 
-The `GET_ENTRY` operation ignores the contents of both the `operand-0` and
-`operand-1` registers. If the `GET_ENTRY` operation is unsuccessful, the
+The `GET_ENTRY` operation ignores the contents of the `operand-0`, `operand-1`,
+and `operand-2` registers. If the `GET_ENTRY` operation is unsuccessful, the
 contents of these registers remain `UNSPECIFIED`. However, upon a successful
 `GET_ENTRY` operation, the configurations of the rule identified by
 `control.RULEID` are provided in the following fields: `SRC_IDT`, `SRC_IDM`,
-`TEE_FLT`, `SRC_ID`, `IOMMU_ID`, `IOSDID`, `MPT_MODE`, `SRL`, `SML`, `SQRID`,
-and `PPN`. The state of all other fields in the `operand-0` and `operand-1`
-registers is `UNSPECIFIED`.
+`TEE_FLT`, `SRC_ID`, `IOMMU_ID`, `IOSDID`, `MPT_MODE`, `SSRM`, `SSMM`, `SRL`,
+`SML`, `SQRID`, `S-RCID`, `S-MCID`, and `PPN`. The state of all other fields in
+the `operand-0`, `operand-1`, and `operand-2` registers is `UNSPECIFIED`.
 
-The contents of `RULEID`, `operand-0` and `operand-1` are disregarded by the
-`IOFENCE` operation.
+The contents of `RULEID`, `operand-0`, `operand-1`, and `operand-2` are
+disregarded by the `IOFENCE` operation.
 
 The `MPTINVAL` operation utilizes the `IOSDID` field of `operand-0` register and
 utilizes the following fields from the `operand-1` register: `PPNV`, `PPN`,
-`IOSDIDV`, and `S`. The contents of `RULEID` and all other fields of `operand-0`
-and `operand-1` register are disregarded by the `MPTINVAL` operation.
-
-[NOTE]
-====
-If an identical `IOSDID` is configured in two rules but the MPT referenced by
-the rules is not identical then it is unpredictable whether the MPT referenced
-by the first rule or the second rule will be used. These are the only expected
-behaviors.
-====
+`IOSDIDV`, and `S`. The contents of `RULEID` and all other fields of `operand-0`,
+`operand-1`, and `operand-2` register are disregarded by the `MPTINVAL` operation.
 
 [[OP-0]]
 === Operand 0 register (`operand-0`)
@@ -378,10 +378,7 @@ operations requested through `control.OP`.
   {bits: 24, name: 'SRC_ID'},
   {bits:  8, name: 'IOMMU_ID (WARL)'},
   {bits:  8, name: 'IOSDID (WARL)'},
-  {bits:  4, name: 'SRL'},
-  {bits:  4, name: 'SML'},
-  {bits:  4, name: 'SQRID'},
-  {bits:  4, name: 'WPRI'}
+  {bits: 16, name: 'WPRI'}
 ], config:{lanes: 8, hspace:1024}}
 ....
 
@@ -396,10 +393,10 @@ used by this classification rule. The `SRC_IDT` encodings are listed in
 |===
 |`SRC_IDT` | Description
 |    0     | None. This rule does not match any incoming transaction. All other
-             fields of the `operand-0` and `operand-1` register are ignored if
-             the `control.OP` is `SET_ENTRY`. All other fields of `operand-0`
-             and `operand-1` register are `UNSPECIFIED` if the `control.OP` is
-             `GET_ENTRY`.
+             fields of the `operand-0`, `operand-1`, and `operand-2` registers
+             are ignored if the `control.OP` is `SET_ENTRY`. All other fields of
+             `operand-0`, `operand-1`, and `operand-2` registers are
+             `UNSPECIFIED` if the `control.OP` is `GET_ENTRY`.
 |    1     | Filter by device ID. The device ID is specified in `SRC_ID` field
              and may be up to 24-bit wide.
 |    2     | Filter by PCIe IDE stream ID and PCIe segment ID. The IDE stream ID
@@ -512,13 +509,6 @@ The `IOSDID` field identifies the supervisor domain whose memory is accessed by
 this transaction. When `operand-1.MPT_MODE` is `Bare`, the `SET_ENTRY`
 operations requires the `IOSDID` field to be zero.
 
-The `SRL` and `SML` fields along with `operand-1.SSM` field are used to determine
-the effective `RCID` and `MCID` provided by the IOMMU for device originated
-requests. The determination of the effective `RCID` and `MCID` is as specified
-by <<SMQOSID>>. The `SQRID` identifies the QRI for requests originating from the
-devices and the IOMMU associated with the SD and accompanies the `RCID` and
-`MCID` in the requests made by the device to the QRI.
-
 [[OP-1]]
 === Operand 1 register (`operand-1`)
 
@@ -534,8 +524,7 @@ operations requested through `control.OP`.
   {bits:  1, name: 'PPNV (WARL)'},
   {bits:  1, name: 'S (WARL)'},
   {bits:  1, name: 'IOSDIDV'},
-  {bits:  1, name: 'SSM'},
-  {bits:  2, name: 'WPRI'},
+  {bits:  3, name: 'WPRI'},
   {bits: 44, name: 'PPN'},
   {bits: 10, name: 'WPRI'}
 ], config:{lanes: 8, hspace:1024}}
@@ -564,7 +553,9 @@ focuses on a NAPOT range. This range is decided by the low-order bits of the
 If the initial low-order 0 bit position is denoted as `x`, the size of the range
 is computed as `(1 << (12 + x + 1))`. When `PPNV` is set to 1, if the address
 range specifed by `PPN` and `S` is invalid, the operation may or may not be
-performed. Operations besides `MPTINVAL` disregard the `PPNV` field.
+performed. If the `PPNV` and `S` are both set to 1 and all bits of the `PPN`
+operand are 1, the behavior of `MPTINVAL` operation is UNSPECIFIED. Operations
+besides `MPTINVAL` disregard the `PPNV` field.
 
 The `MPTINVAL` operation ensures that stores to the MPT are observed by MPTCHK
 before subsequent implicit reads by MPTCHK to the corresponding MPT.
@@ -586,6 +577,7 @@ before subsequent implicit reads by MPTCHK to the corresponding MPT.
                        address range in the `PPN` operand for the supervisor
                        domain address space identified by the `IOSDID` operand.
 |===
+
 
 [NOTE]
 ====
@@ -625,4 +617,89 @@ The IOMMU itself is a DMA capable device. The DMA performed by the IOMMU is
 performed using the device ID of the IOMMU. A rule must be defined to associate
 the IOMMU device ID itself with an `IOSDID` and MPT unless the IOMMU device ID
 is encompassed by another rule that associates device IDs with an SD.
+====
+
+[[OP-2]]
+=== Operand 2 register (`operand-2`)
+
+The `operand-2` register holds the input operands or the output results of
+operations requested through `control.OP`.
+
+[caption="Register {counter:rimage}: ", reftext="Register {rimage}"]
+[title="Operand-2 register (`operand-2`)"]
+[wavedrom, , ]
+....
+{reg: [
+  {bits: 12, name: 'S-RCID (WARL)'},
+  {bits:  4, name: 'WPRI'},
+  {bits: 12, name: 'S-MCID (WARL)'},
+  {bits:  4, name: 'WPRI'},
+  {bits:  4, name: 'SRL    (WARL)'},
+  {bits:  4, name: 'SML    (WARL)'},
+  {bits:  4, name: 'SQRID  (WARL)'},
+  {bits:  1, name: 'SSRM   (WARL)'},
+  {bits:  1, name: 'SSMM   (WARL)'},
+  {bits:  2, name: 'WPRI'},
+  {bits: 16, name: 'WPRI'}
+], config:{lanes: 8, hspace:1024}}
+....
+
+The `SRL`, `SML`, `SSRM`, `SSMM`, `S-RCID`, and `S-MCID` fields are used to
+determine the effective `RCID` and `MCID` for device-originated and
+IOMMU-originated requests, using the RCID-value and MCID-value provided by the
+IOMMU. These fields are inputs to the `SET_ENTRY` operation and outputs of the
+`GET_ENTRY` operation. They are ignored by all other operations.
+
+These fields are implemented only if `capabilities.QOSID` is set to 1.
+
+When multiple rules map to the same `IOSDID`, the values of these fields must be
+configured by software identically across all such rules.
+
+The determination of the effective `RCID` and `MCID` is as follows:
+
+[listing]
+----
+SRL_MASK = (1 << SRL) - 1
+if SSRM == 0
+    effective-RCID = (S-RCID & ~SRL_MASK) | (RCID-value & SRL_MASK)
+else
+    if ((RCID-value & ~SRL_MASK) | SRL_MASK) != ((1 << RCIDLEN) - 1)
+        effective-RCID = RCID-value
+    else
+        effective-RCID = <unspecified but legal value>
+    endif
+endif
+
+SML_MASK = (1 << SML) - 1
+if SSMM == 0
+    effective-MCID = (S-MCID & ~SML_MASK) | (MCID-value & SML_MASK)
+else
+    if ((MCID-value & ~SML_MASK) | SML_MASK) != ((1 << MCIDLEN) - 1)
+        effective-MCID = MCID-value
+    else
+        effective-MCID = <unspecified but legal value>
+    endif
+endif
+----
+
+The `SQRID` identifies the QRI for requests originating from the devices and
+the IOMMU associated with the SD, and accompanies the effective `RCID` and
+`MCID` in the requests made by the device or IOMMU to the QRI.
+
+[NOTE]
+====
+An implementation is allowed to internally organize the data such that the rules
+classify a source ID to an `IOSDID`, and the `IOSDID` is used as an index into a
+table that holds values for effective QoS ID determination and MPT checks.
+
+If an identical `IOSDID` is configured in two rules but the QoS ID related
+fields referenced by the rules are not identical, then it is unpredictable
+whether the QoS ID related values from the first rule or the second rule will
+be used.
+
+Similarly, if an identical `IOSDID` is configured in two rules but the
+MPT referenced by the rules is not identical, then it is unpredictable whether
+the MPT from the first rule or the second rule will be used.
+
+These are the only expected behaviors.
 ====

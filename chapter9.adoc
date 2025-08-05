@@ -126,12 +126,13 @@ reasons.
 To facilitate delegation of `srmcfg` to the SD, the Smqosid extension introduces
 `SRL` (supervisor-RCID-length) and `SML` (supervisor-MCID-length) fields in the
 `msdcfg` register to configure the usable range of `RCID` and `MCID`. These
-fields are WARL, with legal values from 0 to 12. Furthermore, a
-supervisor-srmcfg-mode (`SSM`) field is introduced, with legal values of 0 and
-1. The `SSM`, along with `SRL` and `SML` settings, determine the range of `RCID`
-and `MCID` values an SD can program into the `srmcfg` register. The RDSM is
-expected to configure these fields such that each SD can select from a disjoint
-range of values for `RCID` and `MCID`.
+fields are WARL, with legal values from 0 to 12. Furthermore,
+supervisor-srmcfg-rcid-mode (`SSRM`) and supervisor-srmcfg-mcid-mode (`SSMM`)
+fields are introduced, with legal values of 0 and 1. The `SSRM` and `SSMM`, along
+with `SRL` and `SML` settings, determine the range of `RCID` and `MCID` values an
+SD can program into the `srmcfg` register. The RDSM is expected to configure these
+fields such that each SD can select from a disjoint range of values for `RCID`
+and `MCID`.
 
 .`msdcfg` register
 
@@ -141,8 +142,9 @@ range of values for `RCID` and `MCID`.
   {bits:  6, name: 'SIDN'},
   {bits:  1, name: 'SDEDBGALW'},
   {bits:  1, name: 'SDETRCALW'},
-  {bits:  11, name: 'WPRI'},
-  {bits:  1, name: 'SSM'},
+  {bits:  10, name: 'WPRI'},
+  {bits:  1, name: 'SSRM'},
+  {bits:  1, name: 'SSMM'},
   {bits:  4, name: 'SRL'},
   {bits:  4, name: 'SML'},
   {bits:  4, name: 'SQRID'},
@@ -155,16 +157,16 @@ logic which enables the RDSM to configure supervisor domain specific prefixes fo
 which can only configure `RCID` and `MCID` suffixes within the boundaries set by
 RDSM in `msdcfg`.
 
-When `SSM` is 0, the `SRL` configuration enables the RDSM to configure a `RCID`
+When `SSRM` is 0, the `SRL` configuration enables the RDSM to configure a `RCID`
 prefix value in the `srmcfg.RCID` field while allowing the supervisor domain to
-program the low order `SRL` bits of the field. When `SSM` is 1, the supervisor
+program the low order `SRL` bits of the field. When `SSRM` is 1, the supervisor
 domain may only program a `RCID` value in the range 0 through
 `2^RCIDLEN^ - 2^SRL^ - 1` where `RCIDLEN` is the number of implemented bits of
 the `RCID` field.
 
-When `SSM` is 0, the `SML` configuration enables the RDSM to configure a `MCID`
+When `SSMM` is 0, the `SML` configuration enables the RDSM to configure a `MCID`
 prefix value in the `srmcfg.MCID` field while allowing the supervisor domain to
-program the low order `SML` bits of the field. When `SSM` is 1, the supervisor
+program the low order `SML` bits of the field. When `SSMM` is 1, the supervisor
 domain may only program a `MCID` value in the range 0 through
 `2^MCIDLEN^ - 2^SML^ - 1` where `MCIDLEN` is the number of implemented bits of
 the `MCID` field.
@@ -176,14 +178,14 @@ for the `RCID` and `MCID` fields of the register is computed as follows:
 [listing]
 ----
 SRL_MASK = (1 << SRL) - 1
-if SSM == 0
+if SSRM == 0
     RCID-value = srmcfg.RCID & SRL_MASK
 else
     RCID-value = srmcfg.RCID
 endif
 
 SML_MASK = (1 << SML) - 1
-if SSM == 0
+if SSMM == 0
     MCID-value = srmcfg.MCID & SML_MASK
 else
     MCID-value = srmcfg.MCID
@@ -198,24 +200,24 @@ follows:
 [listing]
 ----
 SRL_MASK = (1 << SRL) - 1
-if SSM == 0
+if SSRM == 0
     srmcfg.RCID = (srmcfg.RCID & ~SRL_MASK) | (RCID-value & SRL_MASK)
 else
     if ((RCID-value & ~SRL_MASK) | SRL_MASK) != ((1 << RCIDLEN) - 1)
         srmcfg.RCID = RCID-value
     else
-        srmcfg.RCID = RCID-value & ((1 << RCIDLEN) - (1 << SRL) - 1)
+        srmcfg.RCID = <unspecified but legal value>
     endif
 endif
 
 SML_MASK = (1 << SML) - 1
-if SSM == 0
+if SSMM == 0
     srmcfg.MCID = (srmcfg.MCID & ~SML_MASK) | (MCID-value & SML_MASK)
 else
     if ((MCID-value & ~SML_MASK) | SML_MASK) != ((1 << MCIDLEN) - 1)
         srmcfg.MCID = MCID-value
     else
-        srmcfg.MCID = MCID-value & ((1 << MCIDLEN) - (1 << SML) - 1)
+        srmcfg.MCID = <unspecified but legal value>
     endif
 endif
 ----
@@ -224,13 +226,13 @@ endif
 ====
 Consider a QRI that supports 32 RCIDs and is mediated by RDSM between two SDs.
 The RDSM may allocate 24 RCIDs to the first SD and 8 RCIDs to the second SD. The
-`SRL` and `SSM` configurations used by the RDSM to support this use case are as
+`SRL` and `SSRM` configurations used by the RDSM to support this use case are as
 follows:
 
-* The RDSM configures `SRL` to 3 and `SSM` to 1 for first SD. This allows the
+* The RDSM configures `SRL` to 3 and `SSRM` to 1 for first SD. This allows the
   first SD to select `RCID` values 0 through 23 in `srmcfg`.
 
-* The RDSM configures `SRL` to 3 and `SSM` to 0 for the second SD and programs
+* The RDSM configures `SRL` to 3 and `SSRM` to 0 for the second SD and programs
   the `srmcfg` with a value of 24. The second SD is allowed to program the low
   order 3 bits of `srmcfg.RCID`, thereby selecting `RCID` values between 24 and 31.
   When this SD reads `srmcfg.RCID`, the value returned consist of the low 3 bits,
@@ -255,6 +257,23 @@ resource usage.
 ====
 The `SQRID` may be updated during the process of switching SDs, to denote the
 QRI allocated to that specific SD by the RDSM.
+
+When a QRI is shared among multiple supervisor domains, the RDSM must mediate
+access to the memory-mapped QoS register interface provided by the capacity
+and bandwidth controllers. This mediation may be implemented by the RDSM
+either by emulation of a virtual QoS register interface--intercepting and
+emulating loads and stores to these registers--or by providing a supervisor
+binary interface (SBI) for QoS configuration. Programming of the QoS
+controllers is typically performed at job startup and is infrequent compared
+to the switching of RCID and/or MCID values in `srmcfg` during a context switch.
+
+When a supervisor domain is allocated a dedicated QRI, the RDSM may permit
+direct access from that domain to the QRI’s memory-mapped register interface.
+In this case, the RDSM should set `SSRM` and `SSMM` to 0 and configure `SRL` and
+`SML` to match the supported `RCIDLEN` and `MCIDLEN` values of the QRI. The RCID
+and MCID values programmed into the `srmcfg` CSR accompany requests issued by
+the supervisor domain. Each QRI is associated with a distinct RCID and MCID
+namespace.
 ====
 
 [[SDQRI]]
@@ -279,31 +298,60 @@ to the QRID in the request. Likewise the counters to count resource usage are
 selected using `MCID` and the QRID in the request and a QRI can be used to
 access counters associated with the corresponding QRID.
 
-By default all resources in the capacity and bandwidth controllers may be
-allocated using any of the QRI. The controllers may optionally support
-reservation of resources for use by a QRI. When such reservation is supported
-the capacity or bandwidth reserved for a QRI may only be used by requests that
-have the corresponding QRID. Supporting resource reservation capability allows
-effective partitioning of the shared resources among SDs sharing the resources.
+When a controller supports only a single QRI, machine mode is required to
+mediate access to that QRI. The RDSM may implement this mediation either
+by emulating a virtual QoS register interface--intercepting and emulating
+loads and stores to those registers--or by providing a supervisor binary
+interface (SBI) for QoS configuration.
 
-To reserve capacity to a QRI, the capacity controllers support a new operation
-called `CONFIG_QRI_LIMIT` (`OP=4`). The capacity to be reserved is specified
-using the `cc_block_mask` register. The `AT` and `RCID` fields of the
-`cc_alloc_ctl` register are ignored by this operation. The mask specified in
-`cc_block_mask` for this operation must have a contiguous run of 1s and an
-implementation may require the mask to reserve at least one capacity block;
-else the operation will fail with `STATUS=5`. The `CONFIG_QRI_LIMIT` operation
-may be requested once following reset. If the operation is requested again then
-the operation will fail with `STATUS=2`. On successful completion of the
-operation, the `cc_capabilities.NCBLKS` shall update to a value that is the
-number of 1 bits in value held in the `cc_block_mask` and only bits `NCBLKS-1:0`
-are writable in `cc_block_mask`.
+When a capacity or bandwidth controller supports multiple QRIs, all resources in
+the controller are, by default, available for allocation through any QRI. The
+controller may optionally support reservation of resources for exclusive use by
+a specific QRI. When such reservation is supported, capacity or bandwidth may
+be reserved for allocation only by that QRI. Support for resource reservation
+enables effective partitioning of shared resources among supervisor domains
+(SDs) that share the controller.
+
+When multiple QRIs are implemented, one of them must be designated for use
+by machine mode. This QRI is known as the __machine-mode QRI__ (MQRI).
+
+The MQRI supports a new operation, `CONFIG_QRI_LIMIT` (`OP=4`), which enables
+partitioning of shared resources--such as cache capacity or memory
+bandwidth--among the QRIs by specifying limits on the amount of each resource
+that may be allocated by the corresponding QRI. If this operation is requested
+on any QRI other than the MQRI, it shall fail with `STATUS=2`.
+
+The MQRI may not support any `RCID` or `MCID`, and when these are unsupported,
+its primary role is to configure resource limits for other QRIs managed by
+the controller. When `RCID` and/or `MCID` are supported, the MQRI may be used
+exclusively by machine mode or may be shared with one or more supervisor
+domains.
+
+Bits 31:28 of the `cc_alloc_ctl` and the `bc_alloc_ctl` registers of an MQRI
+are defined as the `QRID` field. This field is reserved in all other QRIs of the
+controller. It is used by the `CONFIG_QRI_LIMIT` (`OP=4`) operation to specify
+the QRID to which the limit applies and is ignored by all other operations.
+
+To reserve capacity for a QRI, the RDSM may use the `CONFIG_QRI_LIMIT` operation
+through the MQRI, with the `QRID` field identifying the target QRI. The capacity
+to be reserved is specified using the `cc_block_mask` register. The `AT` and
+`RCID` fields of the `cc_alloc_ctl` register are ignored by this operation.
+
+The mask specified in `cc_block_mask` must contain a contiguous run of 1s, and
+an implementation may require the mask to reserve at least one capacity block;
+otherwise, the operation shall fail with STATUS=5.
+
+The number of 1 bits in the `cc_block_mask` value specifies the number of
+capacity blocks that may be allocated using the identified QRI.
+
+On successful completion, the `NCBLKS` field in the `cc_capabilities` register
+of the target QRI shall reflect the updated number of allocatable capacity blocks.
 
 [NOTE]
 ====
-The `CONFIG_QRI_LIMIT` operation is a one time operation to allow the RDSM to
-configure the capacity limit for a QRI before passing through the QRI to the
-associated SD. An SD may then allocate capacity for RCIDs from within this limit
+The `CONFIG_QRI_LIMIT` operation is typically a one-time operation used by
+the RDSM to configure the capacity limit for a QRI before making it accessible
+to an SD. The SD may then allocate capacity for RCIDs within the limit
 established by the RDSM.
 ====
 
@@ -330,32 +378,38 @@ capacity block allocation in the controller is as follows:
 |===
 ====
 
-To reserve bandwidth to a QRI, the bandwidth controllers support a new operation
-called `CONFIG_QRI_LIMIT` (`OP=4`). The `AT` and `RCID` fields of the
-`bc_alloc_ctl` register are ignored by this operation. Likewise, the `sharedAT`
-and `useShared` fields of the `bc_bw_alloc` register are ignored by this
-operation. The bandwidth to be reserved is specified using the `Rbwb` field of
-the `bc_bw_alloc` register and `Mweight`, when not equal to 0, represents a
-proportional share of non-reserved or unused bandwidth that may be used by the
-RCIDs associated with this QRI. When the `Mweight` is equal to 0, the `Rbwb` is
-a hart limit and the RCIDs associated with this QRI are not eligible to use
-unused or non-reserved bandwidth. The `CONFIG_QRI_LIMIT` operation may be
-requested once following reset. If the operation is requested again then the
-operation will fail with `STATUS=2`. On successful completion of the operation,
-the `bc_capabilities.MRBWB` shall update to a value specified in `Rbwb`. When
-`Mweight` for a QRI is not 0, then a two level weighted sharing of unused or
-non-reserved bandwidth occurs. When the `Mweight` parameter for a QRI is not set
-to 0, the amount of unused bandwidth allocated to QRID=x during contention
-with another QRI that is also permitted to use unused bandwidth is determined
-by dividing the `Mweight` of QRID=q by the sum of the `Mweight` of all other
-contending `QRIs`. This ratio `Pq` is determined by <<eq-1>>. This weight share
-of the unused bandwidth made available to a QRI is then shared among the
-contending RCIDs of that QRI using the weights configured for the RCIDs.
+To reserve bandwidth for a QRI, the RDSM may use the `CONFIG_QRI_LIMIT` operation
+through the MQRI, with the `QRID` field identifying the target QRI. The amount
+of bandwidth to reserve is specified using the `Rbwb` and `Mweight` fields of the
+`bc_bw_alloc` register. The `AT` and `RCID` fields of the `bc_alloc_ctl` register
+are ignored by this operation. Similarly, the `sharedAT` and `useShared` fields of
+the `bc_bw_alloc` register are also ignored.
+
+When the specified `Mweight` is nonzero, it represents a proportional share
+of non-reserved or unused bandwidth that may be used by RCIDs associated with
+the QRI. When `Mweight` is zero, the value in `Rbwb` serves as a hard limit, and
+RCIDs associated with the QRI are not eligible to use any non-reserved or unused
+bandwidth.
+
+On successful completion of the operation, the `bc_capabilities.MRBWB` field of
+the target QRI shall reflect the value specified in `Rbwb`.
+
+When the `Mweight` established for a QRI is nonzero, a two-level weighted
+sharing of unused or non-reserved bandwidth occurs. In such cases, the unused
+bandwidth is apportioned among all QRIs with `Mweight != 0` that are contending
+for it, based on their relative `Mweight` values. Specifically, the proportion
+of unused bandwidth allocated to QRID *q* is determined by dividing its
+`Mweight` by the sum of the `Mweight` values across all QRIs contending for
+unused bandwidth, as shown in <<eq-1>>.
+
+This proportion latexmath:[P_q] of the unused bandwidth is then further
+distributed among the RCIDs associated with that QRI using the weights
+configured for the RCIDs.
 
 [latexmath#eq-1,reftext="equation ({counter:eqs})"]
 ++++
 \begin{equation}
-Pq = \frac{Mweight_{q}}{\sum_{q=1}^{q=n} Mweight_{q}}
+P_q = \frac{Mweight_{q}}{\sum_{q=1}^{n} Mweight_{q}}
 \end{equation}
 ++++
 
@@ -398,4 +452,24 @@ their `Rbwb`.
 When contending for unused bandwidth, the weighted share is typically
 computed among the QRIs that are actively generating requests in that
 accounting interval and have a non-zero weight programmed.
+====
+
+[NOTE]
+====
+Typical use cases may require only a small number of QRIs (e.g., 1 to 4). In
+confidential computing scenarios, two QRIs may suffice: one designated for use
+by the non-confidential host OS or hypervisor, and another retained under RDSM
+control to mediate access on behalf of a confidential OS or hypervisor. The
+number of RCIDs and MCIDs supported by the two QRIs does not need to be
+identical.
+
+All QoS controllers in the SoC are strongly encouraged to implement the same
+number of QRIs. For each QRID, the corresponding QRI should support the same
+number of RCIDs and MCIDs across all controllers. For example, if QRID=1
+supports 8 RCIDs and 4 MCIDs in one controller, QRID=1 should support the same
+in every controller. QRID=2 may support a different number of RCIDs and MCIDs
+than QRID=1, but it should do so consistently across all controllers.
+Furthermore, the QRID assigned to the machine-mode QRI should be the same across
+all controllers. This uniformity facilitates efficient and predictable
+allocation of QRIs and RCIDs/MCIDs to supervisor domains (SDs).
 ====
