@@ -5,9 +5,9 @@
 
 This chapter describes two extensions `Smsdedbg` and `Smsdetrc` that enable a
 RDSM to manage isolation of supervisor domains when external debug and trace
-mechanisms are being utilized. `Smsdedbg` defines the `sdedbgalw` bit in the
+mechanisms are being utilized. `Smsdedbg` defines the `SEDA` bit in the
 <<MSDCFG>> CSR that specifies if a supervisor domain is allowed to be
-externally-debugged. Similarly, `Smsdetrc` defines the `sdetrcalw` bit in the
+externally-debugged. Similarly, `Smsdetrc` defines the `SETA` bit in the
 <<MSDCFG>> CSR that specifies if a supervisor domain is allowed to be
 externally-traced cite:[ExtDbg]. External trace refers to tracing software
 running on a separate target RISC-V platform, via a trace control/data transport
@@ -24,7 +24,7 @@ utilized on a platform.
 
 [NOTE]
 ====
-The configuration for `msdcfg.sdedbgalw` and `msdcfg.sdetrcalw` is expected to
+The configuration for `msdcfg.SEDA` and `msdcfg.SETA` is expected to
 be obtained from the manifest/configuration of the supervisor domain and
 reported in the attestation report for the supervisor domain and it's workloads.
 The RDSM should manage this supervisor domain configuration state for context
@@ -35,20 +35,20 @@ switching using secure memory.
 
 When M-mode external debug is enabled, all supervisor domains may also be
 debugged by an external debugger irrespective of the configuration held in
-`msdcfg.sdedbgalw`.
+`msdcfg.SEDA`.
 
 When M-mode external debug is disabled, whether execution at privilege modes
 less than `M-mode` may be debugged by an external debugger depends on the
-configuration held in `msdcfg.sdedbgalw`, as described below:
+configuration held in `msdcfg.SEDA`, as described below:
 
-When `msdcfg.sdedbgalw` is 0:
+When `msdcfg.SEDA` is 0:
 
 * Access by external debuggers to the memory and/or state of the supervisor
   domain is disallowed.
 * Entry to Debug Mode from a supervisor domain is disallowed.
 
 
-When `msdcfg.sdedbgalw` = 1 then external debug of privilege modes less than
+When `msdcfg.SEDA` = 1 then external debug of privilege modes less than
 `M-mode` is allowed for such a supervisor domain on a per-hart basis,
 with the additional requirements listed below. +
 
@@ -71,23 +71,23 @@ system cite:[ExtDbgSec]:
 
 When M-mode external trace is enabled, all supervisor domains activity may also
 be traced by an external trace tool irrespective of the configuration held in
-`msdcfg.sdetralw`.
+`msdcfg.SETA`.
 
 When M-mode external trace is disabled, whether execution at privilege modes
 less than `M-mode` may be traced by an external trace tool depends on the
-configuration held in `msdcfg.sdetrcalw`, as described below:
+configuration held in `msdcfg.SETA`, as described below:
 
-When `msdcfg.sdetrcalw` = 0, external trace of the supervisor domain is
+When `msdcfg.SETA` = 0, external trace of the supervisor domain is
 disallowed.
 
-When `msdcfg.sdetrcalw` = 1 then external trace of privilege modes less than
+When `msdcfg.SETA` = 1 then external trace of privilege modes less than
 `M-mode` shall be allowed for the SD on a per hart basis, with the
 additional requirements listed below.
 
 . When M-mode external tracing is disabled, tracing must be stopped on:
 .. entry to Debug mode
 .. entry to `M-mode` privilege
-.. entry to privilege less than `M-mode` with `msdcfg.sdetrcalw` = 0.
+.. entry to privilege less than `M-mode` with `msdcfg.SETA` = 0.
 
 To enforce the above controls specified by this extension, the following
 functional and security requirements must be met by the external debug security

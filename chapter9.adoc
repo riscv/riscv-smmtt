@@ -140,8 +140,8 @@ and `MCID`.
 ....
 {reg: [
   {bits:  6, name: 'SIDN'},
-  {bits:  1, name: 'SDEDBGALW'},
-  {bits:  1, name: 'SDETRCALW'},
+  {bits:  1, name: 'SEDA'},
+  {bits:  1, name: 'SETA'},
   {bits:  10, name: 'WPRI'},
   {bits:  1, name: 'SSRM'},
   {bits:  1, name: 'SSMM'},
