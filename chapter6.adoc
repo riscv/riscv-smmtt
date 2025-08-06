@@ -252,8 +252,8 @@ IO supervisor domain ID (`IOSDID`) and the Machine-level Memory Protection Table
 ....
 {reg: [
   {bits:  8, name: 'OP (WARL)'},
-  {bits: 16, name: 'RULEID (WARL)'},
-  {bits:  8, name: 'WPRI'},
+  {bits:  8, name: 'RULEID (WARL)'},
+  {bits: 16, name: 'WPRI'},
   {bits:  7, name: 'STATUS (RO)'},
   {bits:  1, name: 'BUSY (RO)'},
   {bits: 24, name: 'WPRI'}
