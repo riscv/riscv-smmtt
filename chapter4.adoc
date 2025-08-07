@@ -433,7 +433,7 @@ must always be aligned to a page boundary.
 The MPTE formats for Smmpt64 are identical to that of Smmpt52.
 
 Any level of MPTE may be a leaf MPTE, so in addition to providing access type
-permissions to 4 KiB pages, Smmpt54 supports 2 MiB, 1 GiB, 512 GiB, and 256 TiB
+permissions to 4 KiB pages, Smmpt64 supports 2 MiB, 1 GiB, 512 GiB, and 256 TiB
 pages.
 
 The algorithm to determine access type permissions for a page is same as in
