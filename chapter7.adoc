@@ -228,7 +228,7 @@ domain_ with up to 64 supervisor domains. The RDSM may emulate interrupt
 controllers for additional supervisor domains.
 
 To emulate an IMSIC _supervisor interrupt domain_, the RDSM may use the illegal
-instruction trap facilitated by AIA-added state-enbale bits to
+instruction trap facilitated by AIA-added state-enable bits to
 `mstateen0/mstateen0h` for emulation purposes.
 ====
 
