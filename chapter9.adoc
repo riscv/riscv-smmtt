@@ -111,10 +111,10 @@ privilege modes less than M.
 ], config:{lanes: 1, hspace:1024}}
 ....
 
-The Smqosid extension enables the scenario where two or more security domains
+The Smqosid extension enables the scenario where two or more supervisor domains
 share a common set of capacity and bandwidth controllers. In this setup, access
 to the QRI of these controllers is restricted to RDSM, which then provides
-mediated access for these security domains to configure capacity or bandwidth
+mediated access for these supervisor domains to configure capacity or bandwidth
 allocation and read the corresponding monitoring counters. A common QRID is
 associated with requests from these domains, and the RDSM allocates sets of
 `RCID` and `MCID` for each domain's use. Supervisor domains are then restricted
