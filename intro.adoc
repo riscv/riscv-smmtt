@@ -110,7 +110,7 @@ domain active on the hart is programmed on the hart along with the supervisor
 domain identifier. The MPT does not perform any address translation; it simply
 provides access permissions for the physically addressed regions/pages
 to enforce the isolation properties per the use case requirements (see
-<<mpt-lookup>> for a high-level illustration and section <<Smmpt>> for
+<<mpt-lookup>> for a high-level illustration and <<Smmpt>> for
 normative details).
 
 [caption="Figure {counter:image}: ", reftext="Figure {image}"]
@@ -175,7 +175,7 @@ initiated from a hart or a device assigned a supervisor domain identifier may be
 denied by virtue of the permissions in the MPT lookup - such disallowed accesses
 from a hart cause a trap to the RDSM to report a fault. In the case of a device
 access disallowed by the MPT, the IO sub-system may log an error for the RDSM
-which may delegeate it to a supervisor domain.
+which may delegate it to a supervisor domain.
 
 The intra-domain isolation of memory between two harts/devices belonging
 to the same supervisor domain, but different tenant workloads, may be
