@@ -235,7 +235,7 @@ follows:
 * The RDSM configures `SRL` to 3 and `SSRM` to 0 for the second SD and programs
   the `srmcfg` with a value of 24. The second SD is allowed to program the low
   order 3 bits of `srmcfg.RCID`, thereby selecting `RCID` values between 24 and 31.
-  When this SD reads `srmcfg.RCID`, the value returned consist of the low 3 bits,
+  When this SD reads `srmcfg.RCID`, the value returned consists of the low 3 bits,
   with all upper bits set to 0.
 ====
 
