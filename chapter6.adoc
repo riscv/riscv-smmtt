@@ -552,7 +552,7 @@ focuses on a NAPOT range. This range is decided by the low-order bits of the
 `PPN` field, going up to the first low-order 0 bit (inclusive of this position).
 If the initial low-order 0 bit position is denoted as `x`, the size of the range
 is computed as `(1 << (12 + x + 1))`. When `PPNV` is set to 1, if the address
-range specifed by `PPN` and `S` is invalid, the operation may or may not be
+range specified by `PPN` and `S` is invalid, the operation may or may not be
 performed. If the `PPNV` and `S` are both set to 1 and all bits of the `PPN`
 operand are 1, the behavior of `MPTINVAL` operation is UNSPECIFIED. Operations
 besides `MPTINVAL` disregard the `PPNV` field.
@@ -568,7 +568,7 @@ before subsequent implicit reads by MPTCHK to the corresponding MPT.
 |   0    |  0        | Invalidates information cached from any MPT for all
                        supervisor domain address spaces.
 |   0    |  1        | Invalidates information cached from the MPT for the
-                       adddress space of the supervisor domain identified by
+                       address space of the supervisor domain identified by
                        the `IOSDID` operand.
 |   1    |  0        | Invalidates information cached from the MPT for the
                        address range in the `PPN` operand for all supervisor
