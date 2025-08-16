@@ -162,6 +162,18 @@ connected to an I/O port as associated with a supervisor domain and with the
 IOMMU instance that governs that device.
 ====
 
+To support I/O MPT checks, the RDSM provides two types of configurations to the
+I/O MPT checker:
+
+* SDCL rules that classify one or more devices to an SDID and an IOMMU ID.
+
+* Configurations that determine the MPT used to check memory requests
+  originated by the IOMMUs and devices associated with that SDID, and
+  configurations that determine the QoS IDs carried with such memory requests.
+
+These configurations are programmed through the I/O MPT checker register
+interface.
+
 === I/O MPT Checker Register Interface
 
 Each I/O MPT checker (IOMPTCHK) register interface is memory-mapped starting at
