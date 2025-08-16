@@ -56,7 +56,7 @@ image::images/IOMTTCHK.png[width=800]
 
 The IO Bridge invokes the SDCL function using the SDID request interface (SDR)
 and provides it the identifiers associated with the incoming transaction. The
-SDCL classifies the request using the identifiers and provides the IOSDID and
+SDCL classifies the request using the identifiers and provides the SDID and
 the IOMMU ID on the SDID completion interface (SDC).
 
 The IO Bridge uses the IOMMU ID to determine the IOMMU governing this request.
@@ -67,8 +67,8 @@ response to the address translation request on the device translation completion
 to access its in-memory data structures over its data structure interface (DSI).
 
 The IO Bridge invokes the MPTCHK function over the MPT check request (MCR)
-interface and provides it the IOSDID and physical address of the access. The
-MPTCHK uses the IOSDID to determine the MPT associated with the supervisor
+interface and provides it the SDID and physical address of the access. The
+MPTCHK uses the SDID to determine the MPT associated with the supervisor
 domain and checks if the physical address may be accessed by the device or IOMMU
 associated with that supervisor domain. The result of the check is provided on
 the MPT check completion (MCC) interface to the IO Bridge. As part of the MPT
@@ -228,7 +228,6 @@ of instructions.
 |8     |`status`       |4       |<<STS,  Status         >>  | No
 |16    |`data-0`       |8       |<< Input/Output data 0 >>  | No
 |24    |`data-1`       |8       |<< Input/Output data 1 >>  | No
-|32    |`data-2`       |8       |<< Input/Output data 2 >>  | Yes
 |===
 
 The reset value is 0 for the following registers fields.
@@ -267,8 +266,7 @@ then the MPT modes for RV64 are supported else the MPT modes for RV32 are
 supported.
 
 The `QOSID` field indicates whether associating QoS IDs with requests is
-supported; if set to 1, the QoS ID related fields in `data-2` are
-implemented, otherwise these fields are reserved and read-only zero.
+supported.
 
 [[CTRL]]
 === Control register (`control`)
@@ -287,7 +285,7 @@ that operation.
 {reg: [
   {bits:  8, name: 'OP (WARL)'},
   {bits: 24, name: 'operands (WARL)'},
-], config:{lanes: 8, hspace:1024}}
+], config:{lanes: 2, hspace:1024}}
 ....
 
 [[IOMPTCHK_OP]]
@@ -315,8 +313,8 @@ that operation.
 |===
 
 Before requesting an operation using the `control` register, software must
-program the fields of the `data-0`, `data-1`, and `data-2` registers as
-required by that operation. Fields not used by an operation are ignored.
+program the fields of the `data-0` and `data-1` registers as required by that
+operation. Fields not used by an operation are ignored.
 
 [[STS]]
 === Status register (`status`)
@@ -330,7 +328,7 @@ The `status` register provides the status of the operation requested using the
   {bits:  7, name: 'STATUS (RO)'},
   {bits: 23, name: 'WPRI'},
   {bits:  1, name: 'BUSY (RO)'}
-], config:{lanes: 8, hspace:1024}}
+], config:{lanes: 2, hspace:1024}}
 ....
 
 When the `control` register is written, IOMPTCHK may perform actions that do not
@@ -375,8 +373,7 @@ based on the identifiers associated with the requests, in order to determine the
 supervisor domain ID (`SDID`) and the IOMMU ID (`IOMMU_ID`).
 
 This operation uses the operands in the `control` register and the `data-0`
-register. The contents of the `data-1` and `data-2` registers are ignored
-by this operation.
+register. The contents of the `data-1` register are ignored by this operation.
 
 For this operation, the fields of the `control` and `data-0` registers are
 interpreted as follows.
@@ -388,10 +385,7 @@ interpreted as follows.
   {bits:  8, name: 'OP (WARL)'},
   {bits:  8, name: 'RULEID (WARL)'},
   {bits: 16, name: 'WPRI'},
-  {bits:  7, name: 'STATUS (RO)'},
-  {bits:  1, name: 'BUSY (RO)'},
-  {bits: 24, name: 'WPRI'}
-], config:{lanes: 8, hspace:1024}}
+], config:{lanes: 2, hspace:1024}}
 ....
 
 .`data-0` register layout for `SET_SDCL_ENTRY` operation
@@ -532,109 +526,185 @@ this transaction.
 === Read the configuration of an SDCL rule - `GET_SDCL_ENTRY`
 
 The `GET_SDCL_ENTRY` operation reads the configuration of an SDCL rule
-identified by `RULEID`.  This operation ignores the contents of the `data-*`
-registers. Upon a successful `GET_SDCL_ENTRY` operation, the configuration of
-the rule identified by `control.RULEID` is returned in the `data-0` register.
+identified by `RULEID`. This operation ignores the contents of the `data-*`
+registers. Upon success, the configuration of the rule identified by
+`control.RULEID` is returned in the `data-0` register.
 
-The contents of the `data-0` register are `UNSPECIFIED` if the operation
-fails or if it is invoked without a preceding `SET_SDCL_ENTRY` for the specified
-`RULEID`. The contents of the `data-1` and `data-2` registers, whether the
-operation completes successfully or not, are `UNSPECIFIED`.
+The contents of the `data-0` register are `UNSPECIFIED` if the operation fails
+or if it is invoked without a preceding `SET_SDCL_ENTRY` for the specified
+`RULEID`. The contents of the `data-1` register are `UNSPECIFIED`, regardless
+of whether the operation completes successfully.
 
-For this operation, the fields of the `control` and `data-0` registers are
-interpreted as follows.
+The interpretation of the `control` and `data-0` registers for this operation is
+identical to that of the `SET_SDCL_ENTRY` operation.
 
-.`control` register layout for `GET_SDCL_ENTRY` operation
+=== Set Supervisor Domain Configurations - `SET_SDCFG_ENTRY`
+
+The `SET_SDCFG_ENTRY` operation configures MPT and QoS ID parameters for a
+supervisor domain in MPTCHK. This operation uses the operands in the `control`,
+`data-0`, and `data-1` registers. The fields of these registers are interpreted
+as follows.
+
+.`control` register layout for `SET_SDCFG_ENTRY` operation
 [wavedrom, , ]
 ....
 {reg: [
   {bits:  8, name: 'OP (WARL)'},
-  {bits:  8, name: 'RULEID (WARL)'},
+  {bits:  8, name: 'SDID (WARL)'},
   {bits: 16, name: 'WPRI'},
-], config:{lanes: 8, hspace:1024}}
+], config:{lanes: 2, hspace:1024}}
 ....
 
-.`data-0` register layout for `GET_SDCL_ENTRY` operation
-[wavedrom, , ]
-....
-{reg: [
-  {bits:  4, name: 'SRC_IDT'},
-  {bits:  2, name: 'SRC_IDM'},
-  {bits:  2, name: 'TEE_FLT'},
-  {bits: 24, name: 'SRC_ID'},
-  {bits:  8, name: 'IOMMU_ID'},
-  {bits:  8, name: 'SDID'},
-  {bits: 16, name: 'WPRI'}
-], config:{lanes: 8, hspace:1024}}
-....
-
-[[OP-1]]
-=== Operand 1 register (`operand-1`)
-
-The `operand-1` register holds the input operands or the output results of
-operations requested through `control.OP`.
-
-[caption="Register {counter:rimage}: ", reftext="Register {rimage}"]
-[title="Operand-1 register (`operand-1`)"]
+.`data-0` register layout for `SET_SDCFG_ENTRY` operation
 [wavedrom, , ]
 ....
 {reg: [
   {bits:  4, name: 'MPT_MODE (WARL)'},
-  {bits:  1, name: 'PPNV (WARL)'},
-  {bits:  1, name: 'S (WARL)'},
-  {bits:  1, name: 'IOSDIDV'},
-  {bits:  3, name: 'WPRI'},
+  {bits:  6, name: 'WPRI'},
   {bits: 44, name: 'PPN'},
   {bits: 10, name: 'WPRI'}
+], config:{lanes: 4, hspace:1024}}
+....
+
+.`data-1` register layout for `SET_SDCFG_ENTRY` operation
+[wavedrom, , ]
+....
+{reg: [
+  {bits: 12, name: 'S-RCID (WARL)'},
+  {bits:  4, name: 'WPRI'},
+  {bits: 12, name: 'S-MCID (WARL)'},
+  {bits:  4, name: 'WPRI'},
+  {bits:  4, name: 'SRL    (WARL)'},
+  {bits:  4, name: 'SML    (WARL)'},
+  {bits:  4, name: 'SQRID  (WARL)'},
+  {bits:  1, name: 'SSRM   (WARL)'},
+  {bits:  1, name: 'SSMM   (WARL)'},
+  {bits:  2, name: 'WPRI'},
+  {bits: 16, name: 'WPRI'}
 ], config:{lanes: 8, hspace:1024}}
 ....
 
 The `MPT_MODE` field identifies the mode of the MPT. It's interpreted as
 outlined in <<mpt-32>> when `capabilities.MPTM` is 1, and as detailed in
-<<mpt-64>> otherwise. The `MPT_MODE` field is programmed into the rule
-identified by `RULEID` via the `SET_ENTRY` operation and can be retrieved by
-the `GET_ENTRY` operation. Both the `IOFENCE` and `MPTINVAL` operations
-disregard the `MPT_MODE` field.
+<<mpt-64>> otherwise. The `PPN` field programs the PPN of the root page of the
+MPT. When `MPT_MODE` is `Bare`, the `PPN` field must be set to zero.
 
-The `PPN` field programs the PPN of the root page of the MPT during the
-`SET_ENTRY` operation and is retrieved by the `GET_ENTRY` operation. When
-`MPT_MODE` is `Bare`, the `SET_ENTRY` operations requires the `PPN` field to be
-zero. The `IOFENCE` operation disregards this field.
+The `SRL`, `SML`, `SSRM`, `SSMM`, `S-RCID`, and `S-MCID` fields are used to
+determine the effective `RCID` and `MCID` for device-originated and
+IOMMU-originated requests, using the RCID-value and MCID-value provided by the
+IOMMU. These fields are implemented only if `capabilities.QOSID` is set to 1.
 
-For the `MPTINVAL` operation, the `PPNV` field indicates if the `PPN` field is
-valid and the `IOSDIDV` field indicates if the `IOSDID` field is valid for the
-operation. When a field is not valid for an operation, it is ignored by the
-operation. When the `PPNV` field is 1, the `S` field sets the address range size
-for the `MPTINVAL` operation. With an `S` field value of 0, the range size is
-4 KiB. But, when the `S` field has a value of 1, the `MPTINVAL` operation
-focuses on a NAPOT range. This range is decided by the low-order bits of the
-`PPN` field, going up to the first low-order 0 bit (inclusive of this position).
-If the initial low-order 0 bit position is denoted as `x`, the size of the range
-is computed as `(1 << (12 + x + 1))`. When `PPNV` is set to 1, if the address
-range specified by `PPN` and `S` is invalid, the operation may or may not be
-performed. If the `PPNV` and `S` are both set to 1 and all bits of the `PPN`
-operand are 1, the behavior of `MPTINVAL` operation is UNSPECIFIED. Operations
-besides `MPTINVAL` disregard the `PPNV` field.
+The determination of the effective `RCID` and `MCID` is as follows:
 
-The `MPTINVAL` operation ensures that stores to the MPT are observed by MPTCHK
-before subsequent implicit reads by MPTCHK to the corresponding MPT.
+[listing]
+----
+SRL_MASK = (1 << SRL) - 1
+if SSRM == 0
+    effective-RCID = (S-RCID & ~SRL_MASK) | (RCID-value & SRL_MASK)
+else
+    if ((RCID-value & ~SRL_MASK) | SRL_MASK) != ((1 << RCIDLEN) - 1)
+        effective-RCID = RCID-value
+    else
+        effective-RCID = <unspecified but legal value>
+    endif
+endif
+
+SML_MASK = (1 << SML) - 1
+if SSMM == 0
+    effective-MCID = (S-MCID & ~SML_MASK) | (MCID-value & SML_MASK)
+else
+    if ((MCID-value & ~SML_MASK) | SML_MASK) != ((1 << MCIDLEN) - 1)
+        effective-MCID = MCID-value
+    else
+        effective-MCID = <unspecified but legal value>
+    endif
+endif
+----
+
+The `SQRID` identifies the QRI for requests originating from the devices and
+the IOMMU associated with the SD, and accompanies the effective `RCID` and
+`MCID` in the requests made by the device or IOMMU to the QRI.
+
+=== Get Supervisor Domain Configurations - `GET_SDCFG_ENTRY`
+
+The `GET_SDCFG_ENTRY` operation reads the configuration of the supervisor domain
+identified by `SDID` from MPTCHK. This operation ignores the contents of the
+`data-*` registers. Upon success, the configuration of the supervisor domain
+identified by `control.SDID` is returned in the `data-0` register.
+
+The contents of the `data-0` and `data-1` registers are `UNSPECIFIED` if the
+operation fails or if it is invoked without a preceding `SET_SDCFG_ENTRY` for
+the specified `SDID`.
+
+The interpretation of the `control`, `data-0`, and `data-1` registers for this
+operation is identical to that of the `SET_SDCFG_ENTRY` operation.
+
+=== MPT Permission Cache Invalidation - `MPTINVAL` 
+
+This operation ensures that stores to an MPT are observed by MPTCHK before
+subsequent implicit reads by MPTCHK to the corresponding MPT.
+
+This operation uses the operands in the `control` register and the `data-0`
+register. The contents of the `data-1` register are ignored by this operation.
+
+For this operation, the fields of the `control` and `data-0` registers are
+interpreted as follows.
+
+.`control` register layout for `MPTINVAL` operation
+[wavedrom, , ]
+....
+{reg: [
+  {bits:  8, name: 'OP (WARL)'},
+  {bits:  8, name: 'SDID (WARL)'},
+  {bits:  1, name: 'SDID_V'},
+  {bits: 15, name: 'WPRI'},
+], config:{lanes: 2, hspace:1024}}
+....
+
+.`data-0` register layout for `MPTINVAL` operation
+[wavedrom, , ]
+....
+{reg: [
+  {bits:  1, name: 'PPN_V'},
+  {bits:  1, name: 'S'},
+  {bits:  8, name: 'WPRI'},
+  {bits: 44, name: 'PPN'},
+  {bits: 10, name: 'WPRI'}
+], config:{lanes: 4, hspace:1024}}
+....
+
+The `PPN_V` field indicates if the `PPN` field is valid and the `SDID_V` field
+indicates if the `SDID` field is valid for the operation. When a field is not
+valid for an operation, it is ignored by the operation. When the `PPN_V` field
+is 1, the `S` field sets the address range size for the `MPTINVAL` operation.
+With an `S` field value of 0, the range size is 4 KiB. But, when the `S` field
+has a value of 1, the `MPTINVAL` operation focuses on a NAPOT range. This range
+is decided by the low-order bits of the `PPN` field, going up to the first
+low-order 0 bit (inclusive of this position). If the initial low-order 0 bit
+position is denoted as `x`, the size of the range is computed as
+`(1 << (12 + x + 1))`. 
+
+When `PPN_V` is set to 1, if the address range specified by `PPN` and `S` is
+invalid, the operation may or may not be performed. If the `PPN_V` and `S` are
+both set to 1 and all bits of the `PPN` operand are 1, the behavior of
+`MPTINVAL` operation is UNSPECIFIED.
 
 . `MPTINVAL` operands and operations
 [%autowidth,float="center",align="center"]
 [%header, cols="^2,^2,20"]
 |===
-| `PPNV` | `IOSDIDV` | Operation
-|   0    |  0        | Invalidates information cached from any MPT for all
-                       supervisor domain address spaces.
-|   0    |  1        | Invalidates information cached from the MPT for the
-                       address space of the supervisor domain identified by
-                       the `IOSDID` operand.
-|   1    |  0        | Invalidates information cached from the MPT for the
-                       address range in the `PPN` operand for all supervisor
-                       domain address spaces.
-|   1    |  1        | Invalidates information cached from the MPT for the
-                       address range in the `PPN` operand for the supervisor
-                       domain address space identified by the `IOSDID` operand.
+| `PPN_V` | `SDID_V` | Operation
+|   0     |  0        | Invalidates information cached from any MPT for all
+                        supervisor domain address spaces.
+|   0     |  1        | Invalidates information cached from the MPT for the
+                        address space of the supervisor domain identified by
+                        the `SDID` operand.
+|   1     |  0        | Invalidates information cached from the MPT for the
+                        address range in the `PPN` operand for all supervisor
+                        domain address spaces.
+|   1     |  1        | Invalidates information cached from the MPT for the
+                        address range in the `PPN` operand for the supervisor
+                        domain address space identified by the `SDID` operand.
 |===
 
 
@@ -674,91 +744,26 @@ time, including when only some of the partial stores have taken effect.
 
 The IOMMU itself is a DMA capable device. The DMA performed by the IOMMU is
 performed using the device ID of the IOMMU. A rule must be defined to associate
-the IOMMU device ID itself with an `IOSDID` and MPT unless the IOMMU device ID
+the IOMMU device ID itself with an `SDID` and MPT unless the IOMMU device ID
 is encompassed by another rule that associates device IDs with an SD.
 ====
 
-[[OP-2]]
-=== Operand 2 register (`operand-2`)
+=== I/O Fence Operation - `IOFENCE` 
 
-The `operand-2` register holds the input operands or the output results of
-operations requested through `control.OP`.
+Ensure that all previous read and write requests from devices already processed
+by IOMPTCHK are committed to a global ordering point such that they can be
+observed by all RISC-V harts, IOMMUs, and devices in the system.
 
-[caption="Register {counter:rimage}: ", reftext="Register {rimage}"]
-[title="Operand-2 register (`operand-2`)"]
+The contents of the `data-0` and `data-1` registers are ignored by this
+operation. For this operation, the fields of the `control` register are
+interpreted as follows.
+
+.`control` register layout for `IOFENCE` operation
 [wavedrom, , ]
 ....
 {reg: [
-  {bits: 12, name: 'S-RCID (WARL)'},
-  {bits:  4, name: 'WPRI'},
-  {bits: 12, name: 'S-MCID (WARL)'},
-  {bits:  4, name: 'WPRI'},
-  {bits:  4, name: 'SRL    (WARL)'},
-  {bits:  4, name: 'SML    (WARL)'},
-  {bits:  4, name: 'SQRID  (WARL)'},
-  {bits:  1, name: 'SSRM   (WARL)'},
-  {bits:  1, name: 'SSMM   (WARL)'},
-  {bits:  2, name: 'WPRI'},
-  {bits: 16, name: 'WPRI'}
-], config:{lanes: 8, hspace:1024}}
+  {bits:  8, name: 'OP (WARL)'},
+  {bits: 24, name: 'WPRI'},
+], config:{lanes: 2, hspace:1024}}
 ....
 
-The `SRL`, `SML`, `SSRM`, `SSMM`, `S-RCID`, and `S-MCID` fields are used to
-determine the effective `RCID` and `MCID` for device-originated and
-IOMMU-originated requests, using the RCID-value and MCID-value provided by the
-IOMMU. These fields are inputs to the `SET_ENTRY` operation and outputs of the
-`GET_ENTRY` operation. They are ignored by all other operations.
-
-These fields are implemented only if `capabilities.QOSID` is set to 1.
-
-When multiple rules map to the same `IOSDID`, the values of these fields must be
-configured by software identically across all such rules.
-
-The determination of the effective `RCID` and `MCID` is as follows:
-
-[listing]
-----
-SRL_MASK = (1 << SRL) - 1
-if SSRM == 0
-    effective-RCID = (S-RCID & ~SRL_MASK) | (RCID-value & SRL_MASK)
-else
-    if ((RCID-value & ~SRL_MASK) | SRL_MASK) != ((1 << RCIDLEN) - 1)
-        effective-RCID = RCID-value
-    else
-        effective-RCID = <unspecified but legal value>
-    endif
-endif
-
-SML_MASK = (1 << SML) - 1
-if SSMM == 0
-    effective-MCID = (S-MCID & ~SML_MASK) | (MCID-value & SML_MASK)
-else
-    if ((MCID-value & ~SML_MASK) | SML_MASK) != ((1 << MCIDLEN) - 1)
-        effective-MCID = MCID-value
-    else
-        effective-MCID = <unspecified but legal value>
-    endif
-endif
-----
-
-The `SQRID` identifies the QRI for requests originating from the devices and
-the IOMMU associated with the SD, and accompanies the effective `RCID` and
-`MCID` in the requests made by the device or IOMMU to the QRI.
-
-[NOTE]
-====
-An implementation is allowed to internally organize the data such that the rules
-classify a source ID to an `IOSDID`, and the `IOSDID` is used as an index into a
-table that holds values for effective QoS ID determination and MPT checks.
-
-If an identical `IOSDID` is configured in two rules but the QoS ID related
-fields referenced by the rules are not identical, then it is unpredictable
-whether the QoS ID related values from the first rule or the second rule will
-be used.
-
-Similarly, if an identical `IOSDID` is configured in two rules but the
-MPT referenced by the rules is not identical, then it is unpredictable whether
-the MPT from the first rule or the second rule will be used.
-
-These are the only expected behaviors.
-====
