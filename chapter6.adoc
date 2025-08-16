@@ -222,17 +222,18 @@ of instructions.
 [width=100%]
 [%header, cols="^3,10,^3, 18, 5"]
 |===
-|Offset|Name           |Size    |Description              | Optional?
-|0     |`capabilities` |8       |<<CAP,  Capabilities >>  | No
-|8     |`control`      |8       |<<CTRL, Control      >>  | No
-|16    |`operand-0`    |8       |<<      Operand 0    >>  | No
-|24    |`operand-1`    |8       |<<      Operand 1    >>  | No
-|32    |`operand-2`    |8       |<<      Operand 2    >>  | Yes
+|Offset|Name           |Size    |Description                | Optional?
+|0     |`capabilities` |8       |<<CAP,  Capabilities   >>  | No
+|4     |`control`      |4       |<<CTRL, Control        >>  | No
+|8     |`status`       |4       |<<STS,  Status         >>  | No
+|16    |`data-0`       |8       |<< Input/Output data 0 >>  | No
+|24    |`data-1`       |8       |<< Input/Output data 1 >>  | No
+|32    |`data-2`       |8       |<< Input/Output data 2 >>  | Yes
 |===
 
 The reset value is 0 for the following registers fields.
 
-* `control` - `BUSY` and `STATUS` fields
+* `status` - `BUSY` and `STATUS` fields
 
 The reset value is `UNSPECIFIED` for all other registers and/or fields.
 
@@ -266,7 +267,7 @@ then the MPT modes for RV64 are supported else the MPT modes for RV32 are
 supported.
 
 The `QOSID` field indicates whether associating QoS IDs with requests is
-supported; if set to 1, the QoS ID related fields in `operand-2` are
+supported; if set to 1, the QoS ID related fields in `data-2` are
 implemented, otherwise these fields are reserved and read-only zero.
 
 [[CTRL]]
@@ -276,19 +277,16 @@ The `control` register is used to initiate I/O MPT checker operations. The
 specific operation is identified by the `OP` field within the `control`
 register. Operands required to complete the operation are supplied either in
 dedicated fields of the `control` register or in one or more of the associated
-`operand-*` registers.  The `OP` field also defines the encoding of the
-`operand` fields in the `control` register and of the `operand-*` registers for
+`data-*` registers.  The `OP` field also defines the encoding of the
+`data` fields in the `control` register and of the `data-*` registers for
 that operation.
 
-[caption="Register {counter:rimage}: ", reftext="Register {rimage}", title="Control register (`control`)"]
+.Control Register (`control`)
 [wavedrom, , ]
 ....
 {reg: [
   {bits:  8, name: 'OP (WARL)'},
-  {bits: 16, name: 'operands (WARL)'},
-  {bits:  7, name: 'STATUS (RO)'},
-  {bits:  1, name: 'BUSY (RO)'},
-  {bits: 32, name: 'operands (WARL)'}
+  {bits: 24, name: 'operands (WARL)'},
 ], config:{lanes: 8, hspace:1024}}
 ....
 
@@ -316,14 +314,33 @@ that operation.
 | --                | 128–255   | Designated for custom use.
 |===
 
+Before requesting an operation using the `control` register, software must
+program the fields of the `data-0`, `data-1`, and `data-2` registers as
+required by that operation. Fields not used by an operation are ignored.
+
+[[STS]]
+=== Status register (`status`)
+
+The `status` register provides the status of the operation requested using the
+`control` register.
+
+.Status Register (`control`)
+....
+{reg: [
+  {bits:  7, name: 'STATUS (RO)'},
+  {bits: 23, name: 'WPRI'},
+  {bits:  1, name: 'BUSY (RO)'}
+], config:{lanes: 8, hspace:1024}}
+....
+
 When the `control` register is written, IOMPTCHK may perform actions that do not
 complete synchronously with the write. A write to the `control` register sets
-the `BUSY` bit to 1, indicating that IOMPTCHK is executing the requested
-operation. The behavior of writing the `control` or the `operand-*` registers
-while the `BUSY` bit is 1 is `UNSPECIFIED`. Some implementations may ignore the
-second write, while others may perform the operation specified by that write.
-Software must verify that `BUSY` is 0 before writing to the `control` or
-`operand-*` registers.
+the `status.BUSY` bit to 1, indicating that IOMPTCHK is executing the requested
+operation. The behavior of writing the `control` or the `data-*` registers
+while the `status.BUSY` bit is 1 is `UNSPECIFIED`. Some implementations may
+ignore the second write, while others may perform the operation specified by
+that write. Software must verify that `BUSY` is 0 before writing to the
+`control` or `data-*` registers.
 
 [NOTE]
 ====
@@ -331,8 +348,9 @@ An implementation that always completes the requested operation synchronously
 with a write to the `control` register may hardwire the `BUSY` bit to 0.
 ====
 
-When the `BUSY` bit reads 0, the operation is complete, and the `STATUS` field
-provides a status value (<<IOMPTCHK_STS>>) for the requested operation.
+When the `status.BUSY` bit reads 0, the operation is complete, and the
+`status.STATUS_CODE` field provides a status value (<<IOMPTCHK_STS>>) for the
+requested operation.
 
 [[IOMPTCHK_STS]]
 .`control.STATUS` field encodings
@@ -350,18 +368,33 @@ provides a status value (<<IOMPTCHK_STS>>) for the requested operation.
 | 128-255 | Designated for custom use.
 |===
 
-Before requesting an operation using the `control` register, software must
-program the fields of the `operand-0`, `operand-1`, and `operand-2` registers as
-required by that operation. Fields not used by an operation are ignored.
+=== Configure a rule in the SDCL - `SET_SDCL_ENTRY`
 
-[[OP-0]]
-=== Operand 0 register (`operand-0`)
+The `SET_SDCL_ENTRY` operation configures an SDCL rule to classify DMA requests
+based on the identifiers associated with the requests, in order to determine the
+supervisor domain ID (`SDID`) and the IOMMU ID (`IOMMU_ID`).
 
-The `operand-0` register holds the input operands or the output results of
-operations requested through `control.OP`.
+This operation uses the operands in the `control` register and the `data-0`
+register. The contents of the `data-1` and `data-2` registers are ignored
+by this operation.
 
-[caption="Register {counter:rimage}: ", reftext="Register {rimage}"]
-[title="Operand-0 register (`operand-0`)"]
+For this operation, the fields of the `control` and `data-0` registers are
+interpreted as follows.
+
+.`control` register layout for `SET_SDCL_ENTRY` operation
+[wavedrom, , ]
+....
+{reg: [
+  {bits:  8, name: 'OP (WARL)'},
+  {bits:  8, name: 'RULEID (WARL)'},
+  {bits: 16, name: 'WPRI'},
+  {bits:  7, name: 'STATUS (RO)'},
+  {bits:  1, name: 'BUSY (RO)'},
+  {bits: 24, name: 'WPRI'}
+], config:{lanes: 8, hspace:1024}}
+....
+
+.`data-0` register layout for `SET_SDCL_ENTRY` operation
 [wavedrom, , ]
 ....
 {reg: [
@@ -370,7 +403,7 @@ operations requested through `control.OP`.
   {bits:  2, name: 'TEE_FLT (WARL)'},
   {bits: 24, name: 'SRC_ID'},
   {bits:  8, name: 'IOMMU_ID (WARL)'},
-  {bits:  8, name: 'IOSDID (WARL)'},
+  {bits:  8, name: 'SDID (WARL)'},
   {bits: 16, name: 'WPRI'}
 ], config:{lanes: 8, hspace:1024}}
 ....
@@ -380,18 +413,14 @@ used by this classification rule. The `SRC_IDT` encodings are listed in
 <<SRC_IDT>>.
 
 [[SRC_IDT]]
-.`operand-0.SRC_IDT` field encodings
+.`data-0.SRC_IDT` field encodings
 [width=100%]
 [%header, cols="12,70"]
 |===
 |`SRC_IDT` | Description
 |    0     | None. This rule does not match any incoming transaction. All other
-             fields of the `operand-0`, `operand-1`, and `operand-2` registers
-             are ignored if the `control.OP` is `SET_ENTRY`. All other fields of
-             `operand-0`, `operand-1`, and `operand-2` registers are
-             `UNSPECIFIED` if the `control.OP` is `GET_ENTRY`.
-|    1     | Filter by device ID. The device ID is specified in `SRC_ID` field
-             and may be up to 24-bit wide.
+             fields of the `data-0` register are ignored.
+|    1     | Filter by device ID. The device ID is specified in `SRC_ID` field.
 |    2     | Filter by PCIe IDE stream ID and PCIe segment ID. The IDE stream ID
              is specified in the bits 7:0 of the `SRC_ID` field and the segment
              ID in bits 15:8 of the `SRC_ID`. The bits 23:16 of the `SRC_ID`
@@ -414,11 +443,11 @@ Sometimes, the term Hierarchy is synonymous with Segment. Especially when in
 Flit Mode, the Segment number can be part of a Function's ID.
 ====
 
-The `SRC_IDM` field can configure `SRC_ID` matching mode for
-transactions. The `SRC_IDM` encodings are listed in <<SRC_IDM>>.
+The `SRC_IDM` field can configure `SRC_ID` matching mode for transactions. The
+`SRC_IDM` encodings are listed in <<SRC_IDM>>.
 
 [[SRC_IDM]]
-.operand-0.SRC_IDM field encodings
+.data-0.SRC_IDM field encodings
 [width=100%]
 [%header, cols="12,70"]
 |===
@@ -441,7 +470,6 @@ transactions. The `SRC_IDM` encodings are listed in <<SRC_IDM>>.
              to that of rule __r__ and TOR is selected for rule __r__, then rule
              __r__ does not match any address.
 |===
-
 
 [NOTE]
 ====
@@ -467,7 +495,7 @@ Execution Environment (TEE). The encodings for the `TEE_FLT` field can be found
 in <<TEE_FLT>>.
 
 [[TEE_FLT]]
-.`operand-0.TEE_FLT` field encodings
+.`data-0.TEE_FLT` field encodings
 [width=100%]
 [%header, cols="12,70"]
 |===
@@ -498,9 +526,51 @@ The `IOMMU_ID` field identifies the instance of the IOMMU that should be used to
 provide address translation and protection for the transactions matching this
 rule.
 
-The `IOSDID` field identifies the supervisor domain whose memory is accessed by
-this transaction. When `operand-1.MPT_MODE` is `Bare`, the `SET_ENTRY`
-operations requires the `IOSDID` field to be zero.
+The `SDID` field identifies the supervisor domain whose memory is accessed by
+this transaction.
+
+=== Read the configuration of an SDCL rule - `GET_SDCL_ENTRY`
+
+The `GET_SDCL_ENTRY` operation reads the configuration of an SDCL rule
+identified by `RULEID`.  This operation ignores the contents of the `data-*`
+registers. Upon a successful `GET_SDCL_ENTRY` operation, the configuration of
+the rule identified by `control.RULEID` is returned in the `data-0` register.
+
+The contents of the `data-0` register are `UNSPECIFIED` if the operation
+fails or if it is invoked without a preceding `SET_SDCL_ENTRY` for the specified
+`RULEID`. The contents of the `data-1` and `data-2` registers, whether the
+operation completes successfully or not, are `UNSPECIFIED`.
+
+For this operation, the fields of the `control` and `data-0` registers are
+interpreted as follows.
+
+.`control` register layout for `GET_SDCL_ENTRY` operation
+[wavedrom, , ]
+....
+{reg: [
+  {bits:  8, name: 'OP (WARL)'},
+  {bits:  8, name: 'RULEID (WARL)'},
+  {bits: 16, name: 'WPRI'},
+  {bits:  7, name: 'STATUS (RO)'},
+  {bits:  1, name: 'BUSY (RO)'},
+  {bits: 24, name: 'WPRI'}
+], config:{lanes: 8, hspace:1024}}
+....
+
+.`data-0` register layout for `GET_SDCL_ENTRY` operation
+[wavedrom, , ]
+....
+{reg: [
+  {bits:  4, name: 'SRC_IDT'},
+  {bits:  2, name: 'SRC_IDM'},
+  {bits:  2, name: 'TEE_FLT'},
+  {bits: 24, name: 'SRC_ID'},
+  {bits:  8, name: 'IOMMU_ID'},
+  {bits:  8, name: 'SDID'},
+  {bits: 16, name: 'WPRI'}
+], config:{lanes: 8, hspace:1024}}
+....
+
 
 [[OP-1]]
 === Operand 1 register (`operand-1`)
