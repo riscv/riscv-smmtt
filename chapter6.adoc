@@ -225,9 +225,9 @@ of instructions.
 |Offset|Name           |Size    |Description              | Optional?
 |0     |`capabilities` |8       |<<CAP,  Capabilities >>  | No
 |8     |`control`      |8       |<<CTRL, Control      >>  | No
-|16    |`operand-0`    |8       |<<OP-0, Operand 0    >>  | No
-|24    |`operand-1`    |8       |<<OP-1, Operand 1    >>  | No
-|32    |`operand-2`    |8       |<<OP-2, Operand 2    >>  | Yes
+|16    |`operand-0`    |8       |<<      Operand 0    >>  | No
+|24    |`operand-1`    |8       |<<      Operand 1    >>  | No
+|32    |`operand-2`    |8       |<<      Operand 2    >>  | Yes
 |===
 
 The reset value is 0 for the following registers fields.
@@ -272,74 +272,67 @@ implemented, otherwise these fields are reserved and read-only zero.
 [[CTRL]]
 === Control register (`control`)
 
-The `control` register is used to control classification of DMA requests using
-the identifiers associated with the DMA requests to determine the associated
-IO supervisor domain ID (`IOSDID`) and the Machine-level Memory Protection Tables (`MMPT`).
+The `control` register is used to initiate I/O MPT checker operations. The
+specific operation is identified by the `OP` field within the `control`
+register. Operands required to complete the operation are supplied either in
+dedicated fields of the `control` register or in one or more of the associated
+`operand-*` registers.  The `OP` field also defines the encoding of the
+`operand` fields in the `control` register and of the `operand-*` registers for
+that operation.
 
 [caption="Register {counter:rimage}: ", reftext="Register {rimage}", title="Control register (`control`)"]
 [wavedrom, , ]
 ....
 {reg: [
   {bits:  8, name: 'OP (WARL)'},
-  {bits:  8, name: 'RULEID (WARL)'},
-  {bits: 16, name: 'WPRI'},
+  {bits: 16, name: 'operands (WARL)'},
   {bits:  7, name: 'STATUS (RO)'},
   {bits:  1, name: 'BUSY (RO)'},
-  {bits: 24, name: 'WPRI'}
+  {bits: 32, name: 'operands (WARL)'}
 ], config:{lanes: 8, hspace:1024}}
 ....
-
-The `OP` field is used to instruct IOMPTCHK to perform an operation listed in
-<<IOMPTCHK_OP>>. The `RULEID` is identifier of a rule in the SDCL function to
-operate on. The `RULEID` value of 0 indicates that the operation applies to all
-rules and is supported only if explicitly specified by an operation.
 
 [[IOMPTCHK_OP]]
 .I/O MPT checker operations (`OP`)
 [width=100%]
 [%header, cols="16,^12,70"]
 |===
-|Operation     | Encoding ^| Description
-|--            | 0         | Reserved for future standard use.
-|`SET_ENTRY`   | 1         | Configure the rule identified by `RULEID` with the
-                             operands specified in `operand-0`, `operand-1`, and
-                             `operand-2` registers.
-|`GET_ENTRY`   | 2         | Read the configurations of a rule identified by
-                             `RULEID`. On successful completion of the
-                             operation, the `operand-0`, `operand-1`, and
-                             `operand-2` registers hold the current
-                             configurations of the rule. If the operation is not
-                             successful then the contents of `operand-0`,
-                             `operand-1`, `operand-2` are `UNSPECIFIED`.
-|`MPTINVAL`    | 3         | This operation ensures that stores to an MPT are
-                             observed by MPTCHK before subsequent implicit
-                             reads by MPTCHK to the corresponding MPT.
-|`IOFENCE`     | 4         | This command can be used to request that IOMPTCHK
-                             ensure that all previous read and write requests
-                             from devices that have already been processed by
-                             IOMPTCHK be committed to a global ordering point
-                             such that they can be observed by all RISC-V harts,
-                             IOMMUs and devices in the system.
-| --           | 5-127     | Reserved for future standard use.
-| --           | 128-255   | Designated for custom use.
+| Operation         | Encoding ^| Description
+| --                | 0         | Reserved for future standard use.
+| `SET_SDCL_ENTRY`  | 1         | Configure a rule in the SDCL.
+| `GET_SDCL_ENTRY`  | 2         | Read the configuration of an SDCL rule.
+| `SET_SDID_ENTRY`  | 3         | Configure MPT and QoS ID parameters for an SD.
+| `GET_SDID_ENTRY`  | 4         | Read the configuration associated with an SD.
+| `MPTINVAL`        | 5         | Ensure that stores to an MPT are observed by
+                                  MPTCHK before subsequent implicit reads by
+                                  MPTCHK to the corresponding MPT.
+| `IOFENCE`         | 6         | Ensure that all previous read and write
+                                  requests from devices already processed by
+                                  IOMPTCHK are committed to a global ordering
+                                  point such that they can be observed by all
+                                  RISC-V harts, IOMMUs, and devices in the
+                                  system.
+| --                | 7–127     | Reserved for future standard use.
+| --                | 128–255   | Designated for custom use.
 |===
 
-When the `control` is written, IOMPTCHK may need to perform several actions that
-may not complete synchronously with the write. A write to the `control` sets the
-`BUSY` bit to 1 indicating that IOMPTCHK is performing the requested operation.
-The behavior of writing the `control` register when the `BUSY` bit is 1 is
-`UNSPECIFIED`.  Some implementations may ignore the second write and others may
-perform the operation determined by the second write. Software must verify that
-`BUSY` is 0 before writing `control`.
+When the `control` register is written, IOMPTCHK may perform actions that do not
+complete synchronously with the write. A write to the `control` register sets
+the `BUSY` bit to 1, indicating that IOMPTCHK is executing the requested
+operation. The behavior of writing the `control` or the `operand-*` registers
+while the `BUSY` bit is 1 is `UNSPECIFIED`. Some implementations may ignore the
+second write, while others may perform the operation specified by that write.
+Software must verify that `BUSY` is 0 before writing to the `control` or
+`operand-*` registers.
 
 [NOTE]
 ====
-An implementation that can always perform the requested operation synchronously
-with the write to `control` register may hardwire the `BUSY` field to 0.
+An implementation that always completes the requested operation synchronously
+with a write to the `control` register may hardwire the `BUSY` bit to 0.
 ====
 
-When the `BUSY` bit reads 0 the operation is complete and the `STATUS` field
-provides a status value (<<IOMPTCHK_STS>>) of the requested operation.
+When the `BUSY` bit reads 0, the operation is complete, and the `STATUS` field
+provides a status value (<<IOMPTCHK_STS>>) for the requested operation.
 
 [[IOMPTCHK_STS]]
 .`control.STATUS` field encodings
@@ -347,48 +340,19 @@ provides a status value (<<IOMPTCHK_STS>>) of the requested operation.
 [%header, cols="12,70"]
 |===
 |`STATUS` | Description
-| 0       | Reserved
-| 1       | Operation was successfully completed.
+| 0       | Reserved.
+| 1       | Operation completed successfully.
 | 2       | Invalid operation (`OP`) requested.
 | 3       | Operation requested for invalid `RULEID`.
-| 4       | Illegal/invalid operand encodings used.
-| 5-127   | Reserved for future standard use.
+| 4       | Operation requested for invalid `SDID`.
+| 5       | Illegal or invalid operand encodings.
+| 6-127   | Reserved for future standard use.
 | 128-255 | Designated for custom use.
 |===
 
-Before requesting the `SET_ENTRY` operation using the `control` register,
-software should program the fields of the `operand-0`, `operand-1`, and
-`operand-2` registers. The `SET_ENTRY` operation utilizes the following
-fields from the `operand-0`, `operand-1`, and `operand-2` registers:
-`SRC_IDT`, `SRC_IDM`, `TEE_FLT`, `SRC_ID`, `IOMMU_ID`, `IOSDID`,
-`MPT_MODE`, `SSRM`, `SSMM`, `SRL`, `SML`, `SQRID`, `S-RCID`, `S-MCID`,
-and `PPN`. All other fields are ignored.
-
-If multiple rules are programmed to match a transaction, the implementation may
-act based on any one of those matching rules. However, if a transaction does not
-match any of the rules, the IO Bridge is notified of this condition. The
-subsequent behavior of the IO Bridge for unmatched transactions remains
-`UNSPECIFIED`.
-
-An implementation that performs the requested operation synchronously may
-hardwire the `BUSY` bit to 0.
-
-The `GET_ENTRY` operation ignores the contents of the `operand-0`, `operand-1`,
-and `operand-2` registers. If the `GET_ENTRY` operation is unsuccessful, the
-contents of these registers remain `UNSPECIFIED`. However, upon a successful
-`GET_ENTRY` operation, the configurations of the rule identified by
-`control.RULEID` are provided in the following fields: `SRC_IDT`, `SRC_IDM`,
-`TEE_FLT`, `SRC_ID`, `IOMMU_ID`, `IOSDID`, `MPT_MODE`, `SSRM`, `SSMM`, `SRL`,
-`SML`, `SQRID`, `S-RCID`, `S-MCID`, and `PPN`. The state of all other fields in
-the `operand-0`, `operand-1`, and `operand-2` registers is `UNSPECIFIED`.
-
-The contents of `RULEID`, `operand-0`, `operand-1`, and `operand-2` are
-disregarded by the `IOFENCE` operation.
-
-The `MPTINVAL` operation utilizes the `IOSDID` field of `operand-0` register and
-utilizes the following fields from the `operand-1` register: `PPNV`, `PPN`,
-`IOSDIDV`, and `S`. The contents of `RULEID` and all other fields of `operand-0`,
-`operand-1`, and `operand-2` register are disregarded by the `MPTINVAL` operation.
+Before requesting an operation using the `control` register, software must
+program the fields of the `operand-0`, `operand-1`, and `operand-2` registers as
+required by that operation. Fields not used by an operation are ignored.
 
 [[OP-0]]
 === Operand 0 register (`operand-0`)
