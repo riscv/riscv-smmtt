@@ -299,8 +299,8 @@ that operation.
 | --                | 0         | Reserved for future standard use.
 | `SET_SDCL_ENTRY`  | 1         | Configure a rule in the SDCL.
 | `GET_SDCL_ENTRY`  | 2         | Read the configuration of an SDCL rule.
-| `SET_SDID_ENTRY`  | 3         | Configure MPT and QoS ID parameters for an SD.
-| `GET_SDID_ENTRY`  | 4         | Read the configuration associated with an SD.
+| `SET_SDCFG_ENTRY` | 3         | Configure MPT and QoS ID parameters for an SD.
+| `GET_SDCFG_ENTRY` | 4         | Read the configuration associated with an SD.
 | `MPTINVAL`        | 5         | Ensure that stores to an MPT are observed by
                                   MPTCHK before subsequent implicit reads by
                                   MPTCHK to the corresponding MPT.
