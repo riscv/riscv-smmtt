@@ -17,7 +17,7 @@
 // needs to be changed? bug discussion started
 //:WaveDromEditorApp: app/wavedrom-editor.app
 :imagesoutdir: images
-:bibtex-file: example.bib
+:bibtex-file: sup_domain.bib
 :bibtex-order: appearance
 :bibtex-style: ieee
 :icons: font
