@@ -224,7 +224,7 @@ of instructions.
 |===
 |Offset|Name           |Size    |Description                | Optional?
 |0     |`capabilities` |8       |<<CAP,  Capabilities   >>  | No
-|4     |`control`      |4       |<<CTRL, Control        >>  | No
+|4     |`command`      |4       |<<CTRL, Command        >>  | No
 |8     |`status`       |4       |<<STS,  Status         >>  | No
 |16    |`data-0`       |8       |<< Input/Output data 0 >>  | No
 |24    |`data-1`       |8       |<< Input/Output data 1 >>  | No
@@ -269,17 +269,17 @@ The `QOSID` field indicates whether associating QoS IDs with requests is
 supported.
 
 [[CTRL]]
-=== Control register (`control`)
+=== Command register (`command`)
 
-The `control` register is used to initiate I/O MPT checker operations. The
-specific operation is identified by the `OP` field within the `control`
+The `command` register is used to initiate I/O MPT checker operations. The
+specific operation is identified by the `OP` field within the `command`
 register. Operands required to complete the operation are supplied either in
-dedicated fields of the `control` register or in one or more of the associated
+dedicated fields of the `command` register or in one or more of the associated
 `data-*` registers.  The `OP` field also defines the encoding of the
-`data` fields in the `control` register and of the `data-*` registers for
+`data` fields in the `command` register and of the `data-*` registers for
 that operation.
 
-.Control Register (`control`)
+.Command Register (`command`)
 [wavedrom, , ]
 ....
 {reg: [
@@ -295,24 +295,24 @@ that operation.
 |===
 | Operation         | Encoding ^| Description
 | --                | 0         | Reserved for future standard use.
-| `SET_SDCL_ENTRY`  | 1         | Configure a rule in the SDCL.
-| `GET_SDCL_ENTRY`  | 2         | Read the configuration of an SDCL rule.
-| `SET_SDCFG_ENTRY` | 3         | Configure MPT and QoS ID parameters for an SD.
-| `GET_SDCFG_ENTRY` | 4         | Read the configuration associated with an SD.
-| `MPTINVAL`        | 5         | Ensure that stores to an MPT are observed by
-                                  MPTCHK before subsequent implicit reads by
-                                  MPTCHK to the corresponding MPT.
-| `IOFENCE`         | 6         | Ensure that all previous read and write
+| `IOFENCE`         | 1         | Ensure that all previous read and write
                                   requests from devices already processed by
                                   IOMPTCHK are committed to a global ordering
                                   point such that they can be observed by all
                                   RISC-V harts, IOMMUs, and devices in the
                                   system.
+| `SET_SDCL_ENTRY`  | 2         | Configure a rule in the SDCL.
+| `GET_SDCL_ENTRY`  | 3         | Read the configuration of an SDCL rule.
+| `SET_SDCFG_ENTRY` | 4         | Configure MPT and QoS ID parameters for an SD.
+| `GET_SDCFG_ENTRY` | 5         | Read the configuration associated with an SD.
+| `MPTINVAL`        | 6         | Ensure that stores to an MPT are observed by
+                                  MPTCHK before subsequent implicit reads by
+                                  MPTCHK to the corresponding MPT.
 | --                | 7–127     | Reserved for future standard use.
 | --                | 128–255   | Designated for custom use.
 |===
 
-Before requesting an operation using the `control` register, software must
+Before requesting an operation using the `command` register, software must
 program the fields of the `data-0` and `data-1` registers as required by that
 operation. Fields not used by an operation are ignored.
 
@@ -320,38 +320,38 @@ operation. Fields not used by an operation are ignored.
 === Status register (`status`)
 
 The `status` register provides the status of the operation requested using the
-`control` register.
+`command` register.
 
-.Status Register (`control`)
+.Status Register (`status`)
 ....
 {reg: [
-  {bits:  7, name: 'STATUS (RO)'},
+  {bits:  7, name: 'CODE (RO)'},
   {bits: 23, name: 'WPRI'},
   {bits:  1, name: 'BUSY (RO)'}
 ], config:{lanes: 2, hspace:1024}}
 ....
 
-When the `control` register is written, IOMPTCHK may perform actions that do not
-complete synchronously with the write. A write to the `control` register sets
+When the `command` register is written, IOMPTCHK may perform actions that do not
+complete synchronously with the write. A write to the `command` register sets
 the `status.BUSY` bit to 1, indicating that IOMPTCHK is executing the requested
-operation. The behavior of writing the `control` or the `data-*` registers
+operation. The behavior of writing the `command` or the `data-*` registers
 while the `status.BUSY` bit is 1 is `UNSPECIFIED`. Some implementations may
 ignore the second write, while others may perform the operation specified by
 that write. Software must verify that `BUSY` is 0 before writing to the
-`control` or `data-*` registers.
+`command` or `data-*` registers.
 
 [NOTE]
 ====
 An implementation that always completes the requested operation synchronously
-with a write to the `control` register may hardwire the `BUSY` bit to 0.
+with a write to the `command` register may hardwire the `BUSY` bit to 0.
 ====
 
 When the `status.BUSY` bit reads 0, the operation is complete, and the
-`status.STATUS_CODE` field provides a status value (<<IOMPTCHK_STS>>) for the
+`status.CODE` field provides a status value (<<IOMPTCHK_STS>>) for the
 requested operation.
 
 [[IOMPTCHK_STS]]
-.`control.STATUS` field encodings
+.`status.CODE` field encodings
 [width=100%]
 [%header, cols="12,70"]
 |===
@@ -372,13 +372,13 @@ The `SET_SDCL_ENTRY` operation configures an SDCL rule to classify DMA requests
 based on the identifiers associated with the requests, in order to determine the
 supervisor domain ID (`SDID`) and the IOMMU ID (`IOMMU_ID`).
 
-This operation uses the operands in the `control` register and the `data-0`
+This operation uses the operands in the `command` register and the `data-0`
 register. The contents of the `data-1` register are ignored by this operation.
 
-For this operation, the fields of the `control` and `data-0` registers are
+For this operation, the fields of the `command` and `data-0` registers are
 interpreted as follows.
 
-.`control` register layout for `SET_SDCL_ENTRY` operation
+.`command` register layout for `SET_SDCL_ENTRY` operation
 [wavedrom, , ]
 ....
 {reg: [
@@ -528,24 +528,24 @@ this transaction.
 The `GET_SDCL_ENTRY` operation reads the configuration of an SDCL rule
 identified by `RULEID`. This operation ignores the contents of the `data-*`
 registers. Upon success, the configuration of the rule identified by
-`control.RULEID` is returned in the `data-0` register.
+`command.RULEID` is returned in the `data-0` register.
 
 The contents of the `data-0` register are `UNSPECIFIED` if the operation fails
 or if it is invoked without a preceding `SET_SDCL_ENTRY` for the specified
 `RULEID`. The contents of the `data-1` register are `UNSPECIFIED`, regardless
 of whether the operation completes successfully.
 
-The interpretation of the `control` and `data-0` registers for this operation is
+The interpretation of the `command` and `data-0` registers for this operation is
 identical to that of the `SET_SDCL_ENTRY` operation.
 
 === Set Supervisor Domain Configurations - `SET_SDCFG_ENTRY`
 
 The `SET_SDCFG_ENTRY` operation configures MPT and QoS ID parameters for a
-supervisor domain in MPTCHK. This operation uses the operands in the `control`,
+supervisor domain in MPTCHK. This operation uses the operands in the `command`,
 `data-0`, and `data-1` registers. The fields of these registers are interpreted
 as follows.
 
-.`control` register layout for `SET_SDCFG_ENTRY` operation
+.`command` register layout for `SET_SDCFG_ENTRY` operation
 [wavedrom, , ]
 ....
 {reg: [
@@ -630,13 +630,13 @@ the IOMMU associated with the SD, and accompanies the effective `RCID` and
 The `GET_SDCFG_ENTRY` operation reads the configuration of the supervisor domain
 identified by `SDID` from MPTCHK. This operation ignores the contents of the
 `data-*` registers. Upon success, the configuration of the supervisor domain
-identified by `control.SDID` is returned in the `data-0` register.
+identified by `command.SDID` is returned in the `data-0` register.
 
 The contents of the `data-0` and `data-1` registers are `UNSPECIFIED` if the
 operation fails or if it is invoked without a preceding `SET_SDCFG_ENTRY` for
 the specified `SDID`.
 
-The interpretation of the `control`, `data-0`, and `data-1` registers for this
+The interpretation of the `command`, `data-0`, and `data-1` registers for this
 operation is identical to that of the `SET_SDCFG_ENTRY` operation.
 
 === MPT Permission Cache Invalidation - `MPTINVAL` 
@@ -644,13 +644,13 @@ operation is identical to that of the `SET_SDCFG_ENTRY` operation.
 This operation ensures that stores to an MPT are observed by MPTCHK before
 subsequent implicit reads by MPTCHK to the corresponding MPT.
 
-This operation uses the operands in the `control` register and the `data-0`
+This operation uses the operands in the `command` register and the `data-0`
 register. The contents of the `data-1` register are ignored by this operation.
 
-For this operation, the fields of the `control` and `data-0` registers are
+For this operation, the fields of the `command` and `data-0` registers are
 interpreted as follows.
 
-.`control` register layout for `MPTINVAL` operation
+.`command` register layout for `MPTINVAL` operation
 [wavedrom, , ]
 ....
 {reg: [
@@ -755,10 +755,10 @@ by IOMPTCHK are committed to a global ordering point such that they can be
 observed by all RISC-V harts, IOMMUs, and devices in the system.
 
 The contents of the `data-0` and `data-1` registers are ignored by this
-operation. For this operation, the fields of the `control` register are
+operation. For this operation, the fields of the `command` register are
 interpreted as follows.
 
-.`control` register layout for `IOFENCE` operation
+.`command` register layout for `IOFENCE` operation
 [wavedrom, , ]
 ....
 {reg: [
