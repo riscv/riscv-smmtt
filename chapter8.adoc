@@ -1,16 +1,16 @@
 [[chapter8]]
-[[Smsdedbg]]
-[[Smsdetrc]]
-== Supervisor Domain External Trace and Debug
+[[Smsdedbga]]
+[[Smsdetrca]]
+== Supervisor Domain External Trace and Debug Allow Controls
 
-This chapter describes two extensions `Smsdedbg` and `Smsdetrc` that enable a
-RDSM to manage isolation of supervisor domains when external debug and trace
-mechanisms are being utilized.
+This chapter describes two extensions `Smsdedbga` and `Smsdetrca` that enable
+the RDSM to enforce isolation of supervisor domains when external debug and
+external trace mechanisms are being utilized.
 
-`Smsdedbg` defines the `SEDA` bit in the `msdcfg` CSR that specifies if a
+`Smsdedbga` defines the `SEDA` bit in the `msdcfg` CSR that specifies if a
 supervisor domain is allowed to be externally-debugged.
 
-Similarly, `Smsdetrc` defines the `SETA` bit in the `msdcfg` CSR that specifies
+Similarly, `Smsdetrca` defines the `SETA` bit in the `msdcfg` CSR that specifies
 if a supervisor domain is allowed to be externally-traced cite:[ExtDbg].
 
 External trace refers to tracing software running on a separate target RISC-V
@@ -39,7 +39,7 @@ external debug and/or trace is allowed for a supervisor doamin, an external
 debugger may enable the external debug and/or trace for that supervisor domain.
 ====
 
-=== `Smsdedbg`: External Debug allowed control for Supervisor Domain
+=== `Smsdedbga`: External Debug allowed control for Supervisor Domain
 
 When M-mode external debug is enabled, all supervisor domains may also be
 debugged by an external debugger irrespective of the configuration held in
@@ -83,7 +83,7 @@ system cite:[ExtDbgSec]:
   This functional change allows the RDSM to remain in control of external debug
   for supervisor domains when it is not under external debug itself.
 
-=== `Smsdetrc`: External Trace allowed control for Supervisor Domain
+=== `Smsdetrca`: External Trace allowed control for Supervisor Domain
 
 When M-mode external trace is enabled, all supervisor domains activity may also
 be traced by an external trace tool irrespective of the configuration held in

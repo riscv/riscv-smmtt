@@ -37,12 +37,12 @@ interrupt file(s) or an APLIC domain to a supervisor domain. The extension also
 provides CSRs to allow M-mode software to retain control on notification of
 interrupts when Supervisor domains are enabled.
 
-* `Smsdedbg` (<<Smsdedbg>>) - This extension provides the controls to indicate
+* `Smsdedbga` (<<Smsdedbga>>) - This extension provides the controls to indicate
 if external debug is allowed for a supervisor domain. Whether external debug is
 authorized or not is expected to be done via a root of trust (RoT) and is
 outside the scope of this specification.
 
-* `Smsdetrc` (<<Smsdetrc>>) - This extension provides the controls to indicate
+* `Smsdetrca` (<<Smsdetrca>>) - This extension provides the controls to indicate
 if external trace is allowed for a supervisor domain. Whether external trace is
 authorized or not is expected to be done via a root of trust (RoT) and is
 outside the scope of this specification.
