@@ -156,7 +156,7 @@ The behavior of `MFENCE.MPA` depends on rs1 and rs2 as follows:
 
 * If rs1=x0 and rs2=x0, the fence orders all reads and writes to any level
   of the MPTs for all supervisor domain address spaces.
-* If rs1=x0 and rs2≠x0, the fence orders all reads and writes to any level
+* If rs1=x0 and rs2!=x0, the fence orders all reads and writes to any level
   of the MPT for the supervisor domain address space identified by the
   SDID in rs2.
 * If rs1!=x0 and rs2=x0, the fence orders all reads and writes made to the
