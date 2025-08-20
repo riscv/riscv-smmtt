@@ -292,15 +292,15 @@ specify additional configuration for supervisor domains:
 
 . `Smsdia` uses `msdcfg.SIDN` to identify the _supervisor interrupt domain_
   associated with the hart.
-. `Smsdedbg` specifies the `msdcfg.SEDA` bit to manage
-  external-debug for a supervisor domain.
-. `Smsdetrc` specifies the `msdcfg.SETA` bit to manage
-  external-trace for a supervisor domain.
+. `Smsdedbga` specifies the `msdcfg.SEDA` bit to allow external-debug for
+  supervisor domains.
+. `Smsdetrca` specifies the `msdcfg.SETA` bit to allow external-trace for
+  supervisor domains.
 . `Smqosid` specifies the control bits `SSRM`, `SSMM`, `SRL`, `SML` and `SQRID`
    to enable the RDSM to manage QoS controls for supervisor domains.
 
-Details of `Smsdia`, `Smsdedbg`, `Smsdetrc` and `Smqosid` are described in their
-respective sections in this specification. For any optional extensions not
+Details of `Smsdia`, `Smsdedbga`, `Smsdetrca` and `Smqosid` are described in
+their respective sections in this specification. For any optional extensions not
 implemented, the corresponding configuration bits in `msdcfg` are read-only
 zero. Hence if no optional extensions are implemented, this CSR becomes
 read-only zero.
