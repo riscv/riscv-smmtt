@@ -302,11 +302,11 @@ The `status` register provides the status of the operation requested using the
 When the `command` register is written, IOMPTCHK may perform actions that do not
 complete synchronously with the write. A write to the `command` register sets
 the `status.BUSY` bit to 1, indicating that IOMPTCHK is executing the requested
-operation. The behavior of writing the `command` or the `data-*` registers
+operation. The behavior of writing the `command` or the `data-+*+` registers
 while the `status.BUSY` bit is 1 is `UNSPECIFIED`. Some implementations may
 ignore the second write, while others may perform the operation specified by
 that write. Software must verify that `BUSY` is 0 before writing to the
-`command` or `data-*` registers.
+`command` or `data-+*+` registers.
 
 [NOTE]
 ====
@@ -386,7 +386,7 @@ commands to invalidate the cached entries. Software must initialize all SDCL
 rules and SDID configurations prior to transitioning the I/O MPT checker to `On`
 state.
 
-When the `MODE` is not `Off`, software changes to fields besides `MODE` may 
+When the `MODE` is not `Off`, software changes to fields besides `MODE` may
 cause UNSPECIFIED behavior. When the state is `On`, software must first change
 the `MODE` to `Off` without changing the values of any other field.
 
@@ -452,8 +452,8 @@ The `command` register is used to initiate I/O MPT checker operations. The
 specific operation is identified by the `OP` field within the `command`
 register. Operands required to complete the operation are supplied either in
 dedicated fields of the `command` register or in one or more of the associated
-`data-*` registers.  The `OP` field also defines the encoding of the
-`data` fields in the `command` register and of the `data-*` registers for
+`data-+*+` registers.  The `OP` field also defines the encoding of the
+`data` fields in the `command` register and of the `data-+*+` registers for
 that operation.
 
 .Command Register (`command`)
@@ -653,7 +653,7 @@ this transaction.
 === Read the configuration of an SDCL rule - `GET_SDCL_ENTRY`
 
 The `GET_SDCL_ENTRY` operation reads the configuration of an SDCL rule
-identified by `RULEID`. This operation ignores the contents of the `data-*`
+identified by `RULEID`. This operation ignores the contents of the `data-+*+`
 registers. Upon success, the configuration of the rule identified by
 `command.RULEID` is returned in the `data-0` register.
 
@@ -756,7 +756,7 @@ the IOMMU associated with the SD, and accompanies the effective `RCID` and
 
 The `GET_SDCFG_ENTRY` operation reads the configuration of the supervisor domain
 identified by `SDID` from MPTCHK. This operation ignores the contents of the
-`data-*` registers. Upon success, the configuration of the supervisor domain
+`data-+*+` registers. Upon success, the configuration of the supervisor domain
 identified by `command.SDID` is returned in the `data-0` register.
 
 The contents of the `data-0` and `data-1` registers are `UNSPECIFIED` if the
