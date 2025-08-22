@@ -362,7 +362,7 @@ formatted as shown in <<MGEIEN>> for RV64 and in <<MGEIEN32>> for RV32.
 ], config:{lanes: 1, hspace:1024}}
 ....
 
-[[MGEIEN]]
+[[MGEIEN32]]
 .`mgeien` register for RV32
 
 [wavedrom, , ]
