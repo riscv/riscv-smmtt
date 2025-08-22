@@ -159,10 +159,10 @@ interface.
 
 A transaction is aborted if:
 * SDCL is not configured with a rule to classify a transaction.
-* Memory access is disallows by the MPT
+* Memory access is disallowed by the MPT
 * Access to the MPT itself is disallowed by a physical memory attributes check
   or physical memory protection check.
-* Access to the MPT returns corrupted (e.k.a poisoned) data.
+* Access to the MPT returns corrupted (a.k.a poisoned) data.
 
 If the aborted transaction is an IOMMU-initiated memory access then the IO
 bridge signals such access faults to the IOMMU itself. The details of such
@@ -232,9 +232,9 @@ of instructions.
 |===
 |Offset|Name           |Size    |Description                 | Optional?
 |0     |`capabilities` |4       |<<CAP, Capabilities     >>  | No
-|4     |`control`      |4       |<<CTL, Control          >>  | No
-|4     |`command`      |4       |<<CMD, Command          >>  | No
-|8     |`status`       |4       |<<STS, Status           >>  | No
+|4     |`status`       |4       |<<STS, Status           >>  | No
+|8     |`control`      |4       |<<CTL, Control          >>  | No
+|12    |`command`      |4       |<<CMD, Command          >>  | No
 |16    |`data-0`       |8       |<< Input/Output data 0  >>  | No
 |24    |`data-1`       |8       |<< Input/Output data 1  >>  | No
 |===
@@ -278,7 +278,58 @@ specification reports 0x10.
 The `QOSID` field indicates whether associating QoS IDs with requests is
 supported.
 
-[[CAP]]
+[[STS]]
+=== Status register (`status`)
+
+The `status` register provides the status of the operation requested using the
+`command` register.
+
+.Status Register (`status`)
+....
+{reg: [
+  {bits:  7, name: 'CODE (RO)'},
+  {bits: 23, name: 'WPRI'},
+  {bits:  1, name: 'BUSY (RO)'}
+], config:{lanes: 2, hspace:1024}}
+....
+
+When the `command` register is written, IOMPTCHK may perform actions that do not
+complete synchronously with the write. A write to the `command` register sets
+the `status.BUSY` bit to 1, indicating that IOMPTCHK is executing the requested
+operation. The behavior of writing the `command` or the `data-*` registers
+while the `status.BUSY` bit is 1 is `UNSPECIFIED`. Some implementations may
+ignore the second write, while others may perform the operation specified by
+that write. Software must verify that `BUSY` is 0 before writing to the
+`command` or `data-*` registers.
+
+[NOTE]
+====
+An implementation that always completes the requested operation synchronously
+with a write to the `command` register may hardwire the `BUSY` bit to 0.
+====
+
+When the `status.BUSY` bit reads 0, the operation is complete, and the
+`status.CODE` field provides a status value (<<IOMPTCHK_STS>>) for the
+requested operation.
+
+[[IOMPTCHK_STS]]
+.`status.CODE` field encodings
+[width=100%]
+[%header, cols="12,70"]
+|===
+|`STATUS` | Description
+| 0       | Reserved.
+| 1       | Operation completed successfully.
+| 2       | Invalid operation (`OP`) requested.
+| 3       | Operation requested for invalid `RULEID`.
+| 4       | Operation requested for invalid `SDID`.
+| 5       | Illegal or invalid operand encodings.
+| 6-127   | Reserved for future standard use.
+| 128-255 | Designated for custom use.
+|===
+
+
+[[CTRL]]
 === Control (`control`)
 
 This register is used to control the operations of the I/O MPT checker.
@@ -329,10 +380,9 @@ commands to invalidate the cached entries. Software must initialize all SDCL
 rules and SDID configurations prior to transitioning the I/O MPT checker to `On`
 state.
 
-If software changes the values of field besides `MODE` field in this register
-when the `MODE` is not `Off`, then the I/O MPT checker behavior is UNSPECIFIED>
-When the state is `On`, software must first change the `MODE` to `Off` without
-changing the values of any other field.
+When the `MODE` is not `Off`, software changes to fields besides `MODE` may 
+cause UNSPECIFIED behavior. When the state is `On`, software must first change
+the `MODE` to `Off` without changing the values of any other field.
 
 A write to `control` register may require the I/O MPT checker to perform many
 operations that may not occur synchronously to the write. When a write is
@@ -437,56 +487,6 @@ Before requesting an operation using the `command` register, software must
 program the fields of the `data-0` and `data-1` registers as required by that
 operation. Fields not used by an operation are ignored.
 
-[[STS]]
-=== Status register (`status`)
-
-The `status` register provides the status of the operation requested using the
-`command` register.
-
-.Status Register (`status`)
-....
-{reg: [
-  {bits:  7, name: 'CODE (RO)'},
-  {bits: 23, name: 'WPRI'},
-  {bits:  1, name: 'BUSY (RO)'}
-], config:{lanes: 2, hspace:1024}}
-....
-
-When the `command` register is written, IOMPTCHK may perform actions that do not
-complete synchronously with the write. A write to the `command` register sets
-the `status.BUSY` bit to 1, indicating that IOMPTCHK is executing the requested
-operation. The behavior of writing the `command` or the `data-*` registers
-while the `status.BUSY` bit is 1 is `UNSPECIFIED`. Some implementations may
-ignore the second write, while others may perform the operation specified by
-that write. Software must verify that `BUSY` is 0 before writing to the
-`command` or `data-*` registers.
-
-[NOTE]
-====
-An implementation that always completes the requested operation synchronously
-with a write to the `command` register may hardwire the `BUSY` bit to 0.
-====
-
-When the `status.BUSY` bit reads 0, the operation is complete, and the
-`status.CODE` field provides a status value (<<IOMPTCHK_STS>>) for the
-requested operation.
-
-[[IOMPTCHK_STS]]
-.`status.CODE` field encodings
-[width=100%]
-[%header, cols="12,70"]
-|===
-|`STATUS` | Description
-| 0       | Reserved.
-| 1       | Operation completed successfully.
-| 2       | Invalid operation (`OP`) requested.
-| 3       | Operation requested for invalid `RULEID`.
-| 4       | Operation requested for invalid `SDID`.
-| 5       | Illegal or invalid operand encodings.
-| 6-127   | Reserved for future standard use.
-| 128-255 | Designated for custom use.
-|===
-
 === Configure a rule in the SDCL - `SET_SDCL_ENTRY`
 
 The `SET_SDCL_ENTRY` operation configures an SDCL rule to classify DMA requests
@@ -518,8 +518,8 @@ interpreted as follows.
   {bits:  2, name: 'TEE_FLT (WARL)'},
   {bits: 24, name: 'SRC_ID'},
   {bits:  8, name: 'IOMMU_ID (WARL)'},
-  {bits:  8, name: 'SDID (WARL)'},
-  {bits: 16, name: 'WPRI'}
+  {bits:  6, name: 'SDID (WARL)'},
+  {bits: 18, name: 'WPRI'}
 ], config:{lanes: 8, hspace:1024}}
 ....
 
@@ -671,8 +671,8 @@ as follows.
 ....
 {reg: [
   {bits:  8, name: 'OP (WARL)'},
-  {bits:  8, name: 'SDID (WARL)'},
-  {bits: 16, name: 'WPRI'},
+  {bits:  6, name: 'SDID (WARL)'},
+  {bits: 18, name: 'WPRI'},
 ], config:{lanes: 2, hspace:1024}}
 ....
 
@@ -776,7 +776,8 @@ interpreted as follows.
 ....
 {reg: [
   {bits:  8, name: 'OP (WARL)'},
-  {bits:  8, name: 'SDID (WARL)'},
+  {bits:  6, name: 'SDID (WARL)'},
+  {bits:  2, name: 'WPRI'},
   {bits:  1, name: 'SDID_V'},
   {bits: 15, name: 'WPRI'},
 ], config:{lanes: 2, hspace:1024}}
