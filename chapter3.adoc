@@ -24,7 +24,7 @@ associated with the SDID.
 
 === Machine-level Memory Protection Tables (`mmpt`)
 
-The `mmpt` register is an `XLEN`-bit read/write register, formatted as shown in
+The `mmpt` register (`0x360`) is an `XLEN`-bit read/write register, formatted as shown in
 <<sdid-32>> for `XLEN=32` and <<sdid-64>> for `XLEN=64`, which controls
 page-based physical address space protection. This register holds the
 supervisor domain identifier (`SDID`); the physical page number (`PPN`) of the

@@ -175,7 +175,7 @@ CSRs, along with a machine supervisor domain external interrupt (`MSDEI`).
 
 ==== Machine supervisor domain configuration (`msdcfg`)
 
-The `msdcfg` is a 32-bit read/write register, formatted as shown in <<MSDCFG>>.
+The `msdcfg` (`0x361`) is a 32-bit read/write register, formatted as shown in <<MSDCFG>>.
 
 The `SIDN` field selects an interrupt domain among the plurality of
 _supervisor interrupt domains_ associated with a hart as the active supervisor
