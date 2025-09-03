@@ -109,7 +109,7 @@ bounded timeframe to subsequent implicit accesses by that hart to such MPTEs.
 [NOTE]
 ====
 This behavior relieves M-mode software from executing certain memory-management
-instructions, such as MFENCE.SPA or MINVAL.SPA, which would normally be used to
+instructions, such as MFENCE.SPA or MINVAL.MPA, which would normally be used to
 synchronize the hart’s MPT caches when a memory-resident MPTE is changed from
 Invalid to Valid. Synchronizing the hart’s MPT caches with other forms of updates
 to a memory-resident MPTE, including when a MPTE is changed from Valid to Invalid,

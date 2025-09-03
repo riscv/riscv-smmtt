@@ -208,10 +208,10 @@ invalidation of cached MPT entries.
 instructions.
 
 The SFENCE.W.INVAL instruction guarantees that any previous stores already
-visible to the current RISC-V hart are ordered before subsequent MINVAL.SPA
+visible to the current RISC-V hart are ordered before subsequent MINVAL.MPA
 instructions executed by the same hart.
 
-The SFENCE.INVAL.IR instruction guarantees that any previous MINVAL.SPA
+The SFENCE.INVAL.IR instruction guarantees that any previous MINVAL.MPA
 instructions executed by the current hart are ordered before subsequent
 implicit references by that hart to memory-protection data structures.
 
