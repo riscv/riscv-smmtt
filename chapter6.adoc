@@ -131,14 +131,14 @@ however can only be associated with one supervisor domain.
 
 [NOTE]
 ====
-Usually an IOMMU is associated with an I/O port, and an I/O port connects to one
+Usually an IOMMU is associated with a root port, and a root port connects to one
 or more devices that are governed by that IOMMU. An I/O MPT checker may be
-associated with more than one I/O port. A supervisor domain may be associated
-with one or more devices from each of these I/O ports, necessitating the
-association of an IOMMU instance for each I/O port to be used by that supervisor
+associated with more than one root port. A supervisor domain may be associated
+with one or more devices from each of these root ports, necessitating the
+association of an IOMMU instance for each root port to be used by that supervisor
 domain. When a common I/O MPT checker is used to check I/O originating from
-multiple I/O ports, the SDCL may be configured with rules to classify a device
-connected to an I/O port as associated with a supervisor domain and with the
+multiple root ports, the SDCL may be configured with rules to classify a device
+connected to a root port as associated with a supervisor domain and with the
 IOMMU instance that governs that device.
 ====
 
