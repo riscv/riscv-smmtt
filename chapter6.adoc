@@ -154,6 +154,11 @@ I/O MPT checker:
 These configurations are programmed through the I/O MPT checker register
 interface.
 
+While the common use case involves the use of an IOMMU, the architecture
+supports implementations without an IOMMU. In such implementations, the SDCL
+rules classify devices to an SDID alone and no IOMMU ID is associated with the
+rules.
+
 [[IOMPTABORT]]
 === Handling I/O MPT checker violations
 
@@ -441,7 +446,9 @@ that operation.
 
 Before requesting an operation using the `command` register, software must
 program the fields of the `data1` and `data2` registers as required by that
-operation. Fields not used by an operation are ignored.
+operation. Fields not used by an operation are ignored. If the fields used by
+the operation have an illegal, unsupported, or invalid encoding then the command
+fails with "Illegal or invalid operand encodings" (`status.CODE=5`).
 
 === Configure a rule in the SDCL - `SET_SDCL_ENTRY`
 
@@ -595,10 +602,8 @@ transactions are received on the same PCIe IDE stream.
 
 The `IOMMU_ID` field identifies the instance of the IOMMU that should be used to
 provide address translation and protection for the transactions matching this
-rule.
-
-The `SDID` field identifies the supervisor domain whose memory is accessed by
-this transaction.
+rule. When the I/O MPT checker is not associated with an IOMMU, the `IOMMU_ID`
+field is ignored by this operation.
 
 === Read the configuration of an SDCL rule - `GET_SDCL_ENTRY`
 
@@ -614,6 +619,9 @@ of whether the operation completes successfully.
 
 The interpretation of the `command` and `data1` registers for this operation is
 identical to that of the `SET_SDCL_ENTRY` operation.
+
+When the I/O MPT checker is not associated with an IOMMU, the value held in
+`IOMMU_ID` field on successful completion of this operation is UNSPECIFIED.
 
 === Set Supervisor Domain Configurations - `SET_SDCFG_ENTRY`
 
@@ -758,6 +766,10 @@ the specified `SDID`.
 
 The interpretation of the `command`, `data1`, and `data2` registers for this
 operation is identical to that of the `SET_SDCFG_ENTRY` operation.
+
+When the I/O MPT checker does not support associating QoS IDs with requests, the
+value held in the `data2` register on successful completion of this operation is
+UNSPECIFIED.
 
 === MPT Permission Cache Invalidation - `MPTINVAL`
 
