@@ -874,6 +874,9 @@ The IOMMU itself is a DMA capable device. The DMA performed by the IOMMU is
 performed using the device ID of the IOMMU. A rule must be defined to associate
 the IOMMU device ID itself with an `SDID` and MPT unless the IOMMU device ID
 is encompassed by another rule that associates device IDs with an SD.
+
+Even if the MPTCHK denies a reqyest, the MPTCHK is allowed to cache the
+corresponding MPT entry.
 ====
 
 === I/O Fence Operation - `IOFENCE`
@@ -895,3 +898,75 @@ interpreted as follows.
 ], config:{lanes: 2, hspace:1024}}
 ....
 
+=== Treatment of Device-Side Address Translation Caches
+
+Some devices may participate in the translation process and provide a
+device-side ATC (DevATC) for their own memory accesses. By providing a
+DevATC, the device shares the translation caching responsibility and thereby
+reduces the probability of "thrashing" in the IOATC. The DevATC may be sized
+by the device to suit its unique performance requirements and may also be
+used to optimize DMA latency by prefetching translations. Such mechanisms
+require close cooperation between the device and the IOMMU through a
+protocol. For PCIe, for example, the Address Translation Services (ATS)
+protocol may be used by the device to request translations to cache in the
+DevATC and to synchronize it with updates made to software address
+translation data structures. +
+
+If the IOBRIDGE and the IOMMUs support the PCIe ATS specification cite:[PCI],
+the IOMMU supports two forms of transactions:
+
+* Translated Requests
+* PCIe ATS Translation Requests
+
+PCIe ATS Translation Requests are used by the device to obtain a translation
+for an I/O virtual address (IOVA) specified in the request. These translated
+addresses may be cached by the device in its DevATC and used as addresses for
+subsequent Translated Requests.
+
+For a PCIe ATS Translation Request, the IOMMU performs a two-stage address
+translation to determine the permissions and the size of the translation to
+be provided in the completion of the request. The IOMMU may be configured to
+return either the SPA or a GPA (see `T2GPA` field in Device Context
+cite:[IOMMU]) as the translation of an IOVA in the response.
+
+Translated Requests also invoke the IOMMU to determine if the device is
+authorized to use these transactions (see `EN_ATS` field in Device Context).
+When the IOMMU is configured to return a GPA in response to a PCIe ATS
+Translation Request, the IOMMU translates the GPA to an SPA when invoked to
+process a Translated Request.
+
+If the IOMMU provides an Unsupported Request (UR) or a Completer Abort (CA) as
+a response to a PCIe ATS Translation Request, the IOBRIDGE forwards that
+response to the device. If the IOMMU provides a Success response with both
+R and W permissions set to 0, it indicates that the page requested by the
+Translation Request is not available, and the IOBRIDGE forwards that response
+to the device. In these cases, the MPTCHK is not invoked to check the responses.
+
+For all other responses to a PCIe ATS Translation Request, further processing
+by the IOBRIDGE depends on whether the IOMMU is configured to return an SPA
+or a GPA in the response.
+
+When the IOMMU is configured to return a GPA as the translated address in
+response to a PCIe ATS Translation Request, the IOBRIDGE forwards such
+responses directly to the device. The MPTCHK is not invoked in this case.
+
+When the response to a PCIe ATS Translation Request is an SPA, the IOBRIDGE
+invokes the MPTCHK on the entire range of translated addresses returned by the
+IOMMU. If the IOMMU grants read permission to the device, the MPT must also
+grant read permission; if the IOMMU grants write permission to the device, the
+MPT must also grant write permission; and if the IOMMU grants permission to
+execute, the MPT must also grant execute permission for the entire range of
+translated addresses provided in the PCIe ATS Translation Completion. If the
+MPTCHK determines that the address is not accessible or that the requested
+permissions are not present, the IOBRIDGE provides an Unsupported Request (UR)
+response to the device. If the MPTCHK succeeds, the translation completion is
+returned to the device.
+
+For a Translated Request, if the IOMMU provides a UR or CA response, the
+request is aborted. Otherwise, the IOBRIDGE invokes the MPTCHK on the SPA
+range provided by the IOMMU. If the MPTCHK fails, the request is aborted. If
+the MPTCHK succeeds, the IOBRIDGE allows the request to access memory.
+
+When protocols other than PCIe ATS are used to support a device-side ATC, the
+IOBRIDGE shall apply similar rules to enforce memory protection as those
+defined for PCIe ATS when implementing the MPTCHK functionality.
