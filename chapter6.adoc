@@ -295,7 +295,7 @@ The `status` register provides the status of the operation requested using the
 ....
 {reg: [
   {bits:  7, name: 'CODE (RO)'},
-  {bits: 23, name: 'WPRI'},
+  {bits: 23, name: '0'},
   {bits:  1, name: 'BUSY (RO)'}
 ], config:{lanes: 2, hspace:1024}}
 ....
@@ -461,7 +461,7 @@ that operation.
 ....
 {reg: [
   {bits:  8, name: 'OP (WARL)'},
-  {bits: 24, name: 'operands (WARL)'},
+  {bits: 24, name: 'operands'},
 ], config:{lanes: 2, hspace:1024}}
 ....
 
@@ -510,8 +510,8 @@ interpreted as follows.
 ....
 {reg: [
   {bits:  8, name: 'OP (WARL)'},
-  {bits:  8, name: 'RULEID (WARL)'},
-  {bits: 16, name: 'WPRI'},
+  {bits:  8, name: 'RULEID'},
+  {bits: 16, name: 'reserved'},
 ], config:{lanes: 2, hspace:1024}}
 ....
 
@@ -519,13 +519,13 @@ interpreted as follows.
 [wavedrom, , ]
 ....
 {reg: [
-  {bits:  4, name: 'SRC_IDT (WARL)'},
-  {bits:  2, name: 'SRC_IDM (WARL)'},
-  {bits:  2, name: 'TEE_FLT (WARL)'},
+  {bits:  4, name: 'SRC_IDT'},
+  {bits:  2, name: 'SRC_IDM'},
+  {bits:  2, name: 'TEE_FLT'},
   {bits: 24, name: 'SRC_ID'},
-  {bits:  8, name: 'IOMMU_ID (WARL)'},
-  {bits:  6, name: 'SDID (WARL)'},
-  {bits: 18, name: 'WPRI'}
+  {bits:  8, name: 'IOMMU_ID'},
+  {bits:  6, name: 'SDID'},
+  {bits: 18, name: 'reserved'}
 ], config:{lanes: 8, hspace:1024}}
 ....
 
@@ -677,8 +677,8 @@ as follows.
 ....
 {reg: [
   {bits:  8, name: 'OP (WARL)'},
-  {bits:  6, name: 'SDID (WARL)'},
-  {bits: 18, name: 'WPRI'},
+  {bits:  6, name: 'SDID'},
+  {bits: 18, name: 'reserved'},
 ], config:{lanes: 2, hspace:1024}}
 ....
 
@@ -686,10 +686,10 @@ as follows.
 [wavedrom, , ]
 ....
 {reg: [
-  {bits:  4, name: 'MPT_MODE (WARL)'},
-  {bits:  6, name: 'WPRI'},
+  {bits:  4, name: 'MPT_MODE'},
+  {bits:  6, name: 'reserved'},
   {bits: 44, name: 'PPN'},
-  {bits: 10, name: 'WPRI'}
+  {bits: 10, name: 'reserved'}
 ], config:{lanes: 4, hspace:1024}}
 ....
 
@@ -697,17 +697,16 @@ as follows.
 [wavedrom, , ]
 ....
 {reg: [
-  {bits: 12, name: 'S-RCID (WARL)'},
+  {bits: 12, name: 'S-RCID'},
   {bits:  4, name: 'WPRI'},
-  {bits: 12, name: 'S-MCID (WARL)'},
-  {bits:  4, name: 'WPRI'},
-  {bits:  4, name: 'SRL    (WARL)'},
-  {bits:  4, name: 'SML    (WARL)'},
-  {bits:  4, name: 'SQRID  (WARL)'},
-  {bits:  1, name: 'SSRM   (WARL)'},
-  {bits:  1, name: 'SSMM   (WARL)'},
-  {bits:  2, name: 'WPRI'},
-  {bits: 16, name: 'WPRI'}
+  {bits: 12, name: 'S-MCID'},
+  {bits:  4, name: 'reserved'},
+  {bits:  4, name: 'SRL'},
+  {bits:  4, name: 'SML'},
+  {bits:  4, name: 'SQRID'},
+  {bits:  1, name: 'SSRM'},
+  {bits:  1, name: 'SSMM'},
+  {bits: 18, name: 'reserved'}
 ], config:{lanes: 8, hspace:1024}}
 ....
 
@@ -782,10 +781,10 @@ interpreted as follows.
 ....
 {reg: [
   {bits:  8, name: 'OP (WARL)'},
-  {bits:  6, name: 'SDID (WARL)'},
-  {bits:  2, name: 'WPRI'},
+  {bits:  6, name: 'SDID'},
+  {bits:  2, name: 'reserved'},
   {bits:  1, name: 'SDID_V'},
-  {bits: 15, name: 'WPRI'},
+  {bits: 15, name: 'reserved'},
 ], config:{lanes: 2, hspace:1024}}
 ....
 
@@ -797,7 +796,7 @@ interpreted as follows.
   {bits:  1, name: 'S'},
   {bits:  8, name: 'WPRI'},
   {bits: 44, name: 'PPN'},
-  {bits: 10, name: 'WPRI'}
+  {bits: 10, name: 'reserved'}
 ], config:{lanes: 4, hspace:1024}}
 ....
 
@@ -894,7 +893,7 @@ interpreted as follows.
 ....
 {reg: [
   {bits:  8, name: 'OP (WARL)'},
-  {bits: 24, name: 'WPRI'},
+  {bits: 24, name: 'reserved'},
 ], config:{lanes: 2, hspace:1024}}
 ....
 
