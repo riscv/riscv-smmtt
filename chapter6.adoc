@@ -605,6 +605,12 @@ provide address translation and protection for the transactions matching this
 rule. When the I/O MPT checker is not associated with an IOMMU, the `IOMMU_ID`
 field is ignored by this operation.
 
+If multiple rules are programmed to match a transaction, the implementation may
+act based on any one of those matching rules. However, if a transaction does not
+match any of the rules, the IO Bridge is notified of this condition. The
+subsequent behavior of the IO Bridge for unmatched transactions remains
+UNSPECIFIED.
+
 === Read the configuration of an SDCL rule - `GET_SDCL_ENTRY`
 
 The `GET_SDCL_ENTRY` operation reads the configuration of an SDCL rule
