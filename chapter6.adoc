@@ -269,8 +269,7 @@ checker capabilities.
 ....
 {reg: [
   {bits:  8, name: 'VER'},
-  {bits:  1, name: 'QOSID'},
-  {bits: 19, name: 'WPRI'},
+  {bits: 20, name: 'WPRI'},
   {bits:  4, name: 'custom'}
 ], config:{lanes: 4, hspace:1024}}
 ....
@@ -280,9 +279,6 @@ I/O MPT checker. The low nibble is used to hold the minor version of the
 specification and the upper nibble is used to hold the major version of the
 specification. For example, an implementation that supports version 1.0 of the
 specification reports 0x10.
-
-The `QOSID` field indicates whether associating QoS IDs with requests is
-supported.
 
 [[STS]]
 === Status register (`status`)
@@ -718,7 +714,11 @@ MPT. When `MPT_MODE` is `Bare`, the `PPN` field must be set to zero.
 The `SRL`, `SML`, `SSRM`, `SSMM`, `S-RCID`, and `S-MCID` fields are used to
 determine the effective `RCID` and `MCID` for device-originated and
 IOMMU-originated requests, using the RCID-value and MCID-value provided by the
-IOMMU. These fields are implemented only if `capabilities.QOSID` is set to 1.
+IOMMU. These fields shall be implemented if any application processor hart in
+the system supports the Ssqosid extension. When implemented, they must accept
+all legal values permitted for the corresponding fields in the `srmcfg`,
+`mrmcfg`, and `msdcfg` CSRs of any application processor hart in the system.
+If not implemented, the `data2` register value is ignored by this operation.
 
 The determination of the effective `RCID` and `MCID` is as follows:
 
