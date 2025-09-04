@@ -447,7 +447,10 @@ operation. Fields not used by an operation are ignored.
 
 The `SET_SDCL_ENTRY` operation configures an SDCL rule to classify DMA requests
 based on the identifiers associated with the requests, in order to determine the
-supervisor domain ID (`SDID`) and the IOMMU ID (`IOMMU_ID`).
+supervisor domain ID (`SDID`) and the IOMMU ID (`IOMMU_ID`). The rule to be
+configured is identified by `RULEID`. The `RULEID`, `IOMMU_ID`, and `SDID`
+fields must contain values in the range 0 to N–1, where N is the maximum number
+of the corresponding identifiers supported by the implementation.
 
 This operation uses the operands in the `command` register and the `data1`
 register. The contents of the `data2` register are ignored by this operation.
@@ -588,9 +591,6 @@ transactions related to a TEE. The `TEE_FLT` filter can be employed to associate
 these TEE-related transactions with a different supervisor domain than the
 transactions not related to TEE. This distinction is made even if both types of
 transactions are received on the same PCIe IDE stream.
-
-Fields such as `TEE_FLT` and `IOMMU_ID` are WARL and may be hardwired to 0 if
-the implementation does not support PCIe IDE and/or an IOMMU.
 ====
 
 The `IOMMU_ID` field identifies the instance of the IOMMU that should be used to
