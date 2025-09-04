@@ -66,13 +66,13 @@ response to the address translation request on the device translation completion
 to access its in-memory data structures over its data structure interface (DSI).
 
 The IO Bridge invokes the I/O MPT checker over the MPT check request (MCR)
-interface and provides it the SDID and physical address of the access. The
+interface and provides it the SDID and machine physical address of the access. The
 I/O MPT checker uses the SDID to determine the MPT associated with the supervisor
-domain and checks if the physical address may be accessed by the device or IOMMU
+domain and checks if the machine physical address may be accessed by the device or IOMMU
 associated with that supervisor domain. The result of the check is provided on
 the MPT check completion (MCC) interface to the IO Bridge. As part of the MPT
 check, the I/O MPT checker may need to perform implicit accesses to the MPT
-using the MPT walk interface (MWI). To perform the checks the I/O MPT checker
+using the I/O MPT checker data structure interface (MDSI). To perform the checks the I/O MPT checker
 uses the same MPT table format as used by the CPU's MMU. Using the same MPT
 table formats as the CPU's MMU allows the same table to be used simultaneously
 by the CPU MMU and I/O MPT checker. The MPT permission lookup process used by
@@ -143,7 +143,7 @@ a device connected to a root port as associated with a supervisor domain and wit
 the IOMMU instance that governs that device.
 ====
 
-To support I/O MPT checks, the RDSM provides two types of configurations to the
+To support MPT checks, the RDSM provides two types of configurations to the
 I/O MPT checker:
 
 * SDCL rules that classify one or more devices to an SDID and an IOMMU ID.
@@ -212,14 +212,14 @@ enable register decoding to be implemented without a hardware adder circuit.
 The behavior for register accesses where the address is not aligned to
 the size of the access, or if the access spans multiple registers, or if the
 size of the access is not 4 bytes or 8 bytes, is `UNSPECIFIED`. An aligned 4
-byte access to a I/O MPT chcker register must be single-copy atomic. Whether an 8 byte
-access to an I/O MPT chcker register is single-copy atomic is `UNSPECIFIED`, and such
-an access may appear, internally to the I/O MPT chcker implementation, as if two
+byte access to a I/O MPT checker register must be single-copy atomic. Whether an 8 byte
+access to an I/O MPT checker register is single-copy atomic is `UNSPECIFIED`, and such
+an access may appear, internally to the I/O MPT checker implementation, as if two
 separate 4 byte accesses were performed.
 
 [NOTE]
 ====
-The I/O MPT chcker registers are defined in such a way that software can perform two
+The I/O MPT checker registers are defined in such a way that software can perform two
 individual 4 byte accesses, or hardware can perform two independent 4 byte
 transactions resulting from an 8 byte access, to the high and low halves of the
 register as long as the register semantics, with regards to side-effects, are
@@ -227,7 +227,7 @@ respected between the two software accesses, or two hardware transactions,
 respectively.
 ====
 
-The I/O MPT chcker registers have little-endian byte order (even for systems where
+The I/O MPT checker registers have little-endian byte order (even for systems where
 all harts are big-endian-only).
 
 [NOTE]
@@ -302,9 +302,9 @@ The `status` register provides the status of the operation requested using the
 ], config:{lanes: 2, hspace:1024}}
 ....
 
-When the `command` register is written, I/O MPT chcker may perform actions that do not
+When the `command` register is written, the I/O MPT checker may perform actions that do not
 complete synchronously with the write. A write to the `command` register sets
-the `status.BUSY` bit to 1, indicating that I/O MPT chcker is executing the requested
+the `status.BUSY` bit to 1, indicating that I/O MPT checker is executing the requested
 operation. The behavior of writing the `command` or the `data*` registers
 while the `status.BUSY` bit is 1 is `UNSPECIFIED`. Some implementations may
 ignore the second write, while others may perform the operation specified by
@@ -429,18 +429,19 @@ that operation.
 | Operation         | Encoding ^| Description
 | --                | 0         | Reserved for future standard use.
 | `IOFENCE`         | 1         | Ensure that all previous read and write
-                                  requests from devices already processed by
-                                  I/O MPT chcker are committed to a global ordering
-                                  point such that they can be observed by all
-                                  RISC-V harts, IOMMUs, and devices in the
-                                  system.
+                                  requests from devices already processed by the
+                                  I/O MPT checker are committed to a global
+                                  ordering point such that they can be observed
+                                  by all RISC-V harts, IOMMUs, and devices in
+                                  the system.
 | `SET_SDCL_ENTRY`  | 2         | Configure a SDCL rule in the I/O MPT checker.
 | `GET_SDCL_ENTRY`  | 3         | Read the configuration of an SDCL rule.
 | `SET_SDCFG_ENTRY` | 4         | Configure MPT and QoS ID parameters for an SD.
 | `GET_SDCFG_ENTRY` | 5         | Read the configuration associated with an SD.
 | `MPTINVAL`        | 6         | Ensure that stores to an MPT are observed by
-                                  I/O MPT chcker before subsequent implicit reads by
-                                  I/O MPT chcker to the corresponding MPT.
+                                  the I/O MPT checker before subsequent implicit
+                                  reads by I/O MPT checker to the corresponding
+                                  MPT.
 | --                | 7–127     | Reserved for future standard use.
 | --                | 128–255   | Designated for custom use.
 |===
@@ -633,9 +634,9 @@ When the I/O MPT checker is not associated with an IOMMU, the value held in
 === Set Supervisor Domain Configurations - `SET_SDCFG_ENTRY`
 
 The `SET_SDCFG_ENTRY` operation configures MPT and QoS ID parameters for a
-supervisor domain in I/O MPT chcker. This operation uses the operands in the `command`,
-`data1`, and `data2` registers. The fields of these registers are interpreted
-as follows.
+supervisor domain in the I/O MPT checker. This operation uses the operands in
+the `command`, `data1`, and `data2` registers. The fields of these registers
+are interpreted as follows.
 
 .`command` register layout for `SET_SDCFG_ENTRY` operation
 [wavedrom, , ]
@@ -763,9 +764,10 @@ the IOMMU associated with the SD, and accompanies the effective `RCID` and
 === Get Supervisor Domain Configurations - `GET_SDCFG_ENTRY`
 
 The `GET_SDCFG_ENTRY` operation reads the configuration of the supervisor domain
-identified by `SDID` from the I/O MPT chcker. This operation ignores the contents of the
-`data*` registers. Upon success, the configuration of the supervisor domain
-identified by `command.SDID` is returned in the `data1` and `data2` registers.
+identified by `SDID` from the I/O MPT checker. This operation ignores the
+contents of the `data*` registers. Upon success, the configuration of the
+supervisor domain identified by `command.SDID` is returned in the `data1` and
+`data2` registers.
 
 The contents of the `data1` and `data2` registers are `UNSPECIFIED` if the
 operation fails or if it is invoked without a preceding `SET_SDCFG_ENTRY` for
@@ -780,8 +782,9 @@ UNSPECIFIED.
 
 === MPT Permission Cache Invalidation - `MPTINVAL`
 
-This operation ensures that stores to an MPT are observed by the I/O MPT checker before
-subsequent implicit reads by I/O MPT checker to the corresponding MPT.
+This operation ensures that stores to an MPT are observed by the I/O MPT
+checker before subsequent implicit reads by I/O MPT checker to the
+corresponding MPT.
 
 This operation uses the operands in the `command` register and the `data1`
 register. The contents of the `data2` register are ignored by this operation.
@@ -938,13 +941,14 @@ subsequent Translated Requests.
 For a PCIe ATS Translation Request, the IOMMU performs a two-stage address
 translation to determine the permissions and the size of the translation to
 be provided in the completion of the request. The IOMMU may be configured to
-return either the SPA or a GPA (see `T2GPA` field in Device Context
-cite:[IOMMU]) as the translation of an IOVA in the response.
+return either the machine physical address (MPA) or a guest physical address
+(GPA) (see `T2GPA` field in the Device Context, cite:[IOMMU]) as the
+translation of an IOVA in the response.
 
 Translated Requests also invoke the IOMMU to determine if the device is
-authorized to use these transactions (see `EN_ATS` field in Device Context).
+authorized to use these transactions (see `EN_ATS` field in the Device Context).
 When the IOMMU is configured to return a GPA in response to a PCIe ATS
-Translation Request, the IOMMU translates the GPA to an SPA when invoked to
+Translation Request, the IOMMU translates the GPA to an MPA when invoked to
 process a Translated Request.
 
 If the IOMMU provides an Unsupported Request (UR) or a Completer Abort (CA) as
@@ -952,32 +956,34 @@ a response to a PCIe ATS Translation Request, the IOBRIDGE forwards that
 response to the device. If the IOMMU provides a Success response with both
 R and W permissions set to 0, it indicates that the page requested by the
 Translation Request is not available, and the IOBRIDGE forwards that response
-to the device. In these cases, the I/O MPT checker is not invoked to check the responses.
+to the device. In these cases, the I/O MPT checker is not invoked to check the
+responses.
 
 For all other responses to a PCIe ATS Translation Request, further processing
-by the IOBRIDGE depends on whether the IOMMU is configured to return an SPA
+by the IOBRIDGE depends on whether the IOMMU is configured to return an MPA
 or a GPA in the response.
 
 When the IOMMU is configured to return a GPA as the translated address in
 response to a PCIe ATS Translation Request, the IOBRIDGE forwards such
-responses directly to the device. The I/O MPT checker is not invoked in this case.
+responses directly to the device. The I/O MPT checker is not invoked in this
+case.
 
-When the response to a PCIe ATS Translation Request is an SPA, the IOBRIDGE
-invokes the I/O MPT checker on the entire range of translated addresses returned by the
-IOMMU. If the IOMMU grants read permission to the device, the MPT must also
-grant read permission; if the IOMMU grants write permission to the device, the
-MPT must also grant write permission; and if the IOMMU grants permission to
-execute, the MPT must also grant execute permission for the entire range of
-translated addresses provided in the PCIe ATS Translation Completion. If the
-I/O MPT checker determines that the address is not accessible or that the requested
-permissions are not present, the IOBRIDGE provides an Unsupported Request (UR)
-response to the device. If the MPT check succeeds, the translation completion is
-returned to the device.
+When the response to a PCIe ATS Translation Request is an MPA, the IOBRIDGE
+invokes the I/O MPT checker on the entire range of translated addresses
+returned by the IOMMU. If the IOMMU grants read permission to the device, the
+MPT must also grant read permission; if the IOMMU grants write permission to the
+device, the MPT must also grant write permission; and if the IOMMU grants
+permission to execute, the MPT must also grant execute permission for the entire
+range of translated addresses provided in the PCIe ATS Translation Completion.
+If the I/O MPT checker determines that the address is not accessible or that the
+requested permissions are not present, the IOBRIDGE provides an Unsupported
+Request (UR) response to the device. If the MPT check succeeds, the translation
+completion is returned to the device.
 
 For a Translated Request, if the IOMMU provides a UR or CA response, the
-request is aborted. Otherwise, the IOBRIDGE invokes the I/O MPT checker on the SPA
-range provided by the IOMMU. If the MPT check fails, the request is aborted. If
-the MPT check succeeds, the IOBRIDGE allows the request to access memory.
+request is aborted. Otherwise, the IOBRIDGE invokes the I/O MPT checker on the
+MPA range provided by the IOMMU. If the MPT check fails, the request is aborted.
+If the MPT check succeeds, the IOBRIDGE allows the request to access memory.
 
 When protocols other than PCIe ATS are used to support a device-side ATC, the
 IOBRIDGE shall apply similar rules to enforce memory protection as those
