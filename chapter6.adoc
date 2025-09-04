@@ -291,6 +291,7 @@ The `status` register provides the status of the operation requested using the
 `command` register.
 
 .Status Register (`status`)
+[wavedrom, , ]
 ....
 {reg: [
   {bits:  7, name: 'CODE (RO)'},
