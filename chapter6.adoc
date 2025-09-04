@@ -416,7 +416,7 @@ configure an unsupported MPT mode must be rejected with `status.CODE` set to
 [%autowidth,float="center",align="center"]
 [%header, cols="^3,^3,20"]
 |===
-3+^|               `fctl.GXL=0`
+3+^|               `control.MXL=0`
 ^|Value ^| Name     ^| Description
 |0       |`Bare`     | No page-based memory protection.
 |1       |`Smmpt43`  | Page-based memory protection for up to 43-bit
