@@ -821,14 +821,14 @@ has a value of 1, the `MPTINVAL` operation focuses on a NAPOT range. This range
 is decided by the low-order bits of the `PPN` field, going up to the first
 low-order 0 bit (inclusive of this position). If the initial low-order 0 bit
 position is denoted as `x`, the size of the range is computed as
-`(1 << (12 + x + 1))`.
+`(1 << (13 + x))`.
 
 When `PPNV` is set to 1, if the address range specified by `PPN` and `S` is
 invalid, the operation may or may not be performed. If the `PPNV` and `S` are
 both set to 1 and all bits of the `PPN` operand are 1, the behavior of
 `MPTINVAL` operation is UNSPECIFIED.
 
-. `MPTINVAL` operands and operations
+.`MPTINVAL` operands and operations
 [%autowidth,float="center",align="center"]
 [%header, cols="^2,^2,20"]
 |===
@@ -854,7 +854,7 @@ range for the `MPTINVAL` operation. The example shows encoding ranges of up to
 8 GiB. Larger ranges may be encoded using the upper address bits (bits 43:22)
 of the `PPN` field.
 
-. Examples of specifying address range sizes using `S` field
+.Examples of specifying address range sizes using `S` field
 [cols="3,1,3", options="header"]
 |===
 | `PPN[21:0]`              | `S` | *Address Range Size*
@@ -866,6 +866,11 @@ of the `PPN` field.
 |===
 
 ====
+
+The IOMMU is itself a DMA-capable device, and performs DMA using its own
+device ID. An explicit rule must associate the IOMMU’s device ID with an
+`SDID` and MPT, unless that device ID is already covered by another rule that
+maps device IDs to a supervisor domain.
 
 [NOTE]
 ====
@@ -880,11 +885,6 @@ Another consequence of this specification is that it is generally unsafe to
 update the MPT using a set of stores of a width less than the width of the MPT
 entry, as it is legal for the implementation to read the MPT entries at any
 time, including when only some of the partial stores have taken effect.
-
-The IOMMU itself is a DMA capable device. The DMA performed by the IOMMU is
-performed using the device ID of the IOMMU. A rule must be defined to associate
-the IOMMU device ID itself with an `SDID` and MPT unless the IOMMU device ID
-is encompassed by another rule that associates device IDs with an SD.
 
 Even if the MPTCHK denies a reqyest, the MPTCHK is allowed to cache the
 corresponding MPT entry.
