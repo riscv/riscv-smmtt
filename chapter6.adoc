@@ -599,12 +599,16 @@ in <<TEE_FLT>>.
 [%header, cols="12,70"]
 |===
 |`TEE_FLT` | Description
-|   0      | Reserved for future standard use.
+|   0      | Rule matches both TEE-associated and non-TEE associated
+             transactions.
 |   1      | Rule matches TEE-associated transactions.
 |   2      | Rule matches transactions that are not TEE associated.
 |   3      | Rule matches both TEE-associated and non-TEE associated
              transactions.
 |===
+
+If filtering transactions associaetd with a TEE is not supported then the only
+legal values for `TEE_FLT` are 0 and 3.
 
 [NOTE]
 ====
@@ -612,10 +616,13 @@ PCIe IDE provides security for transactions from one Port to another. These
 transactions might be initiated by contexts within the device, such as an SR-IOV
 virtual function, which are associated with a Trusted Execution Environment
 (TEE). Within the IDE TLP header, there's a "T" bit that helps differentiate
-transactions related to a TEE. The `TEE_FLT` filter can be employed to associate
-these TEE-related transactions with a different supervisor domain than the
-transactions not related to TEE. This distinction is made even if both types of
-transactions are received on the same PCIe IDE stream.
+transactions related to a TEE. The PCIe TDISP extended TEE Extension introduces
+an additional "XT" bit that complements the "T" bit. When both "T" and "XT" bit
+are 0, the transaction is not related to a TEE. If either the "T" or the "XT"
+bit are 1 then the transaction is related to a TEE. The `TEE_FLT` filter can be
+employed to associate these TEE-related transactions with a different supervisor
+domain than the transactions not related to TEE. This distinction is made even
+if both types of transactions are received on the same PCIe IDE stream.
 ====
 
 The `IOMMU_ID` field identifies the instance of the IOMMU that should be used to
@@ -628,6 +635,7 @@ act based on any one of those matching rules. However, if a transaction does not
 match any of the rules, the IO Bridge is notified of this condition. The
 subsequent behavior of the IO Bridge for unmatched transactions remains
 UNSPECIFIED.
+
 
 === Read the configuration of an SDCL rule - `GET_SDCL_ENTRY`
 
@@ -901,11 +909,6 @@ A consequence of this specification is that an implementation may use any
 information for an address that was valid in the MPT at any time since the most
 recent `MPTINVAL` that subsumes that address.
 
-Another consequence of this specification is that it is generally unsafe to
-update the MPT using a set of stores of a width less than the width of the MPT
-entry, as it is legal for the implementation to read the MPT entries at any
-time, including when only some of the partial stores have taken effect.
-
 Even if the I/O MPT checker denies a request, it is allowed to cache the
 corresponding MPT entry.
 ====
@@ -928,6 +931,15 @@ interpreted as follows.
   {bits: 24, name: 'reserved'},
 ], config:{lanes: 2, hspace:1024}}
 ....
+
+If a previously valid SDCL rule, and/or the supervisor domain configurations
+referenced by a valid SDCL rule, are modified, then the I/O MPT checker must
+observe the new configurations within a bounded but UNSPECIFIED time. Software
+may use the `IOFENCE` operation after updating the configurations. Successful
+completion of an `IOFENCE` operation also guarantees that the I/O MPT checker
+has observed all configuration updates made prior to the `IOFENCE`. If the
+configuration updates modify the MPT mode and/or PPN, an `MPTINVAL` operation
+with `PPNV` set to 0 must be issued before the `IOFENCE`.
 
 === Treatment of Device-Side Address Translation Caches
 
