@@ -453,7 +453,7 @@ specific operation is identified by the `OP` field within the `command`
 register. Operands required to complete the operation are supplied either in
 dedicated fields of the `command` register or in one or more of the associated
 `data-+*+` registers.  The `OP` field also defines the encoding of the
-`data` fields in the `command` register and of the `data-+*+` registers for
+`operand` fields in the `command` register and of the `data-+*+` registers for
 that operation.
 
 .Command Register (`command`)
