@@ -267,8 +267,8 @@ of instructions.
 |4     |`status`       |4       |<<STS, Status           >>  | No
 |8     |`control`      |4       |<<CTL, Control          >>  | No
 |12    |`command`      |4       |<<CMD, Command          >>  | No
-|16    |`data1`        |8       |<< Input/Output data 1  >>  | No
-|24    |`data2`        |8       |<< Input/Output data 2  >>  | No
+|16    |`data1`        |8       |Input/Output data 1         | No
+|24    |`data2`        |8       |Input/Output data 2         | No
 |===
 
 The reset value is 0 for the following registers fields.
@@ -316,7 +316,7 @@ The `status` register provides the status of the operation requested using the
 [wavedrom, , ]
 ....
 {reg: [
-  {bits:  7, name: 'CODE (RO)'},
+  {bits:  8, name: 'CODE (RO)'},
   {bits: 23, name: '0'},
   {bits:  1, name: 'BUSY (RO)'}
 ], config:{lanes: 2, hspace:1024}}
@@ -444,7 +444,7 @@ that operation.
 [[IOMPTCHK_OP]]
 .I/O MPT checker operations (`OP`)
 [width=100%]
-[%header, cols="16,^12,70"]
+[%header, cols="20,^12,70"]
 |===
 | Operation         | Encoding ^| Description
 | --                | 0         | Reserved for future standard use.
@@ -479,7 +479,7 @@ fails with "Illegal or invalid operand encodings" (`status.CODE=5`). The order
 of checking the validity of `SDID`, `RULEID`, and other operands of when a valid
 operation is requested operation is UNSPECIFIED.
 
-=== Configure a SDCL rule - `SET_SDCL_ENTRY`
+==== Configure a SDCL rule - `SET_SDCL_ENTRY`
 
 The `SET_SDCL_ENTRY` operation configures an SDCL rule to classify DMA requests
 based on the identifiers associated with the requests, in order to determine the
@@ -648,7 +648,7 @@ If a transaction does not match any of the rules, the IO Bridge is notified of
 this condition. The subsequent behavior of the IO Bridge for unmatched
 transactions remains UNSPECIFIED.
 
-=== Read the configuration of an SDCL rule - `GET_SDCL_ENTRY`
+==== Read the configuration of an SDCL rule - `GET_SDCL_ENTRY`
 
 The `GET_SDCL_ENTRY` operation reads the configuration of an SDCL rule
 identified by `RULEID`. This operation ignores the contents of the `data*`
@@ -796,7 +796,7 @@ The `SQRID` identifies the QRI for requests originating from the devices and
 the IOMMU associated with the SD, and accompanies the effective `RCID` and
 `MCID` in the requests made by the device or IOMMU to the QRI.
 
-=== Get Supervisor Domain Configurations - `GET_SDCFG_ENTRY`
+==== Get Supervisor Domain Configurations - `GET_SDCFG_ENTRY`
 
 The `GET_SDCFG_ENTRY` operation reads the configuration of the supervisor domain
 identified by `SDID` from the I/O MPT checker. This operation ignores the
@@ -815,7 +815,7 @@ When the I/O MPT checker does not support associating QoS IDs with requests, the
 value held in the `data2` register on successful completion of this operation is
 UNSPECIFIED.
 
-=== MPT Permission Cache Invalidation - `MPTINVAL`
+==== MPT Permission Cache Invalidation - `MPTINVAL`
 
 This operation ensures that stores to an MPT are observed by the I/O MPT
 checker before subsequent implicit reads by I/O MPT checker to the
@@ -869,7 +869,7 @@ both set to 1 and all bits of the `PPN` operand are 1, the behavior of
 
 .`MPTINVAL` operands and operations
 [%autowidth,float="center",align="center"]
-[%header, cols="^2,^2,20"]
+[%header, cols="^4,^4,20"]
 |===
 | `PPNV` | `SDIDV` | Operation
 |   0     |  0        | Invalidates information cached from any MPT for all
@@ -894,7 +894,7 @@ range for the `MPTINVAL` operation. The example shows encoding ranges of up to
 of the `PPN` field.
 
 .Examples of specifying address range sizes using `S` field
-[cols="3,1,3", options="header"]
+[cols="3,^1,^3", options="header"]
 |===
 | `PPN[21:0]`              | `S` | *Address Range Size*
 | `yyyyy yyyyyyyy yyyyyyyy`|  0  | 4  KiB
@@ -924,7 +924,7 @@ Even if the I/O MPT checker denies a request, it is allowed to cache the
 corresponding MPT entry.
 ====
 
-=== I/O Fence Operation - `IOFENCE`
+==== I/O Fence Operation - `IOFENCE`
 
 Ensure that all previous read and write requests from devices already processed
 by I/O MPT checker are committed to a global ordering point such that they can be
