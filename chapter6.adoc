@@ -556,10 +556,10 @@ representing any 1-bit value.
 [cols="^1,3,3", options="header"]
 |===
 | `SRC_IDM` | `SRC_ID`                     | *Comment*
-| 1         |`yyyyyyyy  yyyyyyyy  yyyyyyyy`| One specific seg:bus:dev:func
-| 2         |`yyyyyyyy  yyyyyyyy  yyyyy011`| seg:bus:dev - any func
-| 2         |`yyyyyyyy  yyyyyyyy  01111111`| seg:bus - any dev:func
-| 2         |`yyyyyyyy  01111111  11111111`| seg - any bus:dev:func
+| 2         |`yyyyyyyy  yyyyyyyy  yyyyyyyy`| One specific seg:bus:dev:func
+| 3         |`yyyyyyyy  yyyyyyyy  yyyyy011`| seg:bus:dev - any func
+| 3         |`yyyyyyyy  yyyyyyyy  01111111`| seg:bus - any dev:func
+| 3         |`yyyyyyyy  01111111  11111111`| seg - any bus:dev:func
 |===
 
 ====
