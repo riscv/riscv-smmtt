@@ -66,18 +66,19 @@ response to the address translation request on the device translation completion
 to access its in-memory data structures over its data structure interface (DSI).
 
 The IO Bridge invokes the I/O MPT checker over the MPT check request (MCR)
-interface and provides it the SDID and machine physical address of the access. The
-I/O MPT checker uses the SDID to determine the MPT associated with the supervisor
-domain and checks if the machine physical address may be accessed by the device or IOMMU
-associated with that supervisor domain. The result of the check is provided on
-the MPT check completion (MCC) interface to the IO Bridge. As part of the MPT
-check, the I/O MPT checker may need to perform implicit accesses to the MPT
-using the I/O MPT checker data structure interface (MDSI). To perform the checks the I/O MPT checker
-uses the same MPT table format as used by the CPU's MMU. Using the same MPT
-table formats as the CPU's MMU allows the same table to be used simultaneously
-by the CPU MMU and I/O MPT checker. The MPT permission lookup process used by
-I/O MPT checker is identical to that specified by `Smmpt` extension in section
-"MPT access permissions lookup process".
+interface and provides it the SDID and machine physical address of the access.
+The I/O MPT checker uses the SDID to determine the MPT associated with the
+supervisor domain and checks if the machine physical address may be accessed by
+the device or IOMMU associated with that supervisor domain. The result of the
+check is provided on the MPT check completion (MCC) interface to the IO Bridge.
+As part of the MPT check, the I/O MPT checker may need to perform implicit
+accesses to the MPT using the I/O MPT checker data structure interface (MDSI).
+To perform the checks the I/O MPT checker uses the same MPT table format as
+used by the CPU's MMU. Using the same MPT table formats as the CPU's MMU allows
+the same table to be used simultaneously by the CPU MMU and I/O MPT checker.
+The MPT permission lookup process used by I/O MPT checker is identical to that
+specified by `Smmpt` extension in section "MPT access permissions lookup
+process".
 
 The RISC-V memory model requires memory access from a hart to be single-copy
 atomic. When RV32 is implemented the size of a single-copy atomic memory access
@@ -93,8 +94,8 @@ valid.
 Software is allowed to make updates to a MPT entry that has the `V` bit set to
 1. However, some rules as outlined must be followed.
 
-* Software must use a single atomic store that updates all or parts of an MPT PTE
-  for the update to be atomically observed by the I/O MPT checker.
+* Software must use a single atomic store that updates all or parts of an MPT
+  PTE for the update to be atomically observed by the I/O MPT checker.
 
 * If the update to a field of the MPT entry will make the field inconsistent
   with another field of the entry then software must first set the `V` bit to 0
@@ -103,8 +104,8 @@ Software is allowed to make updates to a MPT entry that has the `V` bit set to
   the updates to the entry with the operation of I/O MPT checker.
 
 * I/O MPT checker is not required to immediately observe the software updates to
-  an MPT entry. Software must use the `MPTINVAL` operation outlined in <<CTRL>> to
-  invalidate any previous copies of that entry that may be in the I/O MPT
+  an MPT entry. Software must use the `MPTINVAL` operation outlined in <<CTRL>>
+  to invalidate any previous copies of that entry that may be in the I/O MPT
   checker caches to synchronize the updates to the entry with the operation of
   I/O MPT checker.
 
@@ -127,20 +128,21 @@ is clear.
 
 The I/O MPT checker provides a memory-mapped register programming interface.
 
-As part of its operations, I/O MPT checker may need to read data from the MPT. The
-provider (a memory controller or a cache) of the data may detect that the data
-requested has an uncorrectable error and signal that the data is corrupted and
-defer the error to I/O MPT checker. Such technique to defer the handling of the corrupted
-data to the consumer of the data is also commonly known as data poisoning. The
-effects of such errors may be contained to the transaction that caused the
-corrupted data to be accessed. In the cases where the error affects the
-transaction being processed but otherwise allows the I/O MPT checker to continue providing
-service, the I/O MPT checker may request the IO bridge to abort the transaction.
-The I/O MPT checker may support the RISC-V RAS error record register interface (RERI) that specifies
-methods for enabling error detection, logging the detected errors, and
-configuring means to report the error to an error handler. When such a RAS
-architecture is supported, errors such as attempted consumption of poisoned data
-may be reported using the methods provided by the RAS architecture.
+As part of its operations, I/O MPT checker may need to read data from the MPT.
+The provider (a memory controller or a cache) of the data may detect that the
+data requested has an uncorrectable error and signal that the data is corrupted
+and defer the error to I/O MPT checker. Such technique to defer the handling of
+the corrupted data to the consumer of the data is also commonly known as data
+poisoning. The effects of such errors may be contained to the transaction that
+caused the corrupted data to be accessed. In the cases where the error affects
+the transaction being processed but otherwise allows the I/O MPT checker to
+continue providing service, the I/O MPT checker may request the IO bridge to
+abort the transaction.  The I/O MPT checker may support the RISC-V RAS error
+record register interface (RERI) that specifies methods for enabling error
+detection, logging the detected errors, and configuring means to report the
+error to an error handler. When such a RAS architecture is supported, errors
+such as attempted consumption of poisoned data may be reported using the
+methods provided by the RAS architecture.
 
 A supervisor domain, identified by an SDID, may be associated with one or more
 IOMMU instances that are each identified by an IOMMU ID. A given IOMMU ID
@@ -183,13 +185,15 @@ A transaction is aborted if::
 
 * The I/O MPT checker is not configured with a rule to classify the transaction.
 * The memory targeted by the transaction is disallowed by the MPT.
-* An access to the MPT by I/O MPT checker is disallowed by a physical memory attributes
-  check or a physical memory protection check performed by the IO bridge.
+* An access to the MPT by I/O MPT checker is disallowed by a physical memory
+  attributes check or a physical memory protection check performed by the IO
+  bridge.
 * An access to the MPT by I/O MPT checker returns corrupted (poisoned) data.
 
 If the aborted transaction is an IOMMU-initiated memory access then the IO
 bridge signals such access faults to the IOMMU itself. The details of such
-signaling is implementation defined.
+signaling is implementation defined. Please see the IOMMU specification for
+the handling of access faults on IOMMU initiated memory accesses.
 
 If the aborted transaction is a write then the IO bridge may discard the write;
 the details of how the write is discarded are implementation defined. If the IO
@@ -228,23 +232,23 @@ enable register decoding to be implemented without a hardware adder circuit.
 The behavior for register accesses where the address is not aligned to
 the size of the access, or if the access spans multiple registers, or if the
 size of the access is not 4 bytes or 8 bytes, is `UNSPECIFIED`. An aligned 4
-byte access to a I/O MPT checker register must be single-copy atomic. Whether an 8 byte
-access to an I/O MPT checker register is single-copy atomic is `UNSPECIFIED`, and such
-an access may appear, internally to the I/O MPT checker implementation, as if two
-separate 4 byte accesses were performed.
+byte access to a I/O MPT checker register must be single-copy atomic. Whether
+an 8 byte access to an I/O MPT checker register is single-copy atomic is
+`UNSPECIFIED`, and such an access may appear, internally to the I/O MPT checker
+implementation, as if two separate 4 byte accesses were performed.
 
 [NOTE]
 ====
-The I/O MPT checker registers are defined in such a way that software can perform two
-individual 4 byte accesses, or hardware can perform two independent 4 byte
-transactions resulting from an 8 byte access, to the high and low halves of the
-register as long as the register semantics, with regards to side-effects, are
-respected between the two software accesses, or two hardware transactions,
+The I/O MPT checker registers are defined in such a way that software can
+perform two individual 4 byte accesses, or hardware can perform two independent
+4 byte transactions resulting from an 8 byte access, to the high and low halves
+of the register as long as the register semantics, with regards to side-effects,
+are respected between the two software accesses, or two hardware transactions,
 respectively.
 ====
 
-The I/O MPT checker registers have little-endian byte order (even for systems where
-all harts are big-endian-only).
+The I/O MPT checker registers have little-endian byte order (even for systems
+where all harts are big-endian-only).
 
 [NOTE]
 ====
@@ -318,14 +322,14 @@ The `status` register provides the status of the operation requested using the
 ], config:{lanes: 2, hspace:1024}}
 ....
 
-When the `command` register is written, the I/O MPT checker may perform actions that do not
-complete synchronously with the write. A write to the `command` register sets
-the `status.BUSY` bit to 1, indicating that I/O MPT checker is executing the requested
-operation. The behavior of writing the `command` or the `data*` registers
-while the `status.BUSY` bit is 1 is `UNSPECIFIED`. Some implementations may
-ignore the second write, while others may perform the operation specified by
-that write. Software must verify that `BUSY` is 0 before writing to the
-`control`, `command` or `data*` registers.
+When the `command` register is written, the I/O MPT checker may perform actions
+that do not complete synchronously with the write. A write to the `command`
+register sets the `status.BUSY` bit to 1, indicating that I/O MPT checker is
+executing the requested operation. The behavior of writing the `command` or the
+`data*` registers while the `status.BUSY` bit is 1 is `UNSPECIFIED`. Some
+implementations may ignore the second write, while others may perform the
+operation specified by that write. Software must verify that `BUSY` is 0 before
+writing to the `control`, `command` or `data*` registers.
 
 [NOTE]
 ====
@@ -464,9 +468,16 @@ that operation.
 
 Before requesting an operation using the `command` register, software must
 program the fields of the `data1` and `data2` registers as required by that
-operation. Fields not used by an operation are ignored. If the fields used by
-the operation have an illegal, unsupported, or invalid encoding then the command
-fails with "Illegal or invalid operand encodings" (`status.CODE=5`).
+operation. Fields not used by an operation are ignored. If the `command.OP`
+encoding is invalid or not supported then the operation fails with "Invalid
+operation (`OP`) requested" (`status.CODE=2`). If the `SDID` or the `RULEID`
+operands are invalid then the operation fails with "Operation requested for
+invalid `SDID` " (`status.CODE=3`) or "Operation requested for invalid
+`RULEID` " (`status.CODE=4`) respectively. If other register fields used by
+the operation have an unsupported or invalid encoding then the operation
+fails with "Illegal or invalid operand encodings" (`status.CODE=5`). The order
+of checking the validity of `SDID`, `RULEID`, and other operands of when a valid
+operation is requested operation is UNSPECIFIED.
 
 === Configure a SDCL rule - `SET_SDCL_ENTRY`
 
@@ -631,11 +642,11 @@ rule. When the I/O MPT checker is not associated with an IOMMU, the `IOMMU_ID`
 field is ignored by this operation.
 
 If multiple rules are programmed to match a transaction, the implementation may
-act based on any one of those matching rules. However, if a transaction does not
-match any of the rules, the IO Bridge is notified of this condition. The
-subsequent behavior of the IO Bridge for unmatched transactions remains
-UNSPECIFIED.
+act based on any one of those matching rules.
 
+If a transaction does not match any of the rules, the IO Bridge is notified of
+this condition. The subsequent behavior of the IO Bridge for unmatched
+transactions remains UNSPECIFIED.
 
 === Read the configuration of an SDCL rule - `GET_SDCL_ENTRY`
 
