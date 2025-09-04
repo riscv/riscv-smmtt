@@ -764,7 +764,7 @@ the IOMMU associated with the SD, and accompanies the effective `RCID` and
 The `GET_SDCFG_ENTRY` operation reads the configuration of the supervisor domain
 identified by `SDID` from MPTCHK. This operation ignores the contents of the
 `data*` registers. Upon success, the configuration of the supervisor domain
-identified by `command.SDID` is returned in the `data1` register.
+identified by `command.SDID` is returned in the `data1` and `data2` registers.
 
 The contents of the `data1` and `data2` registers are `UNSPECIFIED` if the
 operation fails or if it is invoked without a preceding `SET_SDCFG_ENTRY` for
@@ -794,9 +794,9 @@ interpreted as follows.
 {reg: [
   {bits:  8, name: 'OP (WARL)'},
   {bits:  6, name: 'SDID'},
-  {bits:  2, name: 'reserved'},
-  {bits:  1, name: 'SDID_V'},
-  {bits: 15, name: 'reserved'},
+  {bits:  1, name: 'reserved'},
+  {bits:  1, name: 'SDIDV'},
+  {bits: 16, name: 'reserved'},
 ], config:{lanes: 2, hspace:1024}}
 ....
 
@@ -804,7 +804,7 @@ interpreted as follows.
 [wavedrom, , ]
 ....
 {reg: [
-  {bits:  1, name: 'PPN_V'},
+  {bits:  1, name: 'PPNV'},
   {bits:  1, name: 'S'},
   {bits:  8, name: 'WPRI'},
   {bits: 44, name: 'PPN'},
@@ -812,9 +812,9 @@ interpreted as follows.
 ], config:{lanes: 4, hspace:1024}}
 ....
 
-The `PPN_V` field indicates if the `PPN` field is valid and the `SDID_V` field
+The `PPNV` field indicates if the `PPN` field is valid and the `SDIDV` field
 indicates if the `SDID` field is valid for the operation. When a field is not
-valid for an operation, it is ignored by the operation. When the `PPN_V` field
+valid for an operation, it is ignored by the operation. When the `PPNV` field
 is 1, the `S` field sets the address range size for the `MPTINVAL` operation.
 With an `S` field value of 0, the range size is 4 KiB. But, when the `S` field
 has a value of 1, the `MPTINVAL` operation focuses on a NAPOT range. This range
@@ -823,8 +823,8 @@ low-order 0 bit (inclusive of this position). If the initial low-order 0 bit
 position is denoted as `x`, the size of the range is computed as
 `(1 << (12 + x + 1))`.
 
-When `PPN_V` is set to 1, if the address range specified by `PPN` and `S` is
-invalid, the operation may or may not be performed. If the `PPN_V` and `S` are
+When `PPNV` is set to 1, if the address range specified by `PPN` and `S` is
+invalid, the operation may or may not be performed. If the `PPNV` and `S` are
 both set to 1 and all bits of the `PPN` operand are 1, the behavior of
 `MPTINVAL` operation is UNSPECIFIED.
 
@@ -832,7 +832,7 @@ both set to 1 and all bits of the `PPN` operand are 1, the behavior of
 [%autowidth,float="center",align="center"]
 [%header, cols="^2,^2,20"]
 |===
-| `PPN_V` | `SDID_V` | Operation
+| `PPNV` | `SDIDV` | Operation
 |   0     |  0        | Invalidates information cached from any MPT for all
                         supervisor domain address spaces.
 |   0     |  1        | Invalidates information cached from the MPT for the
