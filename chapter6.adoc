@@ -85,15 +85,22 @@ is up to 32-bits. When RV64 is implemented the size of a single-copy atomic
 memory access is up to 64-bits. The size of a single-copy atomic memory access
 implemented by I/O MPT checker is UNSPECIFIED but is required to be at least
 32-bits if all of the harts in the system implement RV32 and is required to be
-at least 64-bits if any of the harts in the system implement RV64. Software must
-follow the rules outlined below to update MPT entries.
+at least 64-bits if any of the harts in the system implement RV64.
 
-* It is generally unsafe to update fields of an MPT entry using stores of width
-  less than the minimal single-copy atomic memory access supported by I/O MPT
-  checker as it is legal for it to read the entry at any time, including when only
-  some of the partial stores have taken effect. For an update to be atomic,
-  software must use a single store of width equal to the minimal single-copy
-  atomic memory access supported by the I/O MPT checker.
+The MPT entries have a `V` bit that when set to 1 indicates that the entry is
+valid.
+
+Software is allowed to make updates to a MPT entry that has the `V` bit set to
+1. However, some rules as outlined must be followed.
+
+* Software must use a single atomic store that updates all or parts of an MPT PTE
+  for the update to be atomically observed by the I/O MPT checker.
+
+* If the update to a field of the MPT entry will make the field inconsistent
+  with another field of the entry then software must first set the `V` bit to 0
+  and use the `MPTINVAL` operation outlined in <<CTRL>> to invalidate previous
+  copies of the entry that may be in the I/O MPT checker caches to synchronize
+  the updates to the entry with the operation of I/O MPT checker.
 
 * I/O MPT checker is not required to immediately observe the software updates to
   an MPT entry. Software must use the `MPTINVAL` operation outlined in <<CTRL>> to
@@ -103,11 +110,20 @@ follow the rules outlined below to update MPT entries.
 
 [NOTE]
 ====
-If an MPT entry is changed, I/O MPT checker may use the old value of the entry or the
-new value of the entry and the choice is unpredictable until software uses the
-`MPTINVAL` operation to synchronize updates to the entry with the operation of
-the I/O MPT checker. These are the only behaviors expected.
+If an MPT entry is changed, I/O MPT checker may use the old value of the entry
+or the new value of the entry and the choice is unpredictable until software
+uses the `MPTINVAL` operation to synchronize updates to the entry with the
+operation of the I/O MPT checker. These are the only behaviors expected.
 ====
+
+The RISC-V memory model specifies byte-invariance for the entire address space.
+When mixed-endian mode of operation is supported, the I/O MPT checker must
+implement byte-invariant addressing such that a byte access to a given address
+accesses the same memory location in both little-endian and big-endian mode of
+operation.
+
+The I/O MPT checker is not allowed to cache an MPT entry whole `V` (valid) bit
+is clear.
 
 The I/O MPT checker provides a memory-mapped register programming interface.
 
