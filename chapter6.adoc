@@ -269,7 +269,7 @@ checker capabilities.
 ....
 {reg: [
   {bits:  8, name: 'VER'},
-  {bits: 20, name: 'WPRI'},
+  {bits: 20, name: 'reserved'},
   {bits:  4, name: 'custom'}
 ], config:{lanes: 4, hspace:1024}}
 ....
@@ -303,12 +303,13 @@ operation. The behavior of writing the `command` or the `data*` registers
 while the `status.BUSY` bit is 1 is `UNSPECIFIED`. Some implementations may
 ignore the second write, while others may perform the operation specified by
 that write. Software must verify that `BUSY` is 0 before writing to the
-`command` or `data*` registers.
+`control`, `command` or `data*` registers.
 
 [NOTE]
 ====
 An implementation that always completes the requested operation synchronously
-with a write to the `command` register may hardwire the `BUSY` bit to 0.
+with a write to the `command` or the `control` register may hardwire the `BUSY`
+bit to 0.
 ====
 
 When the `status.BUSY` bit reads 0, the operation is complete, and the
@@ -331,7 +332,6 @@ requested operation.
 | 128-255 | Designated for custom use.
 |===
 
-
 [[CTRL]]
 === Control (`control`)
 
@@ -346,9 +346,7 @@ the `MODE` field.
 ....
 {reg: [
   {bits:  4, name: 'MODE (WARL)'},
-  {bits:  1, name: 'MBE (WARL)'},
-  {bits:  1, name: 'MXL (WARL)'},
-  {bits: 26, name: 'WPRI'},
+  {bits: 28, name: 'reserved'},
 ], config:{lanes: 2, hspace:1024}}
 ....
 
@@ -388,58 +386,14 @@ the `MODE` to `Off` without changing the values of any other field.
 
 A write to `control` register may require the I/O MPT checker to perform many
 operations that may not occur synchronously to the write. When a write is
-observed by `control`, the `BUSY` bit is set to 1. When the `BUSY` bit is 1,
-behavior of additional writes to `control` are UNSPECIFIED. Some implementations
-may ignore the second write and others may perform the actions determined by the
-second write. Software must verify that the `BUSY` bit is 0 before writing to
-the `control` register. If the `BUSY` bit reads 0 then the I/O MPT checker has
-completed the operations associated with the previous write to the `control`
-register. An I/O MPT checker that can complete these operations synchronously
-may hard-wire this bit to 0
-
-The `MBE` field determines the endianness of the access made by I/O MPT checker
-to memory resident data structures such as the MPTs. When this field is 0, the
-accesses are performed as little-endian acesses and when 1 as big-endian
-accesses.
-
-The `MXL` field controls the MPT modes that may be used for memory protection
-checks as defined in <<MPT_MODE_ENC-0>> and <<MPT_MODE_ENC-1>>. Attempts to
-configure an unsupported MPT mode must be rejected with `status.CODE` set to
-"Illegal or invalid operand encodings (CODE=5)".
-
-[[MPT_MODE_ENC-0]]
-.Encodings of MPT modes when `control.MXL=0`
-[%autowidth,float="center",align="center"]
-[%header, cols="^3,^3,20"]
-|===
-3+^|               `control.MXL=0`
-^|Value ^| Name     ^| Description
-|0       |`Bare`     | No page-based memory protection.
-|1       |`Smmpt43`  | Page-based memory protection for up to 43-bit
-                       physical address spaces.
-|2       |`Smmpt52`  | Page-based memory protection for up to 52-bit
-                       physical address spaces.
-|3       |`Smmpt64`  | Page-based memory protection for up to 64-bit
-                       physical address spaces.
-|4-13    |-          |`_Reserved for future standard use._`
-|14-15   |-          |`_Designated for custom use._`
-|===
-
-[[MPT_MODE_ENC-1]]
-.Encodings of MPT modes when `control.MXL=1`
-[%autowidth,float="center",align="center"]
-[%header, cols="^3,^3,20"]
-|===
-^|Value ^| Name    ^| Description
-|0       |`Bare`    | No page-based memory protection.
-|1       |`Smmpt34` | Page-based memory protection for up to 34-bit
-                      physical address spaces.
-|2       |-         |`_Reserved for future standard use._`
-|3       |-         |`_Designated for custom use._`
-|===
-
-The `MBE` and/or `MXL` fields may be hard-wired if only a single value is
-supported for these fields by an implementation.
+observed by `control`, the `status.BUSY` bit is set to 1. When the `BUSY` bit
+is 1, behavior of additional writes to `control` are UNSPECIFIED. Some
+implementations may ignore the second write and others may perform the actions
+determined by the second write. Software must verify that the `status.BUSY` bit
+is 0 before writing to the `control` register. If the `BUSY` bit reads 0 then
+the I/O MPT checker has completed the operations associated with the previous
+write to the `control` register. The value held in `status.CODE` on completing
+the operations associated with a write to `control` register is UNSPECIFIED.
 
 [[CMD]]
 === Command register (`command`)
@@ -683,7 +637,9 @@ as follows.
 ....
 {reg: [
   {bits:  4, name: 'MPT_MODE'},
-  {bits:  6, name: 'reserved'},
+  {bits:  1, name: 'MBE'},
+  {bits:  1, name: 'MXL'},
+  {bits:  4, name: 'reserved'},
   {bits: 44, name: 'PPN'},
   {bits: 10, name: 'reserved'}
 ], config:{lanes: 4, hspace:1024}}
@@ -707,9 +663,47 @@ as follows.
 ....
 
 The `MPT_MODE` field identifies the mode of the MPT. It's interpreted as
-outlined in <<mpt-32>> when `capabilities.MPTM` is 1, and as detailed in
-<<mpt-64>> otherwise. The `PPN` field programs the PPN of the root page of the
-MPT. When `MPT_MODE` is `Bare`, the `PPN` field must be set to zero.
+outlined in <<MPT_MODE_ENC-0>> when `MXL` is 1, and as detailed in
+<<MPT_MODE_ENC-1>> otherwise. The implementation must support MPT
+modes supported by any of the application processor harts in the system.
+
+[[MPT_MODE_ENC-0]]
+.Encodings of MPT modes when `MXL=0`
+[%autowidth,float="center",align="center"]
+[%header, cols="^3,^3,20"]
+|===
+3+^|               `control.MXL=0`
+^|Value ^| Name     ^| Description
+|0       |`Bare`     | No page-based memory protection.
+|1       |`Smmpt43`  | Page-based memory protection for up to 43-bit
+                       physical address spaces.
+|2       |`Smmpt52`  | Page-based memory protection for up to 52-bit
+                       physical address spaces.
+|3       |`Smmpt64`  | Page-based memory protection for up to 64-bit
+                       physical address spaces.
+|4-13    |-          |`_Reserved for future standard use._`
+|14-15   |-          |`_Designated for custom use._`
+|===
+
+[[MPT_MODE_ENC-1]]
+.Encodings of MPT modes when `MXL=1`
+[%autowidth,float="center",align="center"]
+[%header, cols="^3,^3,20"]
+|===
+^|Value ^| Name    ^| Description
+|0       |`Bare`    | No page-based memory protection.
+|1       |`Smmpt34` | Page-based memory protection for up to 34-bit
+                      physical address spaces.
+|2       |-         |`_Reserved for future standard use._`
+|3       |-         |`_Designated for custom use._`
+|===
+
+The `PPN` field programs the PPN of the root page of the MPT. When `MPT_MODE`
+is `Bare`, the `PPN` field must be set to zero.
+
+The `MBE` field determines the endianness of the access made by I/O MPT
+checker to MPT configured in this entry. When this field is 0, the accesses are
+performed as little-endian acesses and when 1 as big-endian accesses.
 
 The `SRL`, `SML`, `SSRM`, `SSMM`, `S-RCID`, and `S-MCID` fields are used to
 determine the effective `RCID` and `MCID` for device-originated and
