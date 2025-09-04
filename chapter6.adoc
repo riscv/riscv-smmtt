@@ -241,8 +241,8 @@ of instructions.
 |4     |`status`       |4       |<<STS, Status           >>  | No
 |8     |`control`      |4       |<<CTL, Control          >>  | No
 |12    |`command`      |4       |<<CMD, Command          >>  | No
-|16    |`data-0`       |8       |<< Input/Output data 0  >>  | No
-|24    |`data-1`       |8       |<< Input/Output data 1  >>  | No
+|16    |`data1`        |8       |<< Input/Output data 1  >>  | No
+|24    |`data2`        |8       |<< Input/Output data 2  >>  | No
 |===
 
 The reset value is 0 for the following registers fields.
@@ -303,11 +303,11 @@ The `status` register provides the status of the operation requested using the
 When the `command` register is written, IOMPTCHK may perform actions that do not
 complete synchronously with the write. A write to the `command` register sets
 the `status.BUSY` bit to 1, indicating that IOMPTCHK is executing the requested
-operation. The behavior of writing the `command` or the `data-+*+` registers
+operation. The behavior of writing the `command` or the `data*` registers
 while the `status.BUSY` bit is 1 is `UNSPECIFIED`. Some implementations may
 ignore the second write, while others may perform the operation specified by
 that write. Software must verify that `BUSY` is 0 before writing to the
-`command` or `data-+*+` registers.
+`command` or `data*` registers.
 
 [NOTE]
 ====
@@ -452,8 +452,8 @@ The `command` register is used to initiate I/O MPT checker operations. The
 specific operation is identified by the `OP` field within the `command`
 register. Operands required to complete the operation are supplied either in
 dedicated fields of the `command` register or in one or more of the associated
-`data-+*+` registers.  The `OP` field also defines the encoding of the
-`operand` fields in the `command` register and of the `data-+*+` registers for
+`data*` registers.  The `OP` field also defines the encoding of the
+`operand` fields in the `command` register and of the `data*` registers for
 that operation.
 
 .Command Register (`command`)
@@ -490,7 +490,7 @@ that operation.
 |===
 
 Before requesting an operation using the `command` register, software must
-program the fields of the `data-0` and `data-1` registers as required by that
+program the fields of the `data1` and `data2` registers as required by that
 operation. Fields not used by an operation are ignored.
 
 === Configure a rule in the SDCL - `SET_SDCL_ENTRY`
@@ -499,10 +499,10 @@ The `SET_SDCL_ENTRY` operation configures an SDCL rule to classify DMA requests
 based on the identifiers associated with the requests, in order to determine the
 supervisor domain ID (`SDID`) and the IOMMU ID (`IOMMU_ID`).
 
-This operation uses the operands in the `command` register and the `data-0`
-register. The contents of the `data-1` register are ignored by this operation.
+This operation uses the operands in the `command` register and the `data1`
+register. The contents of the `data2` register are ignored by this operation.
 
-For this operation, the fields of the `command` and `data-0` registers are
+For this operation, the fields of the `command` and `data1` registers are
 interpreted as follows.
 
 .`command` register layout for `SET_SDCL_ENTRY` operation
@@ -515,7 +515,7 @@ interpreted as follows.
 ], config:{lanes: 2, hspace:1024}}
 ....
 
-.`data-0` register layout for `SET_SDCL_ENTRY` operation
+.`data1` register layout for `SET_SDCL_ENTRY` operation
 [wavedrom, , ]
 ....
 {reg: [
@@ -534,13 +534,13 @@ used by this classification rule. The `SRC_IDT` encodings are listed in
 <<SRC_IDT>>.
 
 [[SRC_IDT]]
-.`data-0.SRC_IDT` field encodings
+.`data1.SRC_IDT` field encodings
 [width=100%]
 [%header, cols="12,70"]
 |===
 |`SRC_IDT` | Description
 |    0     | None. This rule does not match any incoming transaction. All other
-             fields of the `data-0` register are ignored.
+             fields of the `data1` register are ignored.
 |    1     | Filter by device ID. The device ID is specified in `SRC_ID` field.
 |    2     | Filter by PCIe IDE stream ID and PCIe segment ID. The IDE stream ID
              is specified in the bits 7:0 of the `SRC_ID` field and the segment
@@ -568,7 +568,7 @@ The `SRC_IDM` field can configure `SRC_ID` matching mode for transactions. The
 `SRC_IDM` encodings are listed in <<SRC_IDM>>.
 
 [[SRC_IDM]]
-.data-0.SRC_IDM field encodings
+.data1.SRC_IDM field encodings
 [width=100%]
 [%header, cols="12,70"]
 |===
@@ -616,7 +616,7 @@ Execution Environment (TEE). The encodings for the `TEE_FLT` field can be found
 in <<TEE_FLT>>.
 
 [[TEE_FLT]]
-.`data-0.TEE_FLT` field encodings
+.`data1.TEE_FLT` field encodings
 [width=100%]
 [%header, cols="12,70"]
 |===
@@ -653,23 +653,23 @@ this transaction.
 === Read the configuration of an SDCL rule - `GET_SDCL_ENTRY`
 
 The `GET_SDCL_ENTRY` operation reads the configuration of an SDCL rule
-identified by `RULEID`. This operation ignores the contents of the `data-+*+`
+identified by `RULEID`. This operation ignores the contents of the `data*`
 registers. Upon success, the configuration of the rule identified by
-`command.RULEID` is returned in the `data-0` register.
+`command.RULEID` is returned in the `data1` register.
 
-The contents of the `data-0` register are `UNSPECIFIED` if the operation fails
+The contents of the `data1` register are `UNSPECIFIED` if the operation fails
 or if it is invoked without a preceding `SET_SDCL_ENTRY` for the specified
-`RULEID`. The contents of the `data-1` register are `UNSPECIFIED`, regardless
+`RULEID`. The contents of the `data1` register are `UNSPECIFIED`, regardless
 of whether the operation completes successfully.
 
-The interpretation of the `command` and `data-0` registers for this operation is
+The interpretation of the `command` and `data1` registers for this operation is
 identical to that of the `SET_SDCL_ENTRY` operation.
 
 === Set Supervisor Domain Configurations - `SET_SDCFG_ENTRY`
 
 The `SET_SDCFG_ENTRY` operation configures MPT and QoS ID parameters for a
 supervisor domain in MPTCHK. This operation uses the operands in the `command`,
-`data-0`, and `data-1` registers. The fields of these registers are interpreted
+`data1`, and `data2` registers. The fields of these registers are interpreted
 as follows.
 
 .`command` register layout for `SET_SDCFG_ENTRY` operation
@@ -682,7 +682,7 @@ as follows.
 ], config:{lanes: 2, hspace:1024}}
 ....
 
-.`data-0` register layout for `SET_SDCFG_ENTRY` operation
+.`data1` register layout for `SET_SDCFG_ENTRY` operation
 [wavedrom, , ]
 ....
 {reg: [
@@ -693,7 +693,7 @@ as follows.
 ], config:{lanes: 4, hspace:1024}}
 ....
 
-.`data-1` register layout for `SET_SDCFG_ENTRY` operation
+.`data2` register layout for `SET_SDCFG_ENTRY` operation
 [wavedrom, , ]
 ....
 {reg: [
@@ -756,14 +756,14 @@ the IOMMU associated with the SD, and accompanies the effective `RCID` and
 
 The `GET_SDCFG_ENTRY` operation reads the configuration of the supervisor domain
 identified by `SDID` from MPTCHK. This operation ignores the contents of the
-`data-+*+` registers. Upon success, the configuration of the supervisor domain
-identified by `command.SDID` is returned in the `data-0` register.
+`data*` registers. Upon success, the configuration of the supervisor domain
+identified by `command.SDID` is returned in the `data1` register.
 
-The contents of the `data-0` and `data-1` registers are `UNSPECIFIED` if the
+The contents of the `data1` and `data2` registers are `UNSPECIFIED` if the
 operation fails or if it is invoked without a preceding `SET_SDCFG_ENTRY` for
 the specified `SDID`.
 
-The interpretation of the `command`, `data-0`, and `data-1` registers for this
+The interpretation of the `command`, `data1`, and `data2` registers for this
 operation is identical to that of the `SET_SDCFG_ENTRY` operation.
 
 === MPT Permission Cache Invalidation - `MPTINVAL`
@@ -771,10 +771,10 @@ operation is identical to that of the `SET_SDCFG_ENTRY` operation.
 This operation ensures that stores to an MPT are observed by MPTCHK before
 subsequent implicit reads by MPTCHK to the corresponding MPT.
 
-This operation uses the operands in the `command` register and the `data-0`
-register. The contents of the `data-1` register are ignored by this operation.
+This operation uses the operands in the `command` register and the `data1`
+register. The contents of the `data2` register are ignored by this operation.
 
-For this operation, the fields of the `command` and `data-0` registers are
+For this operation, the fields of the `command` and `data1` registers are
 interpreted as follows.
 
 .`command` register layout for `MPTINVAL` operation
@@ -789,7 +789,7 @@ interpreted as follows.
 ], config:{lanes: 2, hspace:1024}}
 ....
 
-.`data-0` register layout for `MPTINVAL` operation
+.`data1` register layout for `MPTINVAL` operation
 [wavedrom, , ]
 ....
 {reg: [
@@ -885,7 +885,7 @@ Ensure that all previous read and write requests from devices already processed
 by IOMPTCHK are committed to a global ordering point such that they can be
 observed by all RISC-V harts, IOMMUs, and devices in the system.
 
-The contents of the `data-0` and `data-1` registers are ignored by this
+The contents of the `data1` and `data2` registers are ignored by this
 operation. For this operation, the fields of the `command` register are
 interpreted as follows.
 
