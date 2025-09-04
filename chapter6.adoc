@@ -353,7 +353,6 @@ the `MODE` field.
   {bits:  1, name: 'MBE (WARL)'},
   {bits:  1, name: 'MXL (WARL)'},
   {bits: 26, name: 'WPRI'},
-  {bits:  1, name: 'BUSY (RO)'},
 ], config:{lanes: 2, hspace:1024}}
 ....
 
