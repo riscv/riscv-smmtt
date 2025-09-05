@@ -858,9 +858,8 @@ is 1, the `S` field sets the address range size for the `MPTINVAL` operation.
 With an `S` field value of 0, the range size is 4 KiB. But, when the `S` field
 has a value of 1, the `MPTINVAL` operation focuses on a NAPOT range. This range
 is decided by the low-order bits of the `PPN` field, going up to the first
-low-order 0 bit (inclusive of this position). If the initial low-order 0 bit
-position is denoted as `x`, the size of the range is computed as
-`(1 << (13 + x))`.
+low-order 0 bit. If the initial low-order 0 bit position of the `PPN` field is
+denoted as `x`, the size of the range is computed as `(1 << (13 + x))`.
 
 When `PPNV` is set to 1, if the address range specified by `PPN` and `S` is
 invalid, the operation may or may not be performed. If the `PPNV` and `S` are
