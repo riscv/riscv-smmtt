@@ -1,6 +1,6 @@
 [[chapter6]]
 [[IO-MPT]]
-== I/O MPT extension
+== I/O MPT Checker
 
 Supervisor domains may be granted control over DMA-capable devices. When such
 direct device association is supported, the system might also incorporate
@@ -28,11 +28,10 @@ the DMA.
 Given this setup, the I/O subsystem is required to offer the following
 functions:
 
-* Supervisor Domain Classifier (SDCL): This classifier within the I/O subsystem
-  interprets the attributes of a DMA request and determines the appropriate MPT
-  for that request.
+* Supervisor Domain Classifier (SDCL): This function interprets the attributes
+  of a DMA request and determines the appropriate MPT for that request.
 
-* MPT Checker (MPTCHK): This function ensures that stipulated access controls by
+* MPT Check: This function ensures that stipulated access controls by
   `Smmpt` are applied to the memory regions accessed by the DMA. It uses the MPT
   identified by the SDCL.
 
@@ -54,7 +53,7 @@ represented in <<io-mpt-checker>>.
 image::images/IOMTTCHK.png[width=800]
 [[fig:IOMPTCHK]]
 
-The IO Bridge invokes the SDCL function using the SDID request interface (SDR)
+The IO Bridge invokes the I/O MPT checker using the SDID request interface (SDR)
 and provides it the identifiers associated with the incoming transaction. The
 SDCL classifies the request using the identifiers and provides the SDID and
 the IOMMU ID on the SDID completion interface (SDC).
@@ -66,64 +65,84 @@ response to the address translation request on the device translation completion
 (DTC) interface. As part of the address translation process, the IOMMU may need
 to access its in-memory data structures over its data structure interface (DSI).
 
-The IO Bridge invokes the MPTCHK function over the MPT check request (MCR)
-interface and provides it the SDID and physical address of the access. The
-MPTCHK uses the SDID to determine the MPT associated with the supervisor
-domain and checks if the physical address may be accessed by the device or IOMMU
-associated with that supervisor domain. The result of the check is provided on
-the MPT check completion (MCC) interface to the IO Bridge. As part of the MPT
-check, the MPTCHK may need to perform implicit accesses to the MPT using the MPT
-walk interface (MWI). To perform the checks the MPTCHK uses the same MPT table
-format as used by the CPU's MMU. Using the same MPT table formats as the CPU's
-MMU allows the same table to be used simultaneously by the CPU MMU and MPTCHK.
-The MPT access permission lookup process used by MPTCHK is identical to that
-specified by `Smmpt` extension in section "MPT access permissions lookup process".
+The IO Bridge invokes the I/O MPT checker over the MPT check request (MCR)
+interface and provides it the SDID and machine physical address of the access.
+The I/O MPT checker uses the SDID to determine the MPT associated with the
+supervisor domain and checks if the machine physical address may be accessed by
+the device or IOMMU associated with that supervisor domain. The result of the
+check is provided on the MPT check completion (MCC) interface to the IO Bridge.
+As part of the MPT check, the I/O MPT checker may need to perform implicit
+accesses to the MPT using the I/O MPT checker data structure interface (MDSI).
+To perform the checks the I/O MPT checker uses the same MPT table format as
+used by the CPU's MMU. Using the same MPT table formats as the CPU's MMU allows
+the same table to be used simultaneously by the CPU MMU and I/O MPT checker.
+The MPT permission lookup process used by I/O MPT checker is identical to that
+specified by `Smmpt` extension in section "MPT access permissions lookup
+process".
 
 The RISC-V memory model requires memory access from a hart to be single-copy
 atomic. When RV32 is implemented the size of a single-copy atomic memory access
 is up to 32-bits. When RV64 is implemented the size of a single-copy atomic
 memory access is up to 64-bits. The size of a single-copy atomic memory access
-implemented by MPTCHK is UNSPECIFIED but is required to be at least 32-bits if
-all of the harts in the system implement RV32 and is required to be at least
-64-bits if any of the harts in the system implement RV64. Software must follow
-the rules outlined below to update MPT entries.
+implemented by I/O MPT checker is UNSPECIFIED but is required to be at least
+32-bits if all of the harts in the system implement RV32 and is required to be
+at least 64-bits if any of the harts in the system implement RV64.
 
-* It is generally unsafe to update fields of an MPT entry using stores of width
-  less than the minimal single-copy atomic memory access supported by MPTCHK as
-  it is legal for MPTCHK to read the entry at any time, including when only
-  some of the partial stores have taken effect. For an update to be atomic,
-  software must use a single store of width equal to the minimal single-copy
-  atomic memory access supported by MPTCHK.
+The MPT entries have a `V` bit that when set to 1 indicates that the entry is
+valid.
 
-* MPTCHK is not required to immediately observe the software updates to an MPT
-  entry. Software must use the `MPTINVAL` operation outlined in <<CTRL>> to
-  invalidate any previous copies of that entry that may be in the MPTCHK caches
-  to synchronize the updates to the entry with the operation of MPTCHK.
+Software is allowed to make updates to a MPT entry that has the `V` bit set to
+1. However, some rules as outlined must be followed.
+
+* Software must use a single atomic store that updates all or parts of an MPT
+  PTE for the update to be atomically observed by the I/O MPT checker.
+
+* If the update to a field of the MPT entry will make the field inconsistent
+  with another field of the entry then software must first set the `V` bit to 0
+  and use the `MPTINVAL` operation outlined in <<CTRL>> to invalidate previous
+  copies of the entry that may be in the I/O MPT checker caches to synchronize
+  the updates to the entry with the operation of I/O MPT checker.
+
+* I/O MPT checker is not required to immediately observe the software updates to
+  an MPT entry. Software must use the `MPTINVAL` operation outlined in <<CTRL>>
+  to invalidate any previous copies of that entry that may be in the I/O MPT
+  checker caches to synchronize the updates to the entry with the operation of
+  I/O MPT checker.
 
 [NOTE]
 ====
-If an MPT entry is changed, MPTCHK may use the old value of the entry or the
-new value of the entry and the choice is unpredictable until software uses the
-`MPTINVAL` operation to synchronize updates to the entry with the operation of
-the MPTCHK. These are the only behaviors expected.
+If an MPT entry is changed, I/O MPT checker may use the old value of the entry
+or the new value of the entry and the choice is unpredictable until software
+uses the `MPTINVAL` operation to synchronize updates to the entry with the
+operation of the I/O MPT checker. These are the only behaviors expected.
 ====
+
+The RISC-V memory model specifies byte-invariance for the entire address space.
+When mixed-endian mode of operation is supported, the I/O MPT checker must
+implement byte-invariant addressing such that a byte access to a given address
+accesses the same memory location in both little-endian and big-endian mode of
+operation.
+
+The I/O MPT checker is not allowed to cache an MPT entry whole `V` (valid) bit
+is clear.
 
 The I/O MPT checker provides a memory-mapped register programming interface.
 
-As part of its operations, MPTCHK may need to read data from the MPT. The
-provider (a memory controller or a cache) of the data may detect that the data
-requested has an uncorrectable error and signal that the data is corrupted and
-defer the error to MPTCHK. Such technique to defer the handling of the corrupted
-data to the consumer of the data is also commonly known as data poisoning. The
-effects of such errors may be contained to the transaction that caused the
-corrupted data to be accessed. In the cases where the error affects the
-transaction being processed but otherwise allows the MPTCHK to continue providing
-service, MPTCHK may request the IO bridge to abort the transaction. The MPTCHK
-may support the RISC-V RAS error record register interface (RERI) that specifies
-methods for enabling error detection, logging the detected errors, and
-configuring means to report the error to an error handler. When such a RAS
-architecture is supported, errors such as attempted consumption of poisoned data
-may be reported using the methods provided by the RAS architecture.
+As part of its operations, I/O MPT checker may need to read data from the MPT.
+The provider (a memory controller or a cache) of the data may detect that the
+data requested has an uncorrectable error and signal that the data is corrupted
+and defer the error to I/O MPT checker. Such technique to defer the handling of
+the corrupted data to the consumer of the data is also commonly known as data
+poisoning. The effects of such errors may be contained to the transaction that
+caused the corrupted data to be accessed. In the cases where the error affects
+the transaction being processed but otherwise allows the I/O MPT checker to
+continue providing service, the I/O MPT checker may request the IO bridge to
+abort the transaction.  The I/O MPT checker may support the RISC-V RAS error
+record register interface (RERI) that specifies methods for enabling error
+detection, logging the detected errors, and configuring means to report the
+error to an error handler. When such a RAS architecture is supported, errors
+such as attempted consumption of poisoned data may be reported using the
+methods provided by the RAS architecture.
 
 A supervisor domain, identified by an SDID, may be associated with one or more
 IOMMU instances that are each identified by an IOMMU ID. A given IOMMU ID
@@ -131,18 +150,18 @@ however can only be associated with one supervisor domain.
 
 [NOTE]
 ====
-Usually an IOMMU is associated with an I/O port, and an I/O port connects to one
+Usually an IOMMU is associated with a root port, and a root port connects to one
 or more devices that are governed by that IOMMU. An I/O MPT checker may be
-associated with more than one I/O port. A supervisor domain may be associated
-with one or more devices from each of these I/O ports, necessitating the
-association of an IOMMU instance for each I/O port to be used by that supervisor
+associated with more than one root port. A supervisor domain may be associated
+with one or more devices from each of these root ports, necessitating the
+association of an IOMMU instance for each root port to be used by that supervisor
 domain. When a common I/O MPT checker is used to check I/O originating from
-multiple I/O ports, the SDCL may be configured with rules to classify a device
-connected to an I/O port as associated with a supervisor domain and with the
-IOMMU instance that governs that device.
+multiple root ports, the I/O MPT checker may be configured with rules to classify
+a device connected to a root port as associated with a supervisor domain and with
+the IOMMU instance that governs that device.
 ====
 
-To support I/O MPT checks, the RDSM provides two types of configurations to the
+To support MPT checks, the RDSM provides two types of configurations to the
 I/O MPT checker:
 
 * SDCL rules that classify one or more devices to an SDID and an IOMMU ID.
@@ -154,20 +173,27 @@ I/O MPT checker:
 These configurations are programmed through the I/O MPT checker register
 interface.
 
+While the common use case involves the use of an IOMMU, the architecture
+supports implementations without an IOMMU. In such implementations, the SDCL
+rules classify devices to an SDID alone and no IOMMU ID is associated with the
+rules.
+
 [[IOMPTABORT]]
 === Handling I/O MPT checker violations
 
 A transaction is aborted if::
 
-* The SDCL is not configured with a rule to classify the transaction.
+* The I/O MPT checker is not configured with a rule to classify the transaction.
 * The memory targeted by the transaction is disallowed by the MPT.
-* An access to the MPT by MPTCHK is disallowed by a physical memory attributes
-  check or a physical memory protection check performed by the IO bridge.
-* An access to the MPT by MPTCHK returns corrupted (poisoned) data.
+* An access to the MPT by I/O MPT checker is disallowed by a physical memory
+  attributes check or a physical memory protection check performed by the IO
+  bridge.
+* An access to the MPT by I/O MPT checker returns corrupted (poisoned) data.
 
 If the aborted transaction is an IOMMU-initiated memory access then the IO
 bridge signals such access faults to the IOMMU itself. The details of such
-signaling is implementation defined.
+signaling is implementation defined. Please see the IOMMU specification for
+the handling of access faults on IOMMU initiated memory accesses.
 
 If the aborted transaction is a write then the IO bridge may discard the write;
 the details of how the write is discarded are implementation defined. If the IO
@@ -190,9 +216,9 @@ handling of their violations are outside the scope of this specification.
 
 === I/O MPT Checker Register Interface
 
-Each I/O MPT checker (IOMPTCHK) register interface is memory-mapped starting at
+Each I/O MPT checker register interface is memory-mapped starting at
 an 8-byte aligned physical address and includes the registers used to configure
-the SDCL and MPTCHK functions in the I/O MPT checker.
+the the I/O MPT checker.
 
 [NOTE]
 ====
@@ -206,23 +232,23 @@ enable register decoding to be implemented without a hardware adder circuit.
 The behavior for register accesses where the address is not aligned to
 the size of the access, or if the access spans multiple registers, or if the
 size of the access is not 4 bytes or 8 bytes, is `UNSPECIFIED`. An aligned 4
-byte access to a IOMPTCHK register must be single-copy atomic. Whether an 8 byte
-access to an IOMPTCHK register is single-copy atomic is `UNSPECIFIED`, and such
-an access may appear, internally to the IOMPTCHK implementation, as if two
-separate 4 byte accesses were performed.
+byte access to a I/O MPT checker register must be single-copy atomic. Whether
+an 8 byte access to an I/O MPT checker register is single-copy atomic is
+`UNSPECIFIED`, and such an access may appear, internally to the I/O MPT checker
+implementation, as if two separate 4 byte accesses were performed.
 
 [NOTE]
 ====
-The IOMPTCHK registers are defined in such a way that software can perform two
-individual 4 byte accesses, or hardware can perform two independent 4 byte
-transactions resulting from an 8 byte access, to the high and low halves of the
-register as long as the register semantics, with regards to side-effects, are
-respected between the two software accesses, or two hardware transactions,
+The I/O MPT checker registers are defined in such a way that software can
+perform two individual 4 byte accesses, or hardware can perform two independent
+4 byte transactions resulting from an 8 byte access, to the high and low halves
+of the register as long as the register semantics, with regards to side-effects,
+are respected between the two software accesses, or two hardware transactions,
 respectively.
 ====
 
-The IOMPTCHK registers have little-endian byte order (even for systems where
-all harts are big-endian-only).
+The I/O MPT checker registers have little-endian byte order (even for systems
+where all harts are big-endian-only).
 
 [NOTE]
 ====
@@ -241,8 +267,8 @@ of instructions.
 |4     |`status`       |4       |<<STS, Status           >>  | No
 |8     |`control`      |4       |<<CTL, Control          >>  | No
 |12    |`command`      |4       |<<CMD, Command          >>  | No
-|16    |`data-0`       |8       |<< Input/Output data 0  >>  | No
-|24    |`data-1`       |8       |<< Input/Output data 1  >>  | No
+|16    |`data1`        |8       |Input/Output data 1         | No
+|24    |`data2`        |8       |Input/Output data 2         | No
 |===
 
 The reset value is 0 for the following registers fields.
@@ -269,8 +295,7 @@ checker capabilities.
 ....
 {reg: [
   {bits:  8, name: 'VER'},
-  {bits:  1, name: 'QOSID'},
-  {bits: 19, name: 'WPRI'},
+  {bits: 20, name: 'reserved'},
   {bits:  4, name: 'custom'}
 ], config:{lanes: 4, hspace:1024}}
 ....
@@ -281,9 +306,6 @@ specification and the upper nibble is used to hold the major version of the
 specification. For example, an implementation that supports version 1.0 of the
 specification reports 0x10.
 
-The `QOSID` field indicates whether associating QoS IDs with requests is
-supported.
-
 [[STS]]
 === Status register (`status`)
 
@@ -291,27 +313,29 @@ The `status` register provides the status of the operation requested using the
 `command` register.
 
 .Status Register (`status`)
+[wavedrom, , ]
 ....
 {reg: [
-  {bits:  7, name: 'CODE (RO)'},
-  {bits: 23, name: 'WPRI'},
+  {bits:  8, name: 'CODE (RO)'},
+  {bits: 23, name: '0'},
   {bits:  1, name: 'BUSY (RO)'}
 ], config:{lanes: 2, hspace:1024}}
 ....
 
-When the `command` register is written, IOMPTCHK may perform actions that do not
-complete synchronously with the write. A write to the `command` register sets
-the `status.BUSY` bit to 1, indicating that IOMPTCHK is executing the requested
-operation. The behavior of writing the `command` or the `data-+*+` registers
-while the `status.BUSY` bit is 1 is `UNSPECIFIED`. Some implementations may
-ignore the second write, while others may perform the operation specified by
-that write. Software must verify that `BUSY` is 0 before writing to the
-`command` or `data-+*+` registers.
+When the `command` register is written, the I/O MPT checker may perform actions
+that do not complete synchronously with the write. A write to the `command`
+register sets the `status.BUSY` bit to 1, indicating that I/O MPT checker is
+executing the requested operation. The behavior of writing the `command` or the
+`data*` registers while the `status.BUSY` bit is 1 is `UNSPECIFIED`. Some
+implementations may ignore the second write, while others may perform the
+operation specified by that write. Software must verify that `BUSY` is 0 before
+writing to the `control`, `command` or `data*` registers.
 
 [NOTE]
 ====
 An implementation that always completes the requested operation synchronously
-with a write to the `command` register may hardwire the `BUSY` bit to 0.
+with a write to the `command` or the `control` register may hardwire the `BUSY`
+bit to 0.
 ====
 
 When the `status.BUSY` bit reads 0, the operation is complete, and the
@@ -334,7 +358,6 @@ requested operation.
 | 128-255 | Designated for custom use.
 |===
 
-
 [[CTRL]]
 === Control (`control`)
 
@@ -349,10 +372,7 @@ the `MODE` field.
 ....
 {reg: [
   {bits:  4, name: 'MODE (WARL)'},
-  {bits:  1, name: 'MBE (WARL)'},
-  {bits:  1, name: 'MXL (WARL)'},
-  {bits: 26, name: 'WPRI'},
-  {bits:  1, name: 'BUSY (RO)'},
+  {bits: 28, name: 'reserved'},
 ], config:{lanes: 2, hspace:1024}}
 ....
 
@@ -380,8 +400,8 @@ a global ordering point such that they can be observed by all RISC-V harts,
 devices, I/O MPT checkers, and IOMMUs in the platform.
 
 When an I/O MPT checker is transitioned to `Off` state, the I/O MPT checker
-may retain information configured into the SDCL and/or MPTCHK. The MPTCHK may
-retain information cached from the MPTs. Software must use suitable invalidation
+may retain information configured into it. The I/O MPT Checker may retain
+information cached from the MPTs. Software must use suitable invalidation
 commands to invalidate the cached entries. Software must initialize all SDCL
 rules and SDID configurations prior to transitioning the I/O MPT checker to `On`
 state.
@@ -392,58 +412,14 @@ the `MODE` to `Off` without changing the values of any other field.
 
 A write to `control` register may require the I/O MPT checker to perform many
 operations that may not occur synchronously to the write. When a write is
-observed by `control`, the `BUSY` bit is set to 1. When the `BUSY` bit is 1,
-behavior of additional writes to `control` are UNSPECIFIED. Some implementations
-may ignore the second write and others may perform the actions determined by the
-second write. Software must verify that the `BUSY` bit is 0 before writing to
-the `control` register. If the `BUSY` bit reads 0 then the I/O MPT checker has
-completed the operations associated with the previous write to the `control`
-register. An I/O MPT checker that can complete these operations synchronously
-may hard-wire this bit to 0
-
-The `MBE` field determines the endianness of the access made by I/O MPT checker
-to memory resident data structures such as the MPTs. When this field is 0, the
-accesses are performed as little-endian acesses and when 1 as big-endian
-accesses.
-
-The `MXL` field controls the MPT modes that may be used for memory protection
-checks as defined in <<MPT_MODE_ENC-0>> and <<MPT_MODE_ENC-1>>. Attempts to
-configure an unsupported MPT mode must be rejected with `status.CODE` set to
-"Illegal or invalid operand encodings (CODE=5)".
-
-[[MPT_MODE_ENC-0]]
-.Encodings of MPT modes when `control.MXL=0`
-[%autowidth,float="center",align="center"]
-[%header, cols="^3,^3,20"]
-|===
-3+^|               `fctl.GXL=0`
-^|Value ^| Name     ^| Description
-|0       |`Bare`     | No page-based memory protection.
-|1       |`Smmpt43`  | Page-based memory protection for up to 43-bit
-                       physical address spaces.
-|2       |`Smmpt52`  | Page-based memory protection for up to 52-bit
-                       physical address spaces.
-|3       |`Smmpt64`  | Page-based memory protection for up to 64-bit
-                       physical address spaces.
-|4-13    |-          |`_Reserved for future standard use._`
-|14-15   |-          |`_Designated for custom use._`
-|===
-
-[[MPT_MODE_ENC-1]]
-.Encodings of MPT modes when `control.MXL=1`
-[%autowidth,float="center",align="center"]
-[%header, cols="^3,^3,20"]
-|===
-^|Value ^| Name    ^| Description
-|0       |`Bare`    | No page-based memory protection.
-|1       |`Smmpt34` | Page-based memory protection for up to 34-bit
-                      physical address spaces.
-|2       |-         |`_Reserved for future standard use._`
-|3       |-         |`_Designated for custom use._`
-|===
-
-The `MBE` and/or `MXL` fields may be hard-wired if only a single value is
-supported for these fields by an implementation.
+observed by `control`, the `status.BUSY` bit is set to 1. When the `BUSY` bit
+is 1, behavior of additional writes to `control` are UNSPECIFIED. Some
+implementations may ignore the second write and others may perform the actions
+determined by the second write. Software must verify that the `status.BUSY` bit
+is 0 before writing to the `control` register. If the `BUSY` bit reads 0 then
+the I/O MPT checker has completed the operations associated with the previous
+write to the `control` register. The value held in `status.CODE` on completing
+the operations associated with a write to `control` register is UNSPECIFIED.
 
 [[CMD]]
 === Command register (`command`)
@@ -452,8 +428,8 @@ The `command` register is used to initiate I/O MPT checker operations. The
 specific operation is identified by the `OP` field within the `command`
 register. Operands required to complete the operation are supplied either in
 dedicated fields of the `command` register or in one or more of the associated
-`data-+*+` registers.  The `OP` field also defines the encoding of the
-`data` fields in the `command` register and of the `data-+*+` registers for
+`data*` registers.  The `OP` field also defines the encoding of the
+`operand` fields in the `command` register and of the `data*` registers for
 that operation.
 
 .Command Register (`command`)
@@ -461,48 +437,61 @@ that operation.
 ....
 {reg: [
   {bits:  8, name: 'OP (WARL)'},
-  {bits: 24, name: 'operands (WARL)'},
+  {bits: 24, name: 'operands'},
 ], config:{lanes: 2, hspace:1024}}
 ....
 
 [[IOMPTCHK_OP]]
 .I/O MPT checker operations (`OP`)
 [width=100%]
-[%header, cols="16,^12,70"]
+[%header, cols="20,^12,70"]
 |===
 | Operation         | Encoding ^| Description
 | --                | 0         | Reserved for future standard use.
 | `IOFENCE`         | 1         | Ensure that all previous read and write
-                                  requests from devices already processed by
-                                  IOMPTCHK are committed to a global ordering
-                                  point such that they can be observed by all
-                                  RISC-V harts, IOMMUs, and devices in the
-                                  system.
-| `SET_SDCL_ENTRY`  | 2         | Configure a rule in the SDCL.
+                                  requests from devices already processed by the
+                                  I/O MPT checker are committed to a global
+                                  ordering point such that they can be observed
+                                  by all RISC-V harts, IOMMUs, and devices in
+                                  the system.
+| `SET_SDCL_ENTRY`  | 2         | Configure a SDCL rule in the I/O MPT checker.
 | `GET_SDCL_ENTRY`  | 3         | Read the configuration of an SDCL rule.
 | `SET_SDCFG_ENTRY` | 4         | Configure MPT and QoS ID parameters for an SD.
 | `GET_SDCFG_ENTRY` | 5         | Read the configuration associated with an SD.
 | `MPTINVAL`        | 6         | Ensure that stores to an MPT are observed by
-                                  MPTCHK before subsequent implicit reads by
-                                  MPTCHK to the corresponding MPT.
+                                  the I/O MPT checker before subsequent implicit
+                                  reads by I/O MPT checker to the corresponding
+                                  MPT.
 | --                | 7–127     | Reserved for future standard use.
 | --                | 128–255   | Designated for custom use.
 |===
 
 Before requesting an operation using the `command` register, software must
-program the fields of the `data-0` and `data-1` registers as required by that
-operation. Fields not used by an operation are ignored.
+program the fields of the `data1` and `data2` registers as required by that
+operation. Fields not used by an operation are ignored. If the `command.OP`
+encoding is invalid or not supported then the operation fails with "Invalid
+operation (`OP`) requested" (`status.CODE=2`). If the `SDID` or the `RULEID`
+operands are invalid then the operation fails with "Operation requested for
+invalid `SDID` " (`status.CODE=3`) or "Operation requested for invalid
+`RULEID` " (`status.CODE=4`) respectively. If other register fields used by
+the operation have an unsupported or invalid encoding then the operation
+fails with "Illegal or invalid operand encodings" (`status.CODE=5`). The order
+of checking the validity of `SDID`, `RULEID`, and other operands of when a valid
+operation is requested operation is UNSPECIFIED.
 
-=== Configure a rule in the SDCL - `SET_SDCL_ENTRY`
+==== Configure a SDCL rule - `SET_SDCL_ENTRY`
 
 The `SET_SDCL_ENTRY` operation configures an SDCL rule to classify DMA requests
 based on the identifiers associated with the requests, in order to determine the
-supervisor domain ID (`SDID`) and the IOMMU ID (`IOMMU_ID`).
+supervisor domain ID (`SDID`) and the IOMMU ID (`IOMMU_ID`). The rule to be
+configured is identified by `RULEID`. The `RULEID`, `IOMMU_ID`, and `SDID`
+fields must contain values in the range 0 to N–1, where N is the maximum number
+of the corresponding identifiers supported by the implementation.
 
-This operation uses the operands in the `command` register and the `data-0`
-register. The contents of the `data-1` register are ignored by this operation.
+This operation uses the operands in the `command` register and the `data1`
+register. The contents of the `data2` register are ignored by this operation.
 
-For this operation, the fields of the `command` and `data-0` registers are
+For this operation, the fields of the `command` and `data1` registers are
 interpreted as follows.
 
 .`command` register layout for `SET_SDCL_ENTRY` operation
@@ -510,22 +499,22 @@ interpreted as follows.
 ....
 {reg: [
   {bits:  8, name: 'OP (WARL)'},
-  {bits:  8, name: 'RULEID (WARL)'},
-  {bits: 16, name: 'WPRI'},
+  {bits:  8, name: 'RULEID'},
+  {bits: 16, name: 'reserved'},
 ], config:{lanes: 2, hspace:1024}}
 ....
 
-.`data-0` register layout for `SET_SDCL_ENTRY` operation
+.`data1` register layout for `SET_SDCL_ENTRY` operation
 [wavedrom, , ]
 ....
 {reg: [
-  {bits:  4, name: 'SRC_IDT (WARL)'},
-  {bits:  2, name: 'SRC_IDM (WARL)'},
-  {bits:  2, name: 'TEE_FLT (WARL)'},
+  {bits:  4, name: 'SRC_IDT'},
+  {bits:  2, name: 'SRC_IDM'},
+  {bits:  2, name: 'TEE_FLT'},
   {bits: 24, name: 'SRC_ID'},
-  {bits:  8, name: 'IOMMU_ID (WARL)'},
-  {bits:  6, name: 'SDID (WARL)'},
-  {bits: 18, name: 'WPRI'}
+  {bits:  8, name: 'IOMMU_ID'},
+  {bits:  6, name: 'SDID'},
+  {bits: 18, name: 'reserved'}
 ], config:{lanes: 8, hspace:1024}}
 ....
 
@@ -534,13 +523,13 @@ used by this classification rule. The `SRC_IDT` encodings are listed in
 <<SRC_IDT>>.
 
 [[SRC_IDT]]
-.`data-0.SRC_IDT` field encodings
+.`data1.SRC_IDT` field encodings
 [width=100%]
 [%header, cols="12,70"]
 |===
 |`SRC_IDT` | Description
 |    0     | None. This rule does not match any incoming transaction. All other
-             fields of the `data-0` register are ignored.
+             fields of the `data1` register are ignored.
 |    1     | Filter by device ID. The device ID is specified in `SRC_ID` field.
 |    2     | Filter by PCIe IDE stream ID and PCIe segment ID. The IDE stream ID
              is specified in the bits 7:0 of the `SRC_ID` field and the segment
@@ -568,7 +557,7 @@ The `SRC_IDM` field can configure `SRC_ID` matching mode for transactions. The
 `SRC_IDM` encodings are listed in <<SRC_IDM>>.
 
 [[SRC_IDM]]
-.data-0.SRC_IDM field encodings
+.data1.SRC_IDM field encodings
 [width=100%]
 [%header, cols="12,70"]
 |===
@@ -603,10 +592,10 @@ representing any 1-bit value.
 [cols="^1,3,3", options="header"]
 |===
 | `SRC_IDM` | `SRC_ID`                     | *Comment*
-| 1         |`yyyyyyyy  yyyyyyyy  yyyyyyyy`| One specific seg:bus:dev:func
-| 2         |`yyyyyyyy  yyyyyyyy  yyyyy011`| seg:bus:dev - any func
-| 2         |`yyyyyyyy  yyyyyyyy  01111111`| seg:bus - any dev:func
-| 2         |`yyyyyyyy  01111111  11111111`| seg - any bus:dev:func
+| 2         |`yyyyyyyy  yyyyyyyy  yyyyyyyy`| One specific seg:bus:dev:func
+| 3         |`yyyyyyyy  yyyyyyyy  yyyyy011`| seg:bus:dev - any func
+| 3         |`yyyyyyyy  yyyyyyyy  01111111`| seg:bus - any dev:func
+| 3         |`yyyyyyyy  01111111  11111111`| seg - any bus:dev:func
 |===
 
 ====
@@ -616,17 +605,21 @@ Execution Environment (TEE). The encodings for the `TEE_FLT` field can be found
 in <<TEE_FLT>>.
 
 [[TEE_FLT]]
-.`data-0.TEE_FLT` field encodings
+.`data1.TEE_FLT` field encodings
 [width=100%]
 [%header, cols="12,70"]
 |===
 |`TEE_FLT` | Description
-|   0      | Reserved for future standard use.
+|   0      | Rule matches both TEE-associated and non-TEE associated
+             transactions.
 |   1      | Rule matches TEE-associated transactions.
 |   2      | Rule matches transactions that are not TEE associated.
 |   3      | Rule matches both TEE-associated and non-TEE associated
              transactions.
 |===
+
+If filtering transactions associaetd with a TEE is not supported then the only
+legal values for `TEE_FLT` are 0 and 3.
 
 [NOTE]
 ====
@@ -634,92 +627,143 @@ PCIe IDE provides security for transactions from one Port to another. These
 transactions might be initiated by contexts within the device, such as an SR-IOV
 virtual function, which are associated with a Trusted Execution Environment
 (TEE). Within the IDE TLP header, there's a "T" bit that helps differentiate
-transactions related to a TEE. The `TEE_FLT` filter can be employed to associate
-these TEE-related transactions with a different supervisor domain than the
-transactions not related to TEE. This distinction is made even if both types of
-transactions are received on the same PCIe IDE stream.
-
-Fields such as `TEE_FLT` and `IOMMU_ID` are WARL and may be hardwired to 0 if
-the implementation does not support PCIe IDE and/or an IOMMU.
+transactions related to a TEE. The PCIe TDISP extended TEE Extension introduces
+an additional "XT" bit that complements the "T" bit. When both "T" and "XT" bit
+are 0, the transaction is not related to a TEE. If either the "T" or the "XT"
+bit are 1 then the transaction is related to a TEE. The `TEE_FLT` filter can be
+employed to associate these TEE-related transactions with a different supervisor
+domain than the transactions not related to TEE. This distinction is made even
+if both types of transactions are received on the same PCIe IDE stream.
 ====
 
 The `IOMMU_ID` field identifies the instance of the IOMMU that should be used to
 provide address translation and protection for the transactions matching this
-rule.
+rule. When the I/O MPT checker is not associated with an IOMMU, the `IOMMU_ID`
+field is ignored by this operation.
 
-The `SDID` field identifies the supervisor domain whose memory is accessed by
-this transaction.
+If multiple rules are programmed to match a transaction, the implementation may
+act based on any one of those matching rules.
 
-=== Read the configuration of an SDCL rule - `GET_SDCL_ENTRY`
+If a transaction does not match any of the rules, the IO Bridge is notified of
+this condition. The subsequent behavior of the IO Bridge for unmatched
+transactions remains UNSPECIFIED.
+
+==== Read the configuration of an SDCL rule - `GET_SDCL_ENTRY`
 
 The `GET_SDCL_ENTRY` operation reads the configuration of an SDCL rule
-identified by `RULEID`. This operation ignores the contents of the `data-+*+`
+identified by `RULEID`. This operation ignores the contents of the `data*`
 registers. Upon success, the configuration of the rule identified by
-`command.RULEID` is returned in the `data-0` register.
+`command.RULEID` is returned in the `data1` register.
 
-The contents of the `data-0` register are `UNSPECIFIED` if the operation fails
+The contents of the `data1` register are `UNSPECIFIED` if the operation fails
 or if it is invoked without a preceding `SET_SDCL_ENTRY` for the specified
-`RULEID`. The contents of the `data-1` register are `UNSPECIFIED`, regardless
+`RULEID`. The contents of the `data1` register are `UNSPECIFIED`, regardless
 of whether the operation completes successfully.
 
-The interpretation of the `command` and `data-0` registers for this operation is
+The interpretation of the `command` and `data1` registers for this operation is
 identical to that of the `SET_SDCL_ENTRY` operation.
+
+When the I/O MPT checker is not associated with an IOMMU, the value held in
+`IOMMU_ID` field on successful completion of this operation is UNSPECIFIED.
 
 === Set Supervisor Domain Configurations - `SET_SDCFG_ENTRY`
 
 The `SET_SDCFG_ENTRY` operation configures MPT and QoS ID parameters for a
-supervisor domain in MPTCHK. This operation uses the operands in the `command`,
-`data-0`, and `data-1` registers. The fields of these registers are interpreted
-as follows.
+supervisor domain in the I/O MPT checker. This operation uses the operands in
+the `command`, `data1`, and `data2` registers. The fields of these registers
+are interpreted as follows.
 
 .`command` register layout for `SET_SDCFG_ENTRY` operation
 [wavedrom, , ]
 ....
 {reg: [
   {bits:  8, name: 'OP (WARL)'},
-  {bits:  6, name: 'SDID (WARL)'},
-  {bits: 18, name: 'WPRI'},
+  {bits:  6, name: 'SDID'},
+  {bits: 18, name: 'reserved'},
 ], config:{lanes: 2, hspace:1024}}
 ....
 
-.`data-0` register layout for `SET_SDCFG_ENTRY` operation
+.`data1` register layout for `SET_SDCFG_ENTRY` operation
 [wavedrom, , ]
 ....
 {reg: [
-  {bits:  4, name: 'MPT_MODE (WARL)'},
-  {bits:  6, name: 'WPRI'},
+  {bits:  4, name: 'MPT_MODE'},
+  {bits:  1, name: 'MBE'},
+  {bits:  1, name: 'MXL'},
+  {bits:  4, name: 'reserved'},
   {bits: 44, name: 'PPN'},
-  {bits: 10, name: 'WPRI'}
+  {bits: 10, name: 'reserved'}
 ], config:{lanes: 4, hspace:1024}}
 ....
 
-.`data-1` register layout for `SET_SDCFG_ENTRY` operation
+.`data2` register layout for `SET_SDCFG_ENTRY` operation
 [wavedrom, , ]
 ....
 {reg: [
-  {bits: 12, name: 'S-RCID (WARL)'},
+  {bits: 12, name: 'S-RCID'},
   {bits:  4, name: 'WPRI'},
-  {bits: 12, name: 'S-MCID (WARL)'},
-  {bits:  4, name: 'WPRI'},
-  {bits:  4, name: 'SRL    (WARL)'},
-  {bits:  4, name: 'SML    (WARL)'},
-  {bits:  4, name: 'SQRID  (WARL)'},
-  {bits:  1, name: 'SSRM   (WARL)'},
-  {bits:  1, name: 'SSMM   (WARL)'},
-  {bits:  2, name: 'WPRI'},
-  {bits: 16, name: 'WPRI'}
+  {bits: 12, name: 'S-MCID'},
+  {bits:  4, name: 'reserved'},
+  {bits:  4, name: 'SRL'},
+  {bits:  4, name: 'SML'},
+  {bits:  4, name: 'SQRID'},
+  {bits:  1, name: 'SSRM'},
+  {bits:  1, name: 'SSMM'},
+  {bits: 18, name: 'reserved'}
 ], config:{lanes: 8, hspace:1024}}
 ....
 
 The `MPT_MODE` field identifies the mode of the MPT. It's interpreted as
-outlined in <<mpt-32>> when `capabilities.MPTM` is 1, and as detailed in
-<<mpt-64>> otherwise. The `PPN` field programs the PPN of the root page of the
-MPT. When `MPT_MODE` is `Bare`, the `PPN` field must be set to zero.
+outlined in <<MPT_MODE_ENC-0>> when `MXL` is 1, and as detailed in
+<<MPT_MODE_ENC-1>> otherwise. The implementation must support MPT
+modes supported by any of the application processor harts in the system.
+
+[[MPT_MODE_ENC-0]]
+.Encodings of MPT modes when `MXL=0`
+[%autowidth,float="center",align="center"]
+[%header, cols="^3,^3,20"]
+|===
+3+^|               `control.MXL=0`
+^|Value ^| Name     ^| Description
+|0       |`Bare`     | No page-based memory protection.
+|1       |`Smmpt43`  | Page-based memory protection for up to 43-bit
+                       physical address spaces.
+|2       |`Smmpt52`  | Page-based memory protection for up to 52-bit
+                       physical address spaces.
+|3       |`Smmpt64`  | Page-based memory protection for up to 64-bit
+                       physical address spaces.
+|4-13    |-          |`_Reserved for future standard use._`
+|14-15   |-          |`_Designated for custom use._`
+|===
+
+[[MPT_MODE_ENC-1]]
+.Encodings of MPT modes when `MXL=1`
+[%autowidth,float="center",align="center"]
+[%header, cols="^3,^3,20"]
+|===
+^|Value ^| Name    ^| Description
+|0       |`Bare`    | No page-based memory protection.
+|1       |`Smmpt34` | Page-based memory protection for up to 34-bit
+                      physical address spaces.
+|2       |-         |`_Reserved for future standard use._`
+|3       |-         |`_Designated for custom use._`
+|===
+
+The `PPN` field programs the PPN of the root page of the MPT. When `MPT_MODE`
+is `Bare`, the `PPN` field must be set to zero.
+
+The `MBE` field determines the endianness of the access made by I/O MPT
+checker to MPT configured in this entry. When this field is 0, the accesses are
+performed as little-endian acesses and when 1 as big-endian accesses.
 
 The `SRL`, `SML`, `SSRM`, `SSMM`, `S-RCID`, and `S-MCID` fields are used to
 determine the effective `RCID` and `MCID` for device-originated and
 IOMMU-originated requests, using the RCID-value and MCID-value provided by the
-IOMMU. These fields are implemented only if `capabilities.QOSID` is set to 1.
+IOMMU. These fields shall be implemented if any application processor hart in
+the system supports the Ssqosid extension. When implemented, they must accept
+all legal values permitted for the corresponding fields in the `srmcfg`,
+`mrmcfg`, and `msdcfg` CSRs of any application processor hart in the system.
+If not implemented, the `data2` register value is ignored by this operation.
 
 The determination of the effective `RCID` and `MCID` is as follows:
 
@@ -752,29 +796,35 @@ The `SQRID` identifies the QRI for requests originating from the devices and
 the IOMMU associated with the SD, and accompanies the effective `RCID` and
 `MCID` in the requests made by the device or IOMMU to the QRI.
 
-=== Get Supervisor Domain Configurations - `GET_SDCFG_ENTRY`
+==== Get Supervisor Domain Configurations - `GET_SDCFG_ENTRY`
 
 The `GET_SDCFG_ENTRY` operation reads the configuration of the supervisor domain
-identified by `SDID` from MPTCHK. This operation ignores the contents of the
-`data-+*+` registers. Upon success, the configuration of the supervisor domain
-identified by `command.SDID` is returned in the `data-0` register.
+identified by `SDID` from the I/O MPT checker. This operation ignores the
+contents of the `data*` registers. Upon success, the configuration of the
+supervisor domain identified by `command.SDID` is returned in the `data1` and
+`data2` registers.
 
-The contents of the `data-0` and `data-1` registers are `UNSPECIFIED` if the
+The contents of the `data1` and `data2` registers are `UNSPECIFIED` if the
 operation fails or if it is invoked without a preceding `SET_SDCFG_ENTRY` for
 the specified `SDID`.
 
-The interpretation of the `command`, `data-0`, and `data-1` registers for this
+The interpretation of the `command`, `data1`, and `data2` registers for this
 operation is identical to that of the `SET_SDCFG_ENTRY` operation.
 
-=== MPT Permission Cache Invalidation - `MPTINVAL`
+When the I/O MPT checker does not support associating QoS IDs with requests, the
+value held in the `data2` register on successful completion of this operation is
+UNSPECIFIED.
 
-This operation ensures that stores to an MPT are observed by MPTCHK before
-subsequent implicit reads by MPTCHK to the corresponding MPT.
+==== MPT Permission Cache Invalidation - `MPTINVAL`
 
-This operation uses the operands in the `command` register and the `data-0`
-register. The contents of the `data-1` register are ignored by this operation.
+This operation ensures that stores to an MPT are observed by the I/O MPT
+checker before subsequent implicit reads by I/O MPT checker to the
+corresponding MPT.
 
-For this operation, the fields of the `command` and `data-0` registers are
+This operation uses the operands in the `command` register and the `data1`
+register. The contents of the `data2` register are ignored by this operation.
+
+For this operation, the fields of the `command` and `data1` registers are
 interpreted as follows.
 
 .`command` register layout for `MPTINVAL` operation
@@ -782,46 +832,45 @@ interpreted as follows.
 ....
 {reg: [
   {bits:  8, name: 'OP (WARL)'},
-  {bits:  6, name: 'SDID (WARL)'},
-  {bits:  2, name: 'WPRI'},
-  {bits:  1, name: 'SDID_V'},
-  {bits: 15, name: 'WPRI'},
+  {bits:  6, name: 'SDID'},
+  {bits:  1, name: 'reserved'},
+  {bits:  1, name: 'SDIDV'},
+  {bits: 16, name: 'reserved'},
 ], config:{lanes: 2, hspace:1024}}
 ....
 
-.`data-0` register layout for `MPTINVAL` operation
+.`data1` register layout for `MPTINVAL` operation
 [wavedrom, , ]
 ....
 {reg: [
-  {bits:  1, name: 'PPN_V'},
+  {bits:  1, name: 'PPNV'},
   {bits:  1, name: 'S'},
   {bits:  8, name: 'WPRI'},
   {bits: 44, name: 'PPN'},
-  {bits: 10, name: 'WPRI'}
+  {bits: 10, name: 'reserved'}
 ], config:{lanes: 4, hspace:1024}}
 ....
 
-The `PPN_V` field indicates if the `PPN` field is valid and the `SDID_V` field
+The `PPNV` field indicates if the `PPN` field is valid and the `SDIDV` field
 indicates if the `SDID` field is valid for the operation. When a field is not
-valid for an operation, it is ignored by the operation. When the `PPN_V` field
+valid for an operation, it is ignored by the operation. When the `PPNV` field
 is 1, the `S` field sets the address range size for the `MPTINVAL` operation.
 With an `S` field value of 0, the range size is 4 KiB. But, when the `S` field
 has a value of 1, the `MPTINVAL` operation focuses on a NAPOT range. This range
 is decided by the low-order bits of the `PPN` field, going up to the first
-low-order 0 bit (inclusive of this position). If the initial low-order 0 bit
-position is denoted as `x`, the size of the range is computed as
-`(1 << (12 + x + 1))`.
+low-order 0 bit. If the initial low-order 0 bit position of the `PPN` field is
+denoted as `x`, the size of the range is computed as `(1 << (13 + x))`.
 
-When `PPN_V` is set to 1, if the address range specified by `PPN` and `S` is
-invalid, the operation may or may not be performed. If the `PPN_V` and `S` are
+When `PPNV` is set to 1, if the address range specified by `PPN` and `S` is
+invalid, the operation may or may not be performed. If the `PPNV` and `S` are
 both set to 1 and all bits of the `PPN` operand are 1, the behavior of
 `MPTINVAL` operation is UNSPECIFIED.
 
-. `MPTINVAL` operands and operations
+.`MPTINVAL` operands and operations
 [%autowidth,float="center",align="center"]
-[%header, cols="^2,^2,20"]
+[%header, cols="^4,^4,20"]
 |===
-| `PPN_V` | `SDID_V` | Operation
+| `PPNV` | `SDIDV` | Operation
 |   0     |  0        | Invalidates information cached from any MPT for all
                         supervisor domain address spaces.
 |   0     |  1        | Invalidates information cached from the MPT for the
@@ -843,8 +892,8 @@ range for the `MPTINVAL` operation. The example shows encoding ranges of up to
 8 GiB. Larger ranges may be encoded using the upper address bits (bits 43:22)
 of the `PPN` field.
 
-. Examples of specifying address range sizes using `S` field
-[cols="3,1,3", options="header"]
+.Examples of specifying address range sizes using `S` field
+[cols="3,^1,^3", options="header"]
 |===
 | `PPN[21:0]`              | `S` | *Address Range Size*
 | `yyyyy yyyyyyyy yyyyyyyy`|  0  | 4  KiB
@@ -856,6 +905,11 @@ of the `PPN` field.
 
 ====
 
+The IOMMU is itself a DMA-capable device, and performs DMA using its own
+device ID. An explicit rule must associate the IOMMU’s device ID with an
+`SDID` and MPT, unless that device ID is already covered by another rule that
+maps device IDs to a supervisor domain.
+
 [NOTE]
 ====
 Simpler implementations may ignore the operands of `MPTINVAL` operation and
@@ -865,24 +919,17 @@ A consequence of this specification is that an implementation may use any
 information for an address that was valid in the MPT at any time since the most
 recent `MPTINVAL` that subsumes that address.
 
-Another consequence of this specification is that it is generally unsafe to
-update the MPT using a set of stores of a width less than the width of the MPT
-entry, as it is legal for the implementation to read the MPT entries at any
-time, including when only some of the partial stores have taken effect.
-
-The IOMMU itself is a DMA capable device. The DMA performed by the IOMMU is
-performed using the device ID of the IOMMU. A rule must be defined to associate
-the IOMMU device ID itself with an `SDID` and MPT unless the IOMMU device ID
-is encompassed by another rule that associates device IDs with an SD.
+Even if the I/O MPT checker denies a request, it is allowed to cache the
+corresponding MPT entry.
 ====
 
-=== I/O Fence Operation - `IOFENCE`
+==== I/O Fence Operation - `IOFENCE`
 
 Ensure that all previous read and write requests from devices already processed
-by IOMPTCHK are committed to a global ordering point such that they can be
+by I/O MPT checker are committed to a global ordering point such that they can be
 observed by all RISC-V harts, IOMMUs, and devices in the system.
 
-The contents of the `data-0` and `data-1` registers are ignored by this
+The contents of the `data1` and `data2` registers are ignored by this
 operation. For this operation, the fields of the `command` register are
 interpreted as follows.
 
@@ -891,7 +938,91 @@ interpreted as follows.
 ....
 {reg: [
   {bits:  8, name: 'OP (WARL)'},
-  {bits: 24, name: 'WPRI'},
+  {bits: 24, name: 'reserved'},
 ], config:{lanes: 2, hspace:1024}}
 ....
 
+If a previously valid SDCL rule, and/or the supervisor domain configurations
+referenced by a valid SDCL rule, are modified, then the I/O MPT checker must
+observe the new configurations within a bounded but UNSPECIFIED time. Software
+may use the `IOFENCE` operation after updating the configurations. Successful
+completion of an `IOFENCE` operation also guarantees that the I/O MPT checker
+has observed all configuration updates made prior to the `IOFENCE`. If the
+configuration updates modify the MPT mode and/or PPN, an `MPTINVAL` operation
+with `PPNV` set to 0 must be issued before the `IOFENCE`.
+
+=== Treatment of Device-Side Address Translation Caches
+
+Some devices may participate in the translation process and provide a
+device-side ATC (DevATC) for their own memory accesses. By providing a
+DevATC, the device shares the translation caching responsibility and thereby
+reduces the probability of "thrashing" in the IOATC. The DevATC may be sized
+by the device to suit its unique performance requirements and may also be
+used to optimize DMA latency by prefetching translations. Such mechanisms
+require close cooperation between the device and the IOMMU through a
+protocol. For PCIe, for example, the Address Translation Services (ATS)
+protocol may be used by the device to request translations to cache in the
+DevATC and to synchronize it with updates made by software to address
+translation data structures. +
+
+If the IOBRIDGE and the IOMMUs support the PCIe ATS specification cite:[PCI],
+the IOMMU supports two forms of transactions:
+
+* Translated Requests
+* PCIe ATS Translation Requests
+
+PCIe ATS Translation Requests are used by the device to obtain a translation
+for an I/O virtual address (IOVA) specified in the request. These translated
+addresses may be cached by the device in its DevATC and used as addresses for
+subsequent Translated Requests.
+
+For a PCIe ATS Translation Request, the IOMMU performs a two-stage address
+translation to determine the permissions and the size of the translation to
+be provided in the completion of the request. The IOMMU may be configured to
+return either the machine physical address (MPA) or a guest physical address
+(GPA) (see `T2GPA` field in the Device Context, cite:[IOMMU]) as the
+translation of an IOVA in the response.
+
+Translated Requests also invoke the IOMMU to determine if the device is
+authorized to use these transactions (see `EN_ATS` field in the Device Context).
+When the IOMMU is configured to return a GPA in response to a PCIe ATS
+Translation Request, the IOMMU translates the GPA to an MPA when invoked to
+process a Translated Request.
+
+If the IOMMU provides an Unsupported Request (UR) or a Completer Abort (CA) as
+a response to a PCIe ATS Translation Request, the IOBRIDGE forwards that
+response to the device. If the IOMMU provides a Success response with both
+R and W permissions set to 0, it indicates that the page requested by the
+Translation Request is not available, and the IOBRIDGE forwards that response
+to the device. In these cases, the I/O MPT checker is not invoked to check the
+responses.
+
+For all other responses to a PCIe ATS Translation Request, further processing
+by the IOBRIDGE depends on whether the IOMMU is configured to return an MPA
+or a GPA in the response.
+
+When the IOMMU is configured to return a GPA as the translated address in
+response to a PCIe ATS Translation Request, the IOBRIDGE forwards such
+responses directly to the device. The I/O MPT checker is not invoked in this
+case.
+
+When the response to a PCIe ATS Translation Request is an MPA, the IOBRIDGE
+invokes the I/O MPT checker on the entire range of translated addresses
+returned by the IOMMU. If the IOMMU grants read permission to the device, the
+MPT must also grant read permission; if the IOMMU grants write permission to the
+device, the MPT must also grant write permission; and if the IOMMU grants
+permission to execute, the MPT must also grant execute permission for the entire
+range of translated addresses provided in the PCIe ATS Translation Completion.
+If the I/O MPT checker determines that the address is not accessible or that the
+requested permissions are not present, the IOBRIDGE provides an Unsupported
+Request (UR) response to the device. If the MPT check succeeds, the translation
+completion is returned to the device.
+
+For a Translated Request, if the IOMMU provides a UR or CA response, the
+request is aborted. Otherwise, the IOBRIDGE invokes the I/O MPT checker on the
+MPA range provided by the IOMMU. If the MPT check fails, the request is aborted.
+If the MPT check succeeds, the IOBRIDGE allows the request to access memory.
+
+When protocols other than PCIe ATS are used to support a device-side ATC, the
+IOBRIDGE shall apply similar rules to enforce memory protection as those
+defined for PCIe ATS when implementing the I/O MPT checker functionality.
