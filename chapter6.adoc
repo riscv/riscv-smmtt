@@ -618,7 +618,7 @@ in <<TEE_FLT>>.
              transactions.
 |===
 
-If filtering transactions associaetd with a TEE is not supported then the only
+If filtering transactions associated with a TEE is not supported then the only
 legal values for `TEE_FLT` are 0 and 3.
 
 [NOTE]
@@ -754,7 +754,7 @@ is `Bare`, the `PPN` field must be set to zero.
 
 The `MBE` field determines the endianness of the access made by I/O MPT
 checker to MPT configured in this entry. When this field is 0, the accesses are
-performed as little-endian acesses and when 1 as big-endian accesses.
+performed as little-endian accesses and when 1 as big-endian accesses.
 
 The `SRL`, `SML`, `SSRM`, `SSMM`, `S-RCID`, and `S-MCID` fields are used to
 determine the effective `RCID` and `MCID` for device-originated and
