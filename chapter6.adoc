@@ -962,7 +962,7 @@ used to optimize DMA latency by prefetching translations. Such mechanisms
 require close cooperation between the device and the IOMMU through a
 protocol. For PCIe, for example, the Address Translation Services (ATS)
 protocol may be used by the device to request translations to cache in the
-DevATC and to synchronize it with updates made to software address
+DevATC and to synchronize it with updates made by software to address
 translation data structures. +
 
 If the IOBRIDGE and the IOMMUs support the PCIe ATS specification cite:[PCI],
