@@ -42,7 +42,7 @@ if external debug is allowed for a supervisor domain. Whether external debug is
 authorized or not is expected to be done via a root of trust (RoT) and is
 outside the scope of this specification.
 
-* `Smsdetrca` (<<Smsdetrca>>) - This extension provides the controls to indicate
+* `Smsdetrca` (<<Smsdedbga>>) - This extension provides the controls to indicate
 if external trace is allowed for a supervisor domain. Whether external trace is
 authorized or not is expected to be done via a root of trust (RoT) and is
 outside the scope of this specification.

@@ -1,5 +1,5 @@
-[[chapter6]]
 [[IO-MPT]]
+
 == I/O MPT Checker
 
 Supervisor domains may be granted control over DMA-capable devices. When such

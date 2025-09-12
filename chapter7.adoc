@@ -1,5 +1,5 @@
-[[chapter7]]
 [[Smsdia]]
+
 == Supervisor Domain Interrupt Assignment
 
 Interrupts that occur during the execution of a supervisor domain cause a trap

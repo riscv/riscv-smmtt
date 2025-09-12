@@ -1,6 +1,6 @@
-[[chapter8]]
+
 [[Smsdedbga]]
-[[Smsdetrca]]
+
 == Supervisor Domain External Trace and Debug Allow Controls
 
 This chapter describes two extensions `Smsdedbga` and `Smsdetrca` that enable

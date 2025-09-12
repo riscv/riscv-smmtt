@@ -1,5 +1,5 @@
-[[chapter4]]
 [[Smmpt]]
+
 == Machine-mode Memory Protection Table (MPT)
 
 Memory Protection table is a radix-tree table used to provide read, write, and

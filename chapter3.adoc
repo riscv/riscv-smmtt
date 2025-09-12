@@ -1,5 +1,5 @@
-[[chapter3]]
 [[Smsdid]]
+
 == `Smsdid`: Supervisor Domain Identifier and Protection Register
 
 `Smsdid` defines an interface to program the configuration for

@@ -1,5 +1,5 @@
-[[chapter9]]
 [[Smsdqos]]
+
 == Capacity and Bandwidth QoS Register Interface (CBQRI) for Supervisor Domains
 
 Quality of Service (QoS) is defined as the minimal end-to-end performance
