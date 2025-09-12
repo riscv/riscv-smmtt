@@ -109,7 +109,7 @@ bounded timeframe to subsequent implicit accesses by that hart to such MPTEs.
 [NOTE]
 ====
 This behavior relieves M-mode software from executing certain memory-management
-instructions, such as MFENCE.SPA or MINVAL.MPA, which would normally be used to
+instructions, such as MFENCE.MPA or MINVAL.MPA, which would normally be used to
 synchronize the hart’s MPT caches when a memory-resident MPTE is changed from
 Invalid to Valid. Synchronizing the hart’s MPT caches with other forms of updates
 to a memory-resident MPTE, including when a MPTE is changed from Valid to Invalid,
@@ -198,7 +198,7 @@ follows:
 
 3. If _mpte.V_=0, or if any bits or encodings that are reserved for future
    standard use are set within _mpte_, or if _mpte.L_ = 0 and _mpte.N_ = 1,
-   stop and raise an access-fault exception corresponding to the original 
+   stop and raise an access-fault exception corresponding to the original
    access type.
 
 4. Otherwise, the _mpte_ is valid. If _mpte.L=1_ go to step 5; Otherwise, this
@@ -209,12 +209,12 @@ follows:
 
 5. If _mpte.N_=0, a non-NAPOT leaf _mpte_ has been found. If _i_ > 0, let _pi_
    be the value of the NUMPGINRANGE most significant bits of _pa.pn[i-1]_.
-   Otherwise, for _i_ = 0, let _pi_ be the value of the NUMPGINRANGE most 
+   Otherwise, for _i_ = 0, let _pi_ be the value of the NUMPGINRANGE most
    significant bits of the range offset specified in the _pa_.
    (For Smmpt34, NUMPGINRANGE is 3). Let _XWR=mpte.XWR[pi]_.
 
-6. If _mpte.N_=1, a NAPOT leaf _mpte_ has been found. Let _XWR=mpte.XWR_. If 
-   the value of _G_ is reserved for the current MPT mode, raise an access-fault 
+6. If _mpte.N_=1, a NAPOT leaf _mpte_ has been found. Let _XWR=mpte.XWR_. If
+   the value of _G_ is reserved for the current MPT mode, raise an access-fault
    exception corresponding to the original access type.
 
 7. Determine if the requested memory access is allowed by the _XWR_ bits, given
