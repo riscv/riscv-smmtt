@@ -656,7 +656,7 @@ registers. Upon success, the configuration of the rule identified by
 
 The contents of the `data1` register are `UNSPECIFIED` if the operation fails
 or if it is invoked without a preceding `SET_SDCL_ENTRY` for the specified
-`RULEID`. The contents of the `data1` register are `UNSPECIFIED`, regardless
+`RULEID`. The contents of the `data2` register are `UNSPECIFIED`, regardless
 of whether the operation completes successfully.
 
 The interpretation of the `command` and `data1` registers for this operation is
