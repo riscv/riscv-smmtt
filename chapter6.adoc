@@ -148,6 +148,13 @@ A supervisor domain, identified by an SDID, may be associated with one or more
 IOMMU instances that are each identified by an IOMMU ID. A given IOMMU ID
 however can only be associated with one supervisor domain.
 
+The IOMMU is itself a DMA-capable device, and performs DMA using its own
+device ID. An explicit rule must associate the IOMMU’s device ID with an
+`SDID` and MPT, unless that device ID is already covered by another rule that
+maps device IDs to a supervisor domain. The IOMMU ID configured in the rule
+matching the IOMMU's device ID is ignored when the rule is looked up for memory
+accesses originated by the IOMMU itself.
+
 [NOTE]
 ====
 Usually an IOMMU is associated with a root port, and a root port connects to one
@@ -903,10 +910,6 @@ of the `PPN` field.
 
 ====
 
-The IOMMU is itself a DMA-capable device, and performs DMA using its own
-device ID. An explicit rule must associate the IOMMU’s device ID with an
-`SDID` and MPT, unless that device ID is already covered by another rule that
-maps device IDs to a supervisor domain.
 
 [NOTE]
 ====
