@@ -665,7 +665,7 @@ identical to that of the `SET_SDCL_ENTRY` operation.
 When the I/O MPT checker is not associated with an IOMMU, the value held in
 `IOMMU_ID` field on successful completion of this operation is UNSPECIFIED.
 
-=== Set Supervisor Domain Configurations - `SET_SDCFG_ENTRY`
+==== Set Supervisor Domain Configurations - `SET_SDCFG_ENTRY`
 
 The `SET_SDCFG_ENTRY` operation configures MPT and QoS ID parameters for a
 supervisor domain in the I/O MPT checker. This operation uses the operands in
