@@ -700,7 +700,7 @@ are interpreted as follows.
 ....
 {reg: [
   {bits: 12, name: 'S-RCID'},
-  {bits:  4, name: 'WPRI'},
+  {bits:  4, name: 'reserved'},
   {bits: 12, name: 'S-MCID'},
   {bits:  4, name: 'reserved'},
   {bits:  4, name: 'SRL'},
@@ -844,7 +844,7 @@ interpreted as follows.
 {reg: [
   {bits:  1, name: 'PPNV'},
   {bits:  1, name: 'S'},
-  {bits:  8, name: 'WPRI'},
+  {bits:  8, name: 'reserved'},
   {bits: 44, name: 'PPN'},
   {bits: 10, name: 'reserved'}
 ], config:{lanes: 4, hspace:1024}}
