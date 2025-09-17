@@ -123,7 +123,7 @@ implement byte-invariant addressing such that a byte access to a given address
 accesses the same memory location in both little-endian and big-endian mode of
 operation.
 
-The I/O MPT checker is not allowed to cache an MPT entry whole `V` (valid) bit
+The I/O MPT checker is not allowed to cache an MPT entry whose `V` (valid) bit
 is clear.
 
 The I/O MPT checker provides a memory-mapped register programming interface.
@@ -921,7 +921,7 @@ information for an address that was valid in the MPT at any time since the most
 recent `MPTINVAL` that subsumes that address.
 
 Even if the I/O MPT checker denies a request, it is allowed to cache the
-corresponding MPT entry.
+corresponding MPT entry if its is valid.
 ====
 
 ==== I/O Fence Operation - `IOFENCE`
