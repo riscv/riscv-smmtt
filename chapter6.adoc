@@ -645,8 +645,7 @@ If multiple rules are programmed to match a transaction, the implementation may
 act based on any one of those matching rules.
 
 If a transaction does not match any of the rules, the IO Bridge is notified of
-this condition. The subsequent behavior of the IO Bridge for unmatched
-transactions remains UNSPECIFIED.
+this condition.
 
 ==== Read the configuration of an SDCL rule - `GET_SDCL_ENTRY`
 
