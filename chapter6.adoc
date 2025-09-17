@@ -713,7 +713,7 @@ are interpreted as follows.
 ....
 
 The `MPT_MODE` field identifies the mode of the MPT. It's interpreted as
-outlined in <<MPT_MODE_ENC-0>> when `MXL` is 1, and as detailed in
+outlined in <<MPT_MODE_ENC-0>> when `MXL` is 0, and as detailed in
 <<MPT_MODE_ENC-1>> otherwise. The implementation must support MPT
 modes supported by any of the application processor harts in the system.
 
@@ -722,7 +722,6 @@ modes supported by any of the application processor harts in the system.
 [%autowidth,float="center",align="center"]
 [%header, cols="^3,^3,20"]
 |===
-3+^|               `control.MXL=0`
 ^|Value ^| Name     ^| Description
 |0       |`Bare`     | No page-based memory protection.
 |1       |`Smmpt43`  | Page-based memory protection for up to 43-bit
@@ -744,8 +743,8 @@ modes supported by any of the application processor harts in the system.
 |0       |`Bare`    | No page-based memory protection.
 |1       |`Smmpt34` | Page-based memory protection for up to 34-bit
                       physical address spaces.
-|2       |-         |`_Reserved for future standard use._`
-|3       |-         |`_Designated for custom use._`
+|2-13    |-         |`_Reserved for future standard use._`
+|14-15   |-         |`_Designated for custom use._`
 |===
 
 The `PPN` field programs the PPN of the root page of the MPT. When `MPT_MODE`
