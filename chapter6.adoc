@@ -274,7 +274,6 @@ of instructions.
 The reset value is 0 for the following registers fields.
 
 * `status` - `BUSY` and `CODE` fields
-* `control` - `BUSY` field
 
 The reset value for `control.MODE` is recommended to be `Off`.
 
