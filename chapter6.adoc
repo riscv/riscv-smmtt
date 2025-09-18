@@ -123,7 +123,7 @@ implement byte-invariant addressing such that a byte access to a given address
 accesses the same memory location in both little-endian and big-endian mode of
 operation.
 
-The I/O MPT checker is not allowed to cache an MPT entry whole `V` (valid) bit
+The I/O MPT checker is not allowed to cache an MPT entry whose `V` (valid) bit
 is clear.
 
 The I/O MPT checker provides a memory-mapped register programming interface.
@@ -147,6 +147,13 @@ methods provided by the RAS architecture.
 A supervisor domain, identified by an SDID, may be associated with one or more
 IOMMU instances that are each identified by an IOMMU ID. A given IOMMU ID
 however can only be associated with one supervisor domain.
+
+The IOMMU is itself a DMA-capable device, and performs DMA using its own
+device ID. An explicit rule must associate the IOMMU’s device ID with an
+`SDID` and MPT, unless that device ID is already covered by another rule that
+maps device IDs to a supervisor domain. The IOMMU ID configured in the rule
+matching the IOMMU's device ID is ignored when the rule is looked up for memory
+accesses originated by the IOMMU itself.
 
 [NOTE]
 ====
@@ -274,7 +281,6 @@ of instructions.
 The reset value is 0 for the following registers fields.
 
 * `status` - `BUSY` and `CODE` fields
-* `control` - `BUSY` field
 
 The reset value for `control.MODE` is recommended to be `Off`.
 
@@ -656,7 +662,7 @@ registers. Upon success, the configuration of the rule identified by
 
 The contents of the `data1` register are `UNSPECIFIED` if the operation fails
 or if it is invoked without a preceding `SET_SDCL_ENTRY` for the specified
-`RULEID`. The contents of the `data1` register are `UNSPECIFIED`, regardless
+`RULEID`. The contents of the `data2` register are `UNSPECIFIED`, regardless
 of whether the operation completes successfully.
 
 The interpretation of the `command` and `data1` registers for this operation is
@@ -665,7 +671,7 @@ identical to that of the `SET_SDCL_ENTRY` operation.
 When the I/O MPT checker is not associated with an IOMMU, the value held in
 `IOMMU_ID` field on successful completion of this operation is UNSPECIFIED.
 
-=== Set Supervisor Domain Configurations - `SET_SDCFG_ENTRY`
+==== Set Supervisor Domain Configurations - `SET_SDCFG_ENTRY`
 
 The `SET_SDCFG_ENTRY` operation configures MPT and QoS ID parameters for a
 supervisor domain in the I/O MPT checker. This operation uses the operands in
@@ -700,7 +706,7 @@ are interpreted as follows.
 ....
 {reg: [
   {bits: 12, name: 'S-RCID'},
-  {bits:  4, name: 'WPRI'},
+  {bits:  4, name: 'reserved'},
   {bits: 12, name: 'S-MCID'},
   {bits:  4, name: 'reserved'},
   {bits:  4, name: 'SRL'},
@@ -713,7 +719,7 @@ are interpreted as follows.
 ....
 
 The `MPT_MODE` field identifies the mode of the MPT. It's interpreted as
-outlined in <<MPT_MODE_ENC-0>> when `MXL` is 1, and as detailed in
+outlined in <<MPT_MODE_ENC-0>> when `MXL` is 0, and as detailed in
 <<MPT_MODE_ENC-1>> otherwise. The implementation must support MPT
 modes supported by any of the application processor harts in the system.
 
@@ -722,7 +728,6 @@ modes supported by any of the application processor harts in the system.
 [%autowidth,float="center",align="center"]
 [%header, cols="^3,^3,20"]
 |===
-3+^|               `control.MXL=0`
 ^|Value ^| Name     ^| Description
 |0       |`Bare`     | No page-based memory protection.
 |1       |`Smmpt43`  | Page-based memory protection for up to 43-bit
@@ -744,8 +749,8 @@ modes supported by any of the application processor harts in the system.
 |0       |`Bare`    | No page-based memory protection.
 |1       |`Smmpt34` | Page-based memory protection for up to 34-bit
                       physical address spaces.
-|2       |-         |`_Reserved for future standard use._`
-|3       |-         |`_Designated for custom use._`
+|2-13    |-         |`_Reserved for future standard use._`
+|14-15   |-         |`_Designated for custom use._`
 |===
 
 The `PPN` field programs the PPN of the root page of the MPT. When `MPT_MODE`
@@ -844,7 +849,7 @@ interpreted as follows.
 {reg: [
   {bits:  1, name: 'PPNV'},
   {bits:  1, name: 'S'},
-  {bits:  8, name: 'WPRI'},
+  {bits:  8, name: 'reserved'},
   {bits: 44, name: 'PPN'},
   {bits: 10, name: 'reserved'}
 ], config:{lanes: 4, hspace:1024}}
@@ -904,10 +909,6 @@ of the `PPN` field.
 
 ====
 
-The IOMMU is itself a DMA-capable device, and performs DMA using its own
-device ID. An explicit rule must associate the IOMMU’s device ID with an
-`SDID` and MPT, unless that device ID is already covered by another rule that
-maps device IDs to a supervisor domain.
 
 [NOTE]
 ====
@@ -919,7 +920,7 @@ information for an address that was valid in the MPT at any time since the most
 recent `MPTINVAL` that subsumes that address.
 
 Even if the I/O MPT checker denies a request, it is allowed to cache the
-corresponding MPT entry.
+corresponding MPT entry if it is valid.
 ====
 
 ==== I/O Fence Operation - `IOFENCE`
