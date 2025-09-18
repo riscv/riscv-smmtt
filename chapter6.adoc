@@ -921,7 +921,7 @@ information for an address that was valid in the MPT at any time since the most
 recent `MPTINVAL` that subsumes that address.
 
 Even if the I/O MPT checker denies a request, it is allowed to cache the
-corresponding MPT entry if its is valid.
+corresponding MPT entry if it is valid.
 ====
 
 ==== I/O Fence Operation - `IOFENCE`
