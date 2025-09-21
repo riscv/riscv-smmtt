@@ -21,9 +21,9 @@ Unlike the RISC-V harts, DMA-capable devices connected to a supervisor domain
 remain continuously active. Such devices might initiate DMA even if the
 associated domain is not currently active on any RISC-V harts. As a result, the
 MPT of all supervisor domains must be constantly active for DMA protection.
-Furthermore, the IO subsystem must possess the capability to select the
-appropriate MPT for enforcement based on the identity of the device initiating
-the DMA.
+Furthermore, the input/output (I/O) subsystem must possess the capability to
+select the appropriate MPT for enforcement based on the identity of the device
+initiating the DMA.
 
 Given this setup, the I/O subsystem is required to offer the following
 functions:
@@ -40,12 +40,12 @@ subsystem, referred to as the I/O MPT Checker.
 
 === Placement of I/O MPT Checker
 
-The IO Bridge serves as an intermediary, situated between the IO devices and the
+The I/O Bridge serves as an intermediary, situated between the I/O devices and the
 system interconnect, with the primary role of processing DMA transactions. These
-IO devices can initiate DMA transactions utilizing IO Virtual Addresses (IOVA).
+I/O devices can initiate DMA transactions utilizing I/O Virtual Addresses (IOVA).
 Notably, an IOVA could be in the form of a Virtual Address (VA), Guest Virtual
 Address (GVA), or Guest Physical Address (GPA). The configuration and
-interfacing of the I/O MPT Checker with respect to the IO Bridge is graphically
+interfacing of the I/O MPT Checker with respect to the I/O Bridge is graphically
 represented in <<io-mpt-checker>>.
 
 [caption="Figure {counter:image}: ", reftext="Figure {image}"]
@@ -53,24 +53,24 @@ represented in <<io-mpt-checker>>.
 image::images/IOMTTCHK.png[width=800]
 [[fig:IOMPTCHK]]
 
-The IO Bridge invokes the I/O MPT Checker using the SDID request interface (SDR)
+The I/O Bridge invokes the I/O MPT Checker using the SDID request interface (SDR)
 and provides it the identifiers associated with the incoming transaction. The
 SDCL classifies the request using the identifiers and provides the SDID and
 the IOMMU ID on the SDID completion interface (SDC).
 
-The IO Bridge uses the IOMMU ID to determine the IOMMU governing this request.
-The IO Bridge uses the device translation request (DTR) interface to the
+The I/O Bridge uses the IOMMU ID to determine the IOMMU governing this request.
+The I/O Bridge uses the device translation request (DTR) interface to the
 selected IOMMU to request address translation. The selected IOMMU provides the
 response to the address translation request on the device translation completion
 (DTC) interface. As part of the address translation process, the IOMMU may need
 to access its in-memory data structures over its data structure interface (DSI).
 
-The IO Bridge invokes the I/O MPT Checker over the MPT check request (MCR)
+The I/O Bridge invokes the I/O MPT Checker over the MPT check request (MCR)
 interface and provides it the SDID and machine physical address of the access.
 The I/O MPT Checker uses the SDID to determine the MPT associated with the
 supervisor domain and checks if the machine physical address may be accessed by
 the device or IOMMU associated with that supervisor domain. The result of the
-check is provided on the MPT check completion (MCC) interface to the IO Bridge.
+check is provided on the MPT check completion (MCC) interface to the I/O Bridge.
 As part of the MPT check, the I/O MPT Checker may need to perform implicit
 accesses to the MPT using the I/O MPT Checker data structure interface (MDSI).
 To perform the checks the I/O MPT Checker uses the same MPT table format as
@@ -136,7 +136,7 @@ the corrupted data to the consumer of the data is also commonly known as data
 poisoning. The effects of such errors may be contained to the transaction that
 caused the corrupted data to be accessed. In the cases where the error affects
 the transaction being processed but otherwise allows the I/O MPT Checker to
-continue providing service, the I/O MPT Checker may request the IO Bridge to
+continue providing service, the I/O MPT Checker may request the I/O Bridge to
 abort the transaction.  The I/O MPT Checker may support the RISC-V RAS error
 record register interface (RERI) that specifies methods for enabling error
 detection, logging the detected errors, and configuring means to report the
@@ -205,15 +205,15 @@ Bridge signals such access faults to the IOMMU itself. The details of such
 signaling is implementation defined. Please see the IOMMU specification for
 the handling of access faults on IOMMU initiated memory accesses.
 
-If the aborted transaction is a write then the IO Bridge may discard the write;
+If the aborted transaction is a write then the I/O Bridge may discard the write;
 the details of how the write is discarded are implementation defined. If the IO
 protocol requires a response for write transactions (e.g., AXI) then a response
-as defined by the IO protocol may be generated by the IO Bridge (e.g., SLVERR on
+as defined by the I/O protocol may be generated by the I/O Bridge (e.g., SLVERR on
 BRESP - Write Response channel). For PCIe, for example, write transactions are
 posted and no response is returned when a write transaction is discarded.
 
 If the aborted transaction is a read then the device expects a completion. The
-IO Bridge may provide a completion to the device. The data, if returned, in such
+I/O Bridge may provide a completion to the device. The data, if returned, in such
 completion is implementation defined; usually it is a fixed value such as all 0
 or all 1. A status code may be returned to the device in the completion to
 indicate this condition. For AXI, for example, the completion status is provided
@@ -420,7 +420,7 @@ When the `MODE` is not `Off`, software changes to fields besides `MODE` may
 cause UNSPECIFIED behavior. When the state is `On`, software must first change
 the `MODE` to `Off` without changing the values of any other field.
 
-When the `MODE` is `Bare`, the I/O MPT Checker shall request the IO Bridge to
+When the `MODE` is `Bare`, the I/O MPT Checker shall request the I/O Bridge to
 allow inbound transactions that are not TEE-associated and to abort those that
 are TEE-associated.
 
@@ -657,7 +657,7 @@ field is ignored by this operation.
 If multiple rules are programmed to match a transaction, the implementation may
 act based on any one of those matching rules.
 
-If a transaction does not match any of the rules, the IO Bridge is notified of
+If a transaction does not match any of the rules, the I/O Bridge is notified of
 this condition.
 
 ==== Read the configuration of an SDCL rule - `GET_SDCL_ENTRY`
