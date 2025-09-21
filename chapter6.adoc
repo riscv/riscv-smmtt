@@ -50,7 +50,7 @@ represented in <<io-mpt-checker>>.
 
 [caption="Figure {counter:image}: ", reftext="Figure {image}"]
 [title= "I/O MPT checker placement", id=io-mpt-checker]
-image::images/IOMTTCHK.png[width=800]
+image::images/IOMPTCHK.png[width=800]
 [[fig:IOMPTCHK]]
 
 The I/O Bridge invokes the I/O MPT Checker using the SDID request interface (SDR)
