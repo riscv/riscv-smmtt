@@ -188,14 +188,17 @@ rules.
 [[IOMPTABORT]]
 === Handling I/O MPT checker violations
 
-A transaction is aborted if::
+A transaction shall be aborted if:
 
-* The I/O MPT checker is not configured with a rule to classify the transaction.
+* The I/O MPT checker is in `Off` mode, or is in `Bare` mode and the transaction
+  is TEE-associated.
+* The I/O MPT checker is in `On` mode but is not configured with a rule to
+  classify the transaction.
 * The memory targeted by the transaction is disallowed by the MPT.
 * An access to the MPT by I/O MPT checker is disallowed by a physical memory
   attributes check or a physical memory protection check performed by the IO
   bridge.
-* An access to the MPT by I/O MPT checker returns corrupted (poisoned) data.
+* An access to the MPT by the I/O MPT checker returns corrupted (poisoned) data.
 
 If the aborted transaction is an IOMMU-initiated memory access then the IO
 bridge signals such access faults to the IOMMU itself. The details of such
@@ -391,6 +394,7 @@ The I/O MPT checker may be configured to be in the following modes:
 |===
 | Name         | Encoding ^| Description
 | Off          | 0         | No inbound memory transactions are allowed.
+| Bare         | 1         | No memory protection.
 | On           | 1         | I/O MPT checker is operational.
 | Reserved     | 2-13      | Reserved for future standard use.
 | Custom       | 14-15     | Designated for custom use.
@@ -415,6 +419,10 @@ state.
 When the `MODE` is not `Off`, software changes to fields besides `MODE` may
 cause UNSPECIFIED behavior. When the state is `On`, software must first change
 the `MODE` to `Off` without changing the values of any other field.
+
+When the `MODE` is `Bare`, the I/O MPT Checker shall request the I/O bridge to
+allow inbound transactions that are not TEE-associated and to abort those that
+are TEE-associated.
 
 A write to `control` register may require the I/O MPT checker to perform many
 operations that may not occur synchronously to the write. When a write is
