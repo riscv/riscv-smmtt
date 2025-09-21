@@ -620,12 +620,11 @@ in <<TEE_FLT>>.
              transactions.
 |   1      | Rule matches TEE-associated transactions.
 |   2      | Rule matches transactions that are not TEE associated.
-|   3      | Rule matches both TEE-associated and non-TEE associated
-             transactions.
+|   3      | Reserved for future standard use.
 |===
 
 If filtering transactions associated with a TEE is not supported then the only
-legal values for `TEE_FLT` are 0 and 3.
+legal values for `TEE_FLT` is 0.
 
 [NOTE]
 ====
