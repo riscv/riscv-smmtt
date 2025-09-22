@@ -21,9 +21,9 @@ Unlike the RISC-V harts, DMA-capable devices connected to a supervisor domain
 remain continuously active. Such devices might initiate DMA even if the
 associated domain is not currently active on any RISC-V harts. As a result, the
 MPT of all supervisor domains must be constantly active for DMA protection.
-Furthermore, the IO subsystem must possess the capability to select the
-appropriate MPT for enforcement based on the identity of the device initiating
-the DMA.
+Furthermore, the input/output (I/O) subsystem must possess the capability to
+select the appropriate MPT for enforcement based on the identity of the device
+initiating the DMA.
 
 Given this setup, the I/O subsystem is required to offer the following
 functions:
@@ -36,47 +36,47 @@ functions:
   identified by the SDCL.
 
 Collectively, these two functionalities form a logical block in the I/O
-subsystem, referred to as the I/O MPT checker.
+subsystem, referred to as the I/O MPT Checker.
 
-=== Placement of I/O MPT checker
+=== Placement of I/O MPT Checker
 
-The IO Bridge serves as an intermediary, situated between the IO devices and the
+The I/O Bridge serves as an intermediary, situated between the I/O devices and the
 system interconnect, with the primary role of processing DMA transactions. These
-IO devices can initiate DMA transactions utilizing IO Virtual Addresses (IOVA).
+I/O devices can initiate DMA transactions utilizing I/O Virtual Addresses (IOVA).
 Notably, an IOVA could be in the form of a Virtual Address (VA), Guest Virtual
 Address (GVA), or Guest Physical Address (GPA). The configuration and
-interfacing of the I/O MPT Checker with respect to the IO Bridge is graphically
+interfacing of the I/O MPT Checker with respect to the I/O Bridge is graphically
 represented in <<io-mpt-checker>>.
 
 [caption="Figure {counter:image}: ", reftext="Figure {image}"]
 [title= "I/O MPT checker placement", id=io-mpt-checker]
-image::images/IOMTTCHK.png[width=800]
+image::images/IOMPTCHK.png[width=800]
 [[fig:IOMPTCHK]]
 
-The IO Bridge invokes the I/O MPT checker using the SDID request interface (SDR)
+The I/O Bridge invokes the I/O MPT Checker using the SDID request interface (SDR)
 and provides it the identifiers associated with the incoming transaction. The
 SDCL classifies the request using the identifiers and provides the SDID and
 the IOMMU ID on the SDID completion interface (SDC).
 
-The IO Bridge uses the IOMMU ID to determine the IOMMU governing this request.
-The IO Bridge uses the device translation request (DTR) interface to the
+The I/O Bridge uses the IOMMU ID to determine the IOMMU governing this request.
+The I/O Bridge uses the device translation request (DTR) interface to the
 selected IOMMU to request address translation. The selected IOMMU provides the
 response to the address translation request on the device translation completion
 (DTC) interface. As part of the address translation process, the IOMMU may need
 to access its in-memory data structures over its data structure interface (DSI).
 
-The IO Bridge invokes the I/O MPT checker over the MPT check request (MCR)
+The I/O Bridge invokes the I/O MPT Checker over the MPT check request (MCR)
 interface and provides it the SDID and machine physical address of the access.
-The I/O MPT checker uses the SDID to determine the MPT associated with the
+The I/O MPT Checker uses the SDID to determine the MPT associated with the
 supervisor domain and checks if the machine physical address may be accessed by
 the device or IOMMU associated with that supervisor domain. The result of the
-check is provided on the MPT check completion (MCC) interface to the IO Bridge.
-As part of the MPT check, the I/O MPT checker may need to perform implicit
-accesses to the MPT using the I/O MPT checker data structure interface (MDSI).
-To perform the checks the I/O MPT checker uses the same MPT table format as
+check is provided on the MPT check completion (MCC) interface to the I/O Bridge.
+As part of the MPT check, the I/O MPT Checker may need to perform implicit
+accesses to the MPT using the I/O MPT Checker data structure interface (MDSI).
+To perform the checks the I/O MPT Checker uses the same MPT table format as
 used by the CPU's MMU. Using the same MPT table formats as the CPU's MMU allows
-the same table to be used simultaneously by the CPU MMU and I/O MPT checker.
-The MPT permission lookup process used by I/O MPT checker is identical to that
+the same table to be used simultaneously by the CPU MMU and I/O MPT Checker.
+The MPT permission lookup process used by I/O MPT Checker is identical to that
 specified by `Smmpt` extension in section "MPT access permissions lookup
 process".
 
@@ -84,7 +84,7 @@ The RISC-V memory model requires memory access from a hart to be single-copy
 atomic. When RV32 is implemented the size of a single-copy atomic memory access
 is up to 32-bits. When RV64 is implemented the size of a single-copy atomic
 memory access is up to 64-bits. The size of a single-copy atomic memory access
-implemented by I/O MPT checker is UNSPECIFIED but is required to be at least
+implemented by I/O MPT Checker is UNSPECIFIED but is required to be at least
 32-bits if all of the harts in the system implement RV32 and is required to be
 at least 64-bits if any of the harts in the system implement RV64.
 
@@ -95,49 +95,49 @@ Software is allowed to make updates to a MPT entry that has the `V` bit set to
 1. However, some rules as outlined must be followed.
 
 * Software must use a single atomic store that updates all or parts of an MPT
-  PTE for the update to be atomically observed by the I/O MPT checker.
+  PTE for the update to be atomically observed by the I/O MPT Checker.
 
 * If the update to a field of the MPT entry will make the field inconsistent
   with another field of the entry then software must first set the `V` bit to 0
   and use the `MPTINVAL` operation outlined in <<CTRL>> to invalidate previous
-  copies of the entry that may be in the I/O MPT checker caches to synchronize
-  the updates to the entry with the operation of I/O MPT checker.
+  copies of the entry that may be in the I/O MPT Checker caches to synchronize
+  the updates to the entry with the operation of I/O MPT Checker.
 
-* I/O MPT checker is not required to immediately observe the software updates to
+* I/O MPT Checker is not required to immediately observe the software updates to
   an MPT entry. Software must use the `MPTINVAL` operation outlined in <<CTRL>>
   to invalidate any previous copies of that entry that may be in the I/O MPT
-  checker caches to synchronize the updates to the entry with the operation of
-  I/O MPT checker.
+  Checker caches to synchronize the updates to the entry with the operation of
+  I/O MPT Checker.
 
 [NOTE]
 ====
-If an MPT entry is changed, I/O MPT checker may use the old value of the entry
+If an MPT entry is changed, I/O MPT Checker may use the old value of the entry
 or the new value of the entry and the choice is unpredictable until software
 uses the `MPTINVAL` operation to synchronize updates to the entry with the
-operation of the I/O MPT checker. These are the only behaviors expected.
+operation of the I/O MPT Checker. These are the only behaviors expected.
 ====
 
 The RISC-V memory model specifies byte-invariance for the entire address space.
-When mixed-endian mode of operation is supported, the I/O MPT checker must
+When mixed-endian mode of operation is supported, the I/O MPT Checker must
 implement byte-invariant addressing such that a byte access to a given address
 accesses the same memory location in both little-endian and big-endian mode of
 operation.
 
-The I/O MPT checker is not allowed to cache an MPT entry whose `V` (valid) bit
+The I/O MPT Checker is not allowed to cache an MPT entry whose `V` (valid) bit
 is clear.
 
-The I/O MPT checker provides a memory-mapped register programming interface.
+The I/O MPT Checker provides a memory-mapped register programming interface.
 
-As part of its operations, I/O MPT checker may need to read data from the MPT.
+As part of its operations, I/O MPT Checker may need to read data from the MPT.
 The provider (a memory controller or a cache) of the data may detect that the
 data requested has an uncorrectable error and signal that the data is corrupted
-and defer the error to I/O MPT checker. Such technique to defer the handling of
+and defer the error to I/O MPT Checker. Such technique to defer the handling of
 the corrupted data to the consumer of the data is also commonly known as data
 poisoning. The effects of such errors may be contained to the transaction that
 caused the corrupted data to be accessed. In the cases where the error affects
-the transaction being processed but otherwise allows the I/O MPT checker to
-continue providing service, the I/O MPT checker may request the IO bridge to
-abort the transaction.  The I/O MPT checker may support the RISC-V RAS error
+the transaction being processed but otherwise allows the I/O MPT Checker to
+continue providing service, the I/O MPT Checker may request the I/O Bridge to
+abort the transaction.  The I/O MPT Checker may support the RISC-V RAS error
 record register interface (RERI) that specifies methods for enabling error
 detection, logging the detected errors, and configuring means to report the
 error to an error handler. When such a RAS architecture is supported, errors
@@ -158,18 +158,18 @@ accesses originated by the IOMMU itself.
 [NOTE]
 ====
 Usually an IOMMU is associated with a root port, and a root port connects to one
-or more devices that are governed by that IOMMU. An I/O MPT checker may be
+or more devices that are governed by that IOMMU. An I/O MPT Checker may be
 associated with more than one root port. A supervisor domain may be associated
 with one or more devices from each of these root ports, necessitating the
 association of an IOMMU instance for each root port to be used by that supervisor
-domain. When a common I/O MPT checker is used to check I/O originating from
-multiple root ports, the I/O MPT checker may be configured with rules to classify
+domain. When a common I/O MPT Checker is used to check I/O originating from
+multiple root ports, the I/O MPT Checker may be configured with rules to classify
 a device connected to a root port as associated with a supervisor domain and with
 the IOMMU instance that governs that device.
 ====
 
 To support MPT checks, the RDSM provides two types of configurations to the
-I/O MPT checker:
+I/O MPT Checker:
 
 * SDCL rules that classify one or more devices to an SDID and an IOMMU ID.
 
@@ -177,7 +177,7 @@ I/O MPT checker:
   originated by the IOMMUs and devices associated with that SDID, and
   configurations that determine the QoS IDs carried with such memory requests.
 
-These configurations are programmed through the I/O MPT checker register
+These configurations are programmed through the I/O MPT Checker register
 interface.
 
 While the common use case involves the use of an IOMMU, the architecture
@@ -186,46 +186,49 @@ rules classify devices to an SDID alone and no IOMMU ID is associated with the
 rules.
 
 [[IOMPTABORT]]
-=== Handling I/O MPT checker violations
+=== Handling I/O MPT Checker violations
 
-A transaction is aborted if::
+A transaction shall be aborted if:
 
-* The I/O MPT checker is not configured with a rule to classify the transaction.
+* The I/O MPT Checker is in `Off` mode, or is in `Bare` mode and the transaction
+  is TEE-associated.
+* The I/O MPT Checker is in `On` mode but is not configured with a rule to
+  classify the transaction.
 * The memory targeted by the transaction is disallowed by the MPT.
-* An access to the MPT by I/O MPT checker is disallowed by a physical memory
+* An access to the MPT by I/O MPT Checker is disallowed by a physical memory
   attributes check or a physical memory protection check performed by the IO
-  bridge.
-* An access to the MPT by I/O MPT checker returns corrupted (poisoned) data.
+  Bridge.
+* An access to the MPT by the I/O MPT Checker returns corrupted (poisoned) data.
 
 If the aborted transaction is an IOMMU-initiated memory access then the IO
-bridge signals such access faults to the IOMMU itself. The details of such
+Bridge signals such access faults to the IOMMU itself. The details of such
 signaling is implementation defined. Please see the IOMMU specification for
 the handling of access faults on IOMMU initiated memory accesses.
 
-If the aborted transaction is a write then the IO bridge may discard the write;
+If the aborted transaction is a write then the I/O Bridge may discard the write;
 the details of how the write is discarded are implementation defined. If the IO
 protocol requires a response for write transactions (e.g., AXI) then a response
-as defined by the IO protocol may be generated by the IO bridge (e.g., SLVERR on
+as defined by the I/O protocol may be generated by the I/O Bridge (e.g., SLVERR on
 BRESP - Write Response channel). For PCIe, for example, write transactions are
 posted and no response is returned when a write transaction is discarded.
 
 If the aborted transaction is a read then the device expects a completion. The
-IO bridge may provide a completion to the device. The data, if returned, in such
+I/O Bridge may provide a completion to the device. The data, if returned, in such
 completion is implementation defined; usually it is a fixed value such as all 0
 or all 1. A status code may be returned to the device in the completion to
 indicate this condition. For AXI, for example, the completion status is provided
 by SLVERR on RRESP (Read Data channel). For PCIe, for example, the completion
 status field may be set to "Unsupported Request" (UR) or "Completer Abort" (CA).
 
-Transactions permitted by the I/O MPT checker may still be disallowed by
+Transactions permitted by the I/O MPT Checker may still be disallowed by
 additional checks outside the I/O MPT. The nature of such checks and the
 handling of their violations are outside the scope of this specification.
 
 === I/O MPT Checker Register Interface
 
-Each I/O MPT checker register interface is memory-mapped starting at
+Each I/O MPT Checker register interface is memory-mapped starting at
 an 8-byte aligned physical address and includes the registers used to configure
-the the I/O MPT checker.
+the the I/O MPT Checker.
 
 [NOTE]
 ====
@@ -239,14 +242,14 @@ enable register decoding to be implemented without a hardware adder circuit.
 The behavior for register accesses where the address is not aligned to
 the size of the access, or if the access spans multiple registers, or if the
 size of the access is not 4 bytes or 8 bytes, is `UNSPECIFIED`. An aligned 4
-byte access to a I/O MPT checker register must be single-copy atomic. Whether
-an 8 byte access to an I/O MPT checker register is single-copy atomic is
-`UNSPECIFIED`, and such an access may appear, internally to the I/O MPT checker
+byte access to a I/O MPT Checker register must be single-copy atomic. Whether
+an 8 byte access to an I/O MPT Checker register is single-copy atomic is
+`UNSPECIFIED`, and such an access may appear, internally to the I/O MPT Checker
 implementation, as if two separate 4 byte accesses were performed.
 
 [NOTE]
 ====
-The I/O MPT checker registers are defined in such a way that software can
+The I/O MPT Checker registers are defined in such a way that software can
 perform two individual 4 byte accesses, or hardware can perform two independent
 4 byte transactions resulting from an 8 byte access, to the high and low halves
 of the register as long as the register semantics, with regards to side-effects,
@@ -254,7 +257,7 @@ are respected between the two software accesses, or two hardware transactions,
 respectively.
 ====
 
-The I/O MPT checker registers have little-endian byte order (even for systems
+The I/O MPT Checker registers have little-endian byte order (even for systems
 where all harts are big-endian-only).
 
 [NOTE]
@@ -284,7 +287,7 @@ The reset value is 0 for the following registers fields.
 
 The reset value for `control.MODE` is recommended to be `Off`.
 
-After a reset the MPT PTE caches in the I/O MPT checker must have no
+After a reset the MPT PTE caches in the I/O MPT Checker must have no
 valid entries.
 
 The reset value is `UNSPECIFIED` for all other registers and/or fields.
@@ -293,7 +296,7 @@ The reset value is `UNSPECIFIED` for all other registers and/or fields.
 === Capabilities (`capabilities`)
 
 The `capabilities` register is a read-only register that holds the I/O MPT
-checker capabilities.
+Checker capabilities.
 
 [caption="Register {counter:rimage}: ", reftext="Register {rimage}"]
 [title="Capabilities register fields"]
@@ -307,7 +310,7 @@ checker capabilities.
 ....
 
 The `VER` field holds the version of the specification implemented by the
-I/O MPT checker. The low nibble is used to hold the minor version of the
+I/O MPT Checker. The low nibble is used to hold the minor version of the
 specification and the upper nibble is used to hold the major version of the
 specification. For example, an implementation that supports version 1.0 of the
 specification reports 0x10.
@@ -328,9 +331,9 @@ The `status` register provides the status of the operation requested using the
 ], config:{lanes: 2, hspace:1024}}
 ....
 
-When the `command` register is written, the I/O MPT checker may perform actions
+When the `command` register is written, the I/O MPT Checker may perform actions
 that do not complete synchronously with the write. A write to the `command`
-register sets the `status.BUSY` bit to 1, indicating that I/O MPT checker is
+register sets the `status.BUSY` bit to 1, indicating that I/O MPT Checker is
 executing the requested operation. The behavior of writing the `command` or the
 `data*` registers while the `status.BUSY` bit is 1 is `UNSPECIFIED`. Some
 implementations may ignore the second write, while others may perform the
@@ -367,10 +370,10 @@ requested operation.
 [[CTRL]]
 === Control (`control`)
 
-This register is used to control the operations of the I/O MPT checker.
+This register is used to control the operations of the I/O MPT Checker.
 An implementation may allow one or more fields in the register to be
 writable to support enabling or disabling the feature controlled by that
-field. All I/O MPT checkers must support the `Off` and `On` values for
+field. All I/O MPT Checkers must support the `Off` and `On` values for
 the `MODE` field.
 
 .Control Register (`control`)
@@ -382,7 +385,7 @@ the `MODE` field.
 ], config:{lanes: 2, hspace:1024}}
 ....
 
-The I/O MPT checker may be configured to be in the following modes:
+The I/O MPT Checker may be configured to be in the following modes:
 
 [[IOMPTCHK_MODE]]
 .I/O MPT checker modes (`MODE`)
@@ -391,46 +394,51 @@ The I/O MPT checker may be configured to be in the following modes:
 |===
 | Name         | Encoding ^| Description
 | Off          | 0         | No inbound memory transactions are allowed.
-| On           | 1         | I/O MPT checker is operational.
-| Reserved     | 2-13      | Reserved for future standard use.
+| Bare         | 1         | No memory protection.
+| On           | 2         | I/O MPT Checker is operational.
+| Reserved     | 3-13      | Reserved for future standard use.
 | Custom       | 14-15     | Designated for custom use.
 |===
 
-When the `MODE` field value is changed to `Off` the I/O MPT checker guarantees
+When the `MODE` field value is changed to `Off` the I/O MPT Checker guarantees
 that in-flight transactions, observed at the time of the write to this field,
-from devices connected to the I/O MPT checker will either be processed with the
+from devices connected to the I/O MPT Checker will either be processed with the
 configurations applicable to the old value of the `MODE` field or are aborted
 <<IOMPTABORT>>. It also ensures that all transactions and previous requests from
-devices that have already been processed by the I/O MPT checker are committed to
+devices that have already been processed by the I/O MPT Checker are committed to
 a global ordering point such that they can be observed by all RISC-V harts,
-devices, I/O MPT checkers, and IOMMUs in the platform.
+devices, I/O MPT Checkers, and IOMMUs in the platform.
 
-When an I/O MPT checker is transitioned to `Off` state, the I/O MPT checker
+When an I/O MPT Checker is transitioned to `Off` state, the I/O MPT Checker
 may retain information configured into it. The I/O MPT Checker may retain
 information cached from the MPTs. Software must use suitable invalidation
 commands to invalidate the cached entries. Software must initialize all SDCL
-rules and SDID configurations prior to transitioning the I/O MPT checker to `On`
+rules and SDID configurations prior to transitioning the I/O MPT Checker to `On`
 state.
 
 When the `MODE` is not `Off`, software changes to fields besides `MODE` may
 cause UNSPECIFIED behavior. When the state is `On`, software must first change
 the `MODE` to `Off` without changing the values of any other field.
 
-A write to `control` register may require the I/O MPT checker to perform many
+When the `MODE` is `Bare`, the I/O MPT Checker shall request the I/O Bridge to
+allow inbound transactions that are not TEE-associated and to abort those that
+are TEE-associated.
+
+A write to `control` register may require the I/O MPT Checker to perform many
 operations that may not occur synchronously to the write. When a write is
 observed by `control`, the `status.BUSY` bit is set to 1. When the `BUSY` bit
 is 1, behavior of additional writes to `control` are UNSPECIFIED. Some
 implementations may ignore the second write and others may perform the actions
 determined by the second write. Software must verify that the `status.BUSY` bit
 is 0 before writing to the `control` register. If the `BUSY` bit reads 0 then
-the I/O MPT checker has completed the operations associated with the previous
+the I/O MPT Checker has completed the operations associated with the previous
 write to the `control` register. The value held in `status.CODE` on completing
 the operations associated with a write to `control` register is UNSPECIFIED.
 
 [[CMD]]
 === Command register (`command`)
 
-The `command` register is used to initiate I/O MPT checker operations. The
+The `command` register is used to initiate I/O MPT Checker operations. The
 specific operation is identified by the `OP` field within the `command`
 register. Operands required to complete the operation are supplied either in
 dedicated fields of the `command` register or in one or more of the associated
@@ -448,7 +456,7 @@ that operation.
 ....
 
 [[IOMPTCHK_OP]]
-.I/O MPT checker operations (`OP`)
+.I/O MPT Checker operations (`OP`)
 [width=100%]
 [%header, cols="20,^12,70"]
 |===
@@ -456,17 +464,17 @@ that operation.
 | --                | 0         | Reserved for future standard use.
 | `IOFENCE`         | 1         | Ensure that all previous read and write
                                   requests from devices already processed by the
-                                  I/O MPT checker are committed to a global
+                                  I/O MPT Checker are committed to a global
                                   ordering point such that they can be observed
                                   by all RISC-V harts, IOMMUs, and devices in
                                   the system.
-| `SET_SDCL_ENTRY`  | 2         | Configure a SDCL rule in the I/O MPT checker.
+| `SET_SDCL_ENTRY`  | 2         | Configure a SDCL rule in the I/O MPT Checker.
 | `GET_SDCL_ENTRY`  | 3         | Read the configuration of an SDCL rule.
 | `SET_SDCFG_ENTRY` | 4         | Configure MPT and QoS ID parameters for an SD.
 | `GET_SDCFG_ENTRY` | 5         | Read the configuration associated with an SD.
 | `MPTINVAL`        | 6         | Ensure that stores to an MPT are observed by
-                                  the I/O MPT checker before subsequent implicit
-                                  reads by I/O MPT checker to the corresponding
+                                  the I/O MPT Checker before subsequent implicit
+                                  reads by I/O MPT Checker to the corresponding
                                   MPT.
 | --                | 7–127     | Reserved for future standard use.
 | --                | 128–255   | Designated for custom use.
@@ -620,12 +628,11 @@ in <<TEE_FLT>>.
              transactions.
 |   1      | Rule matches TEE-associated transactions.
 |   2      | Rule matches transactions that are not TEE associated.
-|   3      | Rule matches both TEE-associated and non-TEE associated
-             transactions.
+|   3      | Reserved for future standard use.
 |===
 
 If filtering transactions associated with a TEE is not supported then the only
-legal values for `TEE_FLT` are 0 and 3.
+legal values for `TEE_FLT` is 0.
 
 [NOTE]
 ====
@@ -644,13 +651,13 @@ if both types of transactions are received on the same PCIe IDE stream.
 
 The `IOMMU_ID` field identifies the instance of the IOMMU that should be used to
 provide address translation and protection for the transactions matching this
-rule. When the I/O MPT checker is not associated with an IOMMU, the `IOMMU_ID`
+rule. When the I/O MPT Checker is not associated with an IOMMU, the `IOMMU_ID`
 field is ignored by this operation.
 
 If multiple rules are programmed to match a transaction, the implementation may
 act based on any one of those matching rules.
 
-If a transaction does not match any of the rules, the IO Bridge is notified of
+If a transaction does not match any of the rules, the I/O Bridge is notified of
 this condition.
 
 ==== Read the configuration of an SDCL rule - `GET_SDCL_ENTRY`
@@ -668,13 +675,13 @@ of whether the operation completes successfully.
 The interpretation of the `command` and `data1` registers for this operation is
 identical to that of the `SET_SDCL_ENTRY` operation.
 
-When the I/O MPT checker is not associated with an IOMMU, the value held in
+When the I/O MPT Checker is not associated with an IOMMU, the value held in
 `IOMMU_ID` field on successful completion of this operation is UNSPECIFIED.
 
 ==== Set Supervisor Domain Configurations - `SET_SDCFG_ENTRY`
 
 The `SET_SDCFG_ENTRY` operation configures MPT and QoS ID parameters for a
-supervisor domain in the I/O MPT checker. This operation uses the operands in
+supervisor domain in the I/O MPT Checker. This operation uses the operands in
 the `command`, `data1`, and `data2` registers. The fields of these registers
 are interpreted as follows.
 
@@ -757,7 +764,7 @@ The `PPN` field programs the PPN of the root page of the MPT. When `MPT_MODE`
 is `Bare`, the `PPN` field must be set to zero.
 
 The `MBE` field determines the endianness of the access made by I/O MPT
-checker to MPT configured in this entry. When this field is 0, the accesses are
+Checker to MPT configured in this entry. When this field is 0, the accesses are
 performed as little-endian accesses and when 1 as big-endian accesses.
 
 The `SRL`, `SML`, `SSRM`, `SSMM`, `S-RCID`, and `S-MCID` fields are used to
@@ -803,7 +810,7 @@ the IOMMU associated with the SD, and accompanies the effective `RCID` and
 ==== Get Supervisor Domain Configurations - `GET_SDCFG_ENTRY`
 
 The `GET_SDCFG_ENTRY` operation reads the configuration of the supervisor domain
-identified by `SDID` from the I/O MPT checker. This operation ignores the
+identified by `SDID` from the I/O MPT Checker. This operation ignores the
 contents of the `data*` registers. Upon success, the configuration of the
 supervisor domain identified by `command.SDID` is returned in the `data1` and
 `data2` registers.
@@ -815,14 +822,14 @@ the specified `SDID`.
 The interpretation of the `command`, `data1`, and `data2` registers for this
 operation is identical to that of the `SET_SDCFG_ENTRY` operation.
 
-When the I/O MPT checker does not support associating QoS IDs with requests, the
+When the I/O MPT Checker does not support associating QoS IDs with requests, the
 value held in the `data2` register on successful completion of this operation is
 UNSPECIFIED.
 
 ==== MPT Permission Cache Invalidation - `MPTINVAL`
 
 This operation ensures that stores to an MPT are observed by the I/O MPT
-checker before subsequent implicit reads by I/O MPT checker to the
+Checker before subsequent implicit reads by I/O MPT Checker to the
 corresponding MPT.
 
 This operation uses the operands in the `command` register and the `data1`
@@ -919,14 +926,14 @@ A consequence of this specification is that an implementation may use any
 information for an address that was valid in the MPT at any time since the most
 recent `MPTINVAL` that subsumes that address.
 
-Even if the I/O MPT checker denies a request, it is allowed to cache the
+Even if the I/O MPT Checker denies a request, it is allowed to cache the
 corresponding MPT entry if it is valid.
 ====
 
 ==== I/O Fence Operation - `IOFENCE`
 
 Ensure that all previous read and write requests from devices already processed
-by I/O MPT checker are committed to a global ordering point such that they can be
+by I/O MPT Checker are committed to a global ordering point such that they can be
 observed by all RISC-V harts, IOMMUs, and devices in the system.
 
 The contents of the `data1` and `data2` registers are ignored by this
@@ -943,10 +950,10 @@ interpreted as follows.
 ....
 
 If a previously valid SDCL rule, and/or the supervisor domain configurations
-referenced by a valid SDCL rule, are modified, then the I/O MPT checker must
+referenced by a valid SDCL rule, are modified, then the I/O MPT Checker must
 observe the new configurations within a bounded but UNSPECIFIED time. Software
 may use the `IOFENCE` operation after updating the configurations. Successful
-completion of an `IOFENCE` operation also guarantees that the I/O MPT checker
+completion of an `IOFENCE` operation also guarantees that the I/O MPT Checker
 has observed all configuration updates made prior to the `IOFENCE`. If the
 configuration updates modify the MPT mode and/or PPN, an `MPTINVAL` operation
 with `PPNV` set to 0 must be issued before the `IOFENCE`.
@@ -994,7 +1001,7 @@ a response to a PCIe ATS Translation Request, the IOBRIDGE forwards that
 response to the device. If the IOMMU provides a Success response with both
 R and W permissions set to 0, it indicates that the page requested by the
 Translation Request is not available, and the IOBRIDGE forwards that response
-to the device. In these cases, the I/O MPT checker is not invoked to check the
+to the device. In these cases, the I/O MPT Checker is not invoked to check the
 responses.
 
 For all other responses to a PCIe ATS Translation Request, further processing
@@ -1003,26 +1010,26 @@ or a GPA in the response.
 
 When the IOMMU is configured to return a GPA as the translated address in
 response to a PCIe ATS Translation Request, the IOBRIDGE forwards such
-responses directly to the device. The I/O MPT checker is not invoked in this
+responses directly to the device. The I/O MPT Checker is not invoked in this
 case.
 
 When the response to a PCIe ATS Translation Request is an MPA, the IOBRIDGE
-invokes the I/O MPT checker on the entire range of translated addresses
+invokes the I/O MPT Checker on the entire range of translated addresses
 returned by the IOMMU. If the IOMMU grants read permission to the device, the
 MPT must also grant read permission; if the IOMMU grants write permission to the
 device, the MPT must also grant write permission; and if the IOMMU grants
 permission to execute, the MPT must also grant execute permission for the entire
 range of translated addresses provided in the PCIe ATS Translation Completion.
-If the I/O MPT checker determines that the address is not accessible or that the
+If the I/O MPT Checker determines that the address is not accessible or that the
 requested permissions are not present, the IOBRIDGE provides an Unsupported
 Request (UR) response to the device. If the MPT check succeeds, the translation
 completion is returned to the device.
 
 For a Translated Request, if the IOMMU provides a UR or CA response, the
-request is aborted. Otherwise, the IOBRIDGE invokes the I/O MPT checker on the
+request is aborted. Otherwise, the IOBRIDGE invokes the I/O MPT Checker on the
 MPA range provided by the IOMMU. If the MPT check fails, the request is aborted.
 If the MPT check succeeds, the IOBRIDGE allows the request to access memory.
 
 When protocols other than PCIe ATS are used to support a device-side ATC, the
 IOBRIDGE shall apply similar rules to enforce memory protection as those
-defined for PCIe ATS when implementing the I/O MPT checker functionality.
+defined for PCIe ATS when implementing the I/O MPT Checker functionality.
