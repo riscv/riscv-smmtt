@@ -395,8 +395,8 @@ The I/O MPT Checker may be configured to be in the following modes:
 | Name         | Encoding ^| Description
 | Off          | 0         | No inbound memory transactions are allowed.
 | Bare         | 1         | No memory protection.
-| On           | 1         | I/O MPT Checker is operational.
-| Reserved     | 2-13      | Reserved for future standard use.
+| On           | 2         | I/O MPT Checker is operational.
+| Reserved     | 3-13      | Reserved for future standard use.
 | Custom       | 14-15     | Designated for custom use.
 |===
 
