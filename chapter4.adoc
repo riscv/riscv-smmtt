@@ -117,7 +117,7 @@ requires the use of suitable memory-management instructions. This behavior
 guarantees that a change to a MPTE from Invalid to Valid is made visible within a
 bounded time, thereby making the execution of these memory-management
 instructions redundant. The performance benefit of eliding these instructions
-outweighs the cost of an occasional gratuitous additional access fault that may occur.
+outweighs the cost of an occasional gratuitous access fault that may occur.
 
 Depending on the microarchitecture, some possible ways to facilitate include:
 not storing Invalid PTEs in the MPT page-walk caches, automatically evicting
