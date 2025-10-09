@@ -55,20 +55,20 @@ QoS identifiers for requests made by a hart with effective privilege mode equal
 to M.
 
 The `mrmcfg` register is an MXLEN-bit read/write register used to configure a
-Resource Control ID (`RCID`), Monitoring Counter ID (`MCID`), and a Machine QRID
-(`MQRID`). The `MQRID`, `RCID`, and `MCID` are WARL fields. The register is
+Resource Control ID (`RCID`), Monitoring Counter ID (`MCID`), and a QRID
+(`QRID`). The `QRID`, `RCID`, and `MCID` are WARL fields. The register is
 formatted as shown in <<MRMCFG64>> when MXLEN=64 and <<MRMCFG32>> when MXLEN=32.
 The CSR number is TBA.
 
-The `MQRID`, `RCID`, and `MCID` values accompany each request made with effective
-privilege mode equal to M by the hart to shared resource controllers. The `MQRID`
+The `QRID`, `RCID`, and `MCID` values accompany each request made with effective
+privilege mode equal to M by the hart to shared resource controllers. The `QRID`
 and `RCID` values are used to determine the resource allocations (e.g., cache
-occupancy limits, memory bandwidth limits, etc.) to enforce. The `MQRID` and
+occupancy limits, memory bandwidth limits, etc.) to enforce. The `QRID` and
 `MCID` values are used to identify a counter to monitor resource usage.
 
 [NOTE]
 ====
-A suggested reset value of 0 for the `RCID` and `MQRID` fields within the
+A suggested reset value of 0 for the `RCID` and `QRID` fields within the
 `mrmcfg` register aligns with the default operational behavior of resource
 controllers, which is to associate all capacity and resources with `RCID=0`. This
 setup ensures a seamless initial state that conforms to expected default resource
@@ -76,7 +76,7 @@ allocation policies. The reset value for the `MCID` field, being potentially
 implementation-defined, does not directly impact core functionality and may
 vary based on specific system requirements.
 
-The `MQRID` is typically selected once at startup by the RDSM to designate the
+The `QRID` is typically selected once at startup by the RDSM to designate the
 QRI utilized by the RDSM itself.
 ====
 
@@ -93,7 +93,7 @@ privilege modes less than M.
   {bits: 12, name: 'RCID'},
   {bits:  4, name: 'WPRI'},
   {bits: 12, name: 'MCID'},
-  {bits:  4, name: 'MQRID'},
+  {bits:  4, name: 'QRID'},
   {bits: 32, name: 'WPRI'},
 ], config:{lanes: 2, hspace:1024}}
 ....
@@ -107,7 +107,7 @@ privilege modes less than M.
   {bits: 12, name: 'RCID'},
   {bits:  4, name: 'WPRI'},
   {bits: 12, name: 'MCID'},
-  {bits:  4, name: 'MQRID'},
+  {bits:  4, name: 'QRID'},
 ], config:{lanes: 1, hspace:1024}}
 ....
 
