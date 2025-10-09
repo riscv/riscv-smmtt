@@ -291,20 +291,21 @@ When MXLEN=32, `msideieh` is a 32-bit read-write register which aliases bits
 ], config:{lanes: 1, hspace:1024}}
 ....
 
-The `msideie` CSR selects the subset of _supervisor interrupt domains_ that cause
-a machine supervisor interrupt domain external interrupt. The enable bits in `msideie` do not
-affect the supervisor-level external interrupt and guest external interrupt
-pending signals from the _supervisor interrupt domain_ selected by `msdcfg.SIDN`.
+The `msideie` CSR selects the subset of _supervisor interrupt domains_ that
+cause a machine supervisor domain external interrupt (`MSDEI`). The enable
+bits in `msideie` do not affect the supervisor-level external interrupt and
+guest external interrupt pending signals from the _supervisor interrupt
+domain_ selected by `msdcfg.SIDN`.
 
 ==== Machine and Supervisor Interrupt registers (`mip/mie` and `sip/sie`)
 
 The `Smsdia` extension introduces the machine supervisor domain external
-interrupt (`MSDEI`). This interrupt is treated as a standard local
-interrupt that is assigned to bit 14 in the `mip`, `mie`, `sip`, and `sie`
-registers. The bit 14 in `mip` and `sip` is called `MSDEIP` and the same bit in
-`mie` and `sie` is called `MSDEIE`. The `mideleg` register controls the
-delegation of `MSDEI` to S-mode. This interrupt cannot be delegated to
-VS-mode and bit 14 of `hideleg` is read-only zero.
+interrupt (`MSDEI`). This interrupt is assigned to bit 14 in the `mip`,
+`mie`, `sip`, and `sie` registers. The bit 14 in `mip` and `sip` is called
+`MSDEIP` and the same bit in `mie` and `sie` is called `MSDEIE`. The
+`mideleg` register controls the delegation of `MSDEI` to S-mode. This
+interrupt cannot be delegated to VS-mode and bit 14 of `hideleg` is
+read-only zero.
 
 The `mip.MSDEIP` bit read-only and is set to 1 if the bitwise logical AND of CSRs
 `msideip` and `msideie` is nonzero in any bit. The `mie.MSDEIE` bit is writable.
