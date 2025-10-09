@@ -24,8 +24,8 @@ associated with the SDID.
 
 === Machine-level Memory Protection Tables (`mmpt`)
 
-The `mmpt` register is an `XLEN`-bit read/write register, formatted as shown in
-<<sdid-32>> for `XLEN=32` and <<sdid-64>> for `XLEN=64`, which controls
+The `mmpt` register is an `MXLEN` wide read/write register, formatted as shown in
+<<sdid-32>> for `MXLEN=32` and <<sdid-64>> for `MXLEN=64`, which controls
 page-based physical address space protection. This register holds the
 supervisor domain identifier (`SDID`); the physical page number (`PPN`) of the
 root page of the memory protection tables (`MPT`), which facilitates page-based
@@ -36,7 +36,7 @@ Attempts to read or write `mmpt` while executing in U or S-mode will raise
 an illegal instruction exception.
 
 [caption="Register {counter:rimage}: ", reftext="Register {rimage}"]
-[title="MMPT register (`mmpt`) when `XLEN=32`."]
+[title="MMPT register (`mmpt`) when `MXLEN=32`."]
 [id=sdid-32]
 [wavedrom, ,svg]
 ....
@@ -49,7 +49,7 @@ an illegal instruction exception.
 ....
 
 [caption="Register {counter:rimage}: ", reftext="Register {rimage}"]
-[title="MMPT register (`mmpt`) when `XLEN=64`."]
+[title="MMPT register (`mmpt`) when `MXLEN=64`."]
 [id=sdid-64]
 [wavedrom, ,svg]
 ....
@@ -70,10 +70,10 @@ least-significant bits of `SDID` are implemented first: that is, if
 `SDIDLEN` > 0, `SDID`[`SDIDLEN`-1:0] is writable. The maximal value of
 `SDIDLEN`, termed `SDIDMAX`, is 6.
 
-<<mpt-32>> shows the encodings of the `MODE` field when `XLEN=32` and
-<<mpt-64>> shows the encodings of the `MODE` field when `XLEN=64`.
+<<mpt-32>> shows the encodings of the `MODE` field when `MXLEN=32` and
+<<mpt-64>> shows the encodings of the `MODE` field when `MXLEN=64`.
 
-.Encoding of `mmpt` `MODE` field for `XLEN=32`.
+.Encoding of `mmpt` `MODE` field for `MXLEN=32`.
 [width="100%",cols="10%,14%,76%", options="header", id=mpt-32]
 |===
 |Value |Name |Description
@@ -88,7 +88,7 @@ spaces.
 
 |===
 
-.Encoding of `mmpt` `MODE` field for `XLEN=64`.
+.Encoding of `mmpt` `MODE` field for `MXLEN=64`.
 [width="100%",cols="10%,14%,76%", options="header", id=mpt-64]
 |===
 |Value |Name |Description
@@ -284,7 +284,7 @@ to the VMID provided in the HINVAL.GVMA or the ASID provided in HINVAL.VVMA.
 
 === Machine supervisor domain configuration (`msdcfg`)
 
-The `msdcfg` is a MXLEN read/write register, formatted as shown in <<MSDCFG>>
+The `msdcfg` is a MXLEN wide read/write register, formatted as shown in <<MSDCFG>>
 for RV64 and in <<MSDCFG32>> for RV32. This CSR is used by M-mode software to
 specify the active configuration for capabilities of the supervisor domain when
 associated with a hart.  The following extensions use the `msdcfg` register to
