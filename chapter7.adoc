@@ -385,7 +385,7 @@ interrupt file_ in the _supervisor interrupt domain_ selected by `msdcfg.SIDN`.
 
 The number of writable bits in mgeien is determined by the maximum `GEILEN`
 value across all supervisor interrupt domains, and this maximum is referred to
-as `MGEILEN`. If `MGEILEN` is nonzero, bits `MGEILEN-1:0` shall be writable in
+as `MGEILEN`. If `MGEILEN` is nonzero, bits `MGEILEN:1` shall be writable in
 `mgeien`. All other bit positions in the `GIF` field shall be read-only zeros.
 
 For a supervisor-level environment, extension `Ssgeien` is essentially the same
