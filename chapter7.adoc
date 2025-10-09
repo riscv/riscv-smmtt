@@ -346,7 +346,7 @@ The `Smgeien` extension enables access to a subset of the guest interrupt
 files within a _supervisor interrupt domain_ in an IMSIC to a supervisor domain.
 The `Smgeien` extension depends on the `Smsdia` extension.
 
-The `Smgeien` extension depends on the `Smaia`, `Ssaia`, and the H extension.
+The `Smgeien` extension depends on the `Smaia` and the H extension.
 When `Smgeien` is implemented, the bit 9 of `mvien` must be writable.
 
 This extension introduces an MXLEN read-write WARL register named `mgeien`,
