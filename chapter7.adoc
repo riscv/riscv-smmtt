@@ -146,8 +146,8 @@ n = \text{CI} \mathbin{\&} \left( 2^{\text{DXW}} - 1 \right)
 \text{MSI address} =
 \left(
   \text{Base PPN}
-  \mid ( n \ll \text{DXS} )
   \mid ( g \ll (\text{HHXS} + 12) )
+  \mid ( n \ll \text{DXS} )
   \mid ( h \ll \text{LHXS} )
   \mid \text{Guest Index}
 \right) \ll 12
