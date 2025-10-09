@@ -125,14 +125,19 @@ reasons.
 
 To facilitate delegation of `srmcfg` to the SD, the Smqosid extension introduces
 `SRL` (supervisor-RCID-length) and `SML` (supervisor-MCID-length) fields in the
-`msdcfg` register to configure the usable range of `RCID` and `MCID`. These
-fields are WARL, with legal values from 0 to 12. Furthermore,
-supervisor-srmcfg-rcid-mode (`SSRM`) and supervisor-srmcfg-mcid-mode (`SSMM`)
-fields are introduced, with legal values of 0 and 1. The `SSRM` and `SSMM`, along
-with `SRL` and `SML` settings, determine the range of `RCID` and `MCID` values an
-SD can program into the `srmcfg` register. The RDSM is expected to configure these
-fields such that each SD can select from a disjoint range of values for `RCID`
-and `MCID`.
+`msdcfg` register to configure the usable range of `RCID` and `MCID`.
+
+The `SRL` field is WARL with legal values from 0 to `RCIDLEN` where `RCIDLEN` is
+the number of implemented bits of the `RCID` field of `srmcfg`. The `SML` field
+is WARL with legal values from 0 to `MCIDLEN` where `MCIDLEN` is the number of
+implemented bits of the `MCID` field of `srmcfg`.
+
+Furthermore, supervisor-srmcfg-rcid-mode (`SSRM`) and supervisor-srmcfg-mcid-mode
+(`SSMM`) fields are introduced, with legal values of 0 and 1. The `SSRM` and
+`SSMM`, along with `SRL` and `SML` settings, determine the range of `RCID` and
+`MCID` values an SD can program into the `srmcfg` register. The RDSM is expected
+to configure these fields such that each SD can select from a disjoint range of
+values for `RCID` and `MCID`.
 
 .`msdcfg` register
 
