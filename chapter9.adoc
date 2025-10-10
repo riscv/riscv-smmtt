@@ -61,7 +61,7 @@ The `mrmcfg` register is an MXLEN-wide read/write register used to configure a
 Resource Control ID (`RCID`), Monitoring Counter ID (`MCID`), and a QRID
 (`QRID`). The `QRID`, `RCID`, and `MCID` are WARL fields. The register is
 formatted as shown in <<MRMCFG64>> when MXLEN=64 and <<MRMCFG32>> when MXLEN=32.
-The CSR number is TBA.
+The CSR number is 0x381.
 
 The `QRID`, `RCID`, and `MCID` values accompany each request made with effective
 privilege mode equal to M by the hart to shared resource controllers. The `QRID`
@@ -130,10 +130,8 @@ enabling domains to program `srmcfg` directly is preferred for performance
 reasons.
 
 To facilitate delegation of `srmcfg` to the SD, the Smqosid extension introduces
-a 64-bit read/write register called `msrmcfg`. The register is formatted as
-shown in <<MSRMCFG64>>. When MXLEN=32, `msrmcfgh` is a 32-bit read/write
-register that aliases bits 63:32 of `msrmcfg`. The `msrmcfgh` register does not
-exist when MXLEN=64.
+a MXLEN-wide read/write register called `msrmcfg`. The register is formatted as
+shown in <<MSRMCFG64>> for MXLEN=64.
 
 [[MSRMCFG64]]
 .Machine Supervisor Resource Management Configuration (`msrmcfg`) register
@@ -145,32 +143,29 @@ exist when MXLEN=64.
   {bits:  4, name: 'WPRI'},
   {bits: 12, name: 'MCID'},
   {bits:  4, name: 'QRID'},
-  {bits:  4, name: 'SRL'},
-  {bits:  4, name: 'SML'},
-  {bits:  1, name: 'SSRM'},
-  {bits:  1, name: 'SSMM'},
-  {bits: 22, name: 'WPRI'},
 ], config:{lanes: 2, hspace:1024}}
 ....
 
-The `SRL` (supervisor-RCID-length) and `SML` (supervisor-MCID-length) fields
-in the `msrmcfg` register specify the usable range of `RCID` and `MCID`. The
-`SRL` field is WARL with legal values from 0 to `RCIDLEN` where `RCIDLEN`
-is the number of implemented bits of the `RCID` field of `srmcfg`. The `SML`
-field is WARL with legal values from 0 to `MCIDLEN` where `MCIDLEN` is the
-number of implemented bits of the `MCID` field of `srmcfg`.
+Additionally, the extension intoduces the `SRL`, `SML`, `SSRM`, and `SSMM`
+fields in the `msfcfg` <<MSDCFG>> register.
 
-The supervisor-srmcfg-rcid-mode (`SSRM`) and `SRL` fields determine the legal
-values for the `srmcfg.RCID` field. When `SSRM` is 0, the legal values are
-between 0 and `2^SRL^ - 1`. When `SSRM` is 1, the legal values are between
-0 and `2^RCIDLEN^ - 2^SRL^ - 1` where `RCIDLEN` is the number of implemented
-bits of the `srmcfg.RCID` field.
+The `SRL` (supervisor-RCID-length) is a WARL field with legal values from 0 to
+`RCIDLEN` where `RCIDLEN` is the number of implemented bits of the `RCID`
+field of `srmcfg`. 
+
+The `SML` (supervisor-MCID-length) is a WARL field with legal values from 0 to
+`MCIDLEN` where `MCIDLEN` is the number of implemented bits of the `MCID`
+field of `srmcfg`.
+
+The supervisor-srmcfg-rcid-mode (`SSRM`) and `SRL` fields in the `msdcfg`
+determine the legal values for the `srmcfg.RCID` field. When `SSRM` is 0, the
+legal values are between 0 and `2^SRL^ - 1`. When `SSRM` is 1, the legal values
+are between 0 and `2^RCIDLEN^ - 2^SRL^ - 1`.
 
 The supervisor-srmcfg-mcid-mode (`SSMM`) and `SML` fields determine the legal
 values for the `srmcfg.MCID` field. When `SSMM` is 0, the legal values are
 between 0 and `2^SML^ - 1`. When `SSMM` is 1, the legal values are between
-0 and `2^MCIDLEN^ - 2^SML^ - 1` where `MCIDLEN` is the number of implemented
-bits of the `srmcfg.MCID` field.
+0 and `2^MCIDLEN^ - 2^SML^ - 1`.
 
 The `msrmcfg.RCID` and `SSRM` determine the value of `RCID` that accompanies
 requests made with effective privilege mode less than M by the hart to shared
@@ -219,8 +214,9 @@ follows:
   between 24 and 31 depending on the value held in `srmcfg.RCID`.
 ====
 
-The RDSM is expected to configure the `msrmcfg` fields such that each SD is
-assocaited with a disjoint range of values for `RCID` and `MCID`.
+The RDSM is expected to configure the `msrmcfg` fields and the `msdcfg` fields
+such that each SD is assocaited with a disjoint range of values for `RCID` and
+`MCID`.
 
 [NOTE]
 ====

@@ -30,7 +30,7 @@ page-based physical address space protection. This register holds the
 supervisor domain identifier (`SDID`); the physical page number (`PPN`) of the
 root page of the memory protection tables (`MPT`), which facilitates page-based
 address space protection; and the `MODE` field, which selects the memory
-protection scheme for machine-level physical addresses.
+protection scheme for machine-level physical addresses. The CSR number is 0x382.
 
 Attempts to read or write `mmpt` while executing in U or S-mode will raise
 an illegal instruction exception.
@@ -284,21 +284,23 @@ to the VMID provided in the HINVAL.GVMA or the ASID provided in HINVAL.VVMA.
 
 === Machine supervisor domain configuration (`msdcfg`)
 
-The `msdcfg` is a MXLEN wide read/write register, formatted as shown in <<MSDCFG>>
-for RV64 and in <<MSDCFG32>> for RV32. This CSR is used by M-mode software to
-specify the active configuration for capabilities of the supervisor domain when
-associated with a hart.  The following extensions use the `msdcfg` register to
-specify additional configuration for supervisor domains:
+The `msdcfg` is a MXLEN wide read/write register, formatted as shown in
+<<MSDCFG>>. This CSR is used to hold configurations for a supervisor domain.
+The CSR number is 0x74E.
 
-. `Smsdia` uses `msdcfg.SIDN` to identify the _supervisor interrupt domain_
-  associated with the hart.
-. `Smsdedbga` specifies the `msdcfg.SEDA` bit to allow external-debug for
-  supervisor domains.
-. `Smsdetrca` specifies the `msdcfg.SETA` bit to allow external-trace for
-  supervisor domains.
+The following extensions specify the fields of the `msdcfg` register:
 
-Details of `Smsdia`, `Smsdedbga`, and `Smsdetrca` are described in
-their respective sections in this specification. For any optional extensions not
+. `Smsdia` specifies the `SIDN` field to identify the _supervisor interrupt
+  domain_ associated with the hart.
+. `Smsdedbga` specifies the `SEDA` bit to allow external-debug for supervisor
+  domains.
+. `Smsdetrca` specifies the `SETA` bit to allow external-trace for supervisor
+  domains.
+. `Smsdqosid` specifies the `SRL`, `SML`, `SSRM`, and `SSMM` fileds to determine
+  supervisor domain QoS IDs.
+
+Details of `Smsdia`, `Smsdedbga`, `Smsdetrca`, and `Smsdqosid` are described in
+their respective sections in this specification. If an extension is not
 implemented, the corresponding configuration bits in `msdcfg` are read-only
 zero. Hence if no optional extensions are implemented, this CSR becomes
 read-only zero.
@@ -312,6 +314,10 @@ read-only zero.
   {bits:  6, name:  'SIDN'},
   {bits:  1, name:  'SEDA'},
   {bits:  1, name:  'SETA'},
-  {bits:  24, name: 'WPRI'},
+  {bits: 14, name:  'WPRI'},
+  {bits:  1, name:  'SSRM'},
+  {bits:  1, name:  'SSMM'},
+  {bits:  4, name:  'SRL'},
+  {bits:  4, name:  'SML'},
 ], config:{lanes: 2, hspace:1600}}
 ....
