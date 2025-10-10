@@ -296,17 +296,15 @@ specify additional configuration for supervisor domains:
   supervisor domains.
 . `Smsdetrca` specifies the `msdcfg.SETA` bit to allow external-trace for
   supervisor domains.
-. `Smqosid` specifies the control bits `SSRM`, `SSMM`, `SRL`, `SML` and `SQRID`
-   to enable the RDSM to manage QoS controls for supervisor domains.
 
-Details of `Smsdia`, `Smsdedbga`, `Smsdetrca` and `Smqosid` are described in
+Details of `Smsdia`, `Smsdedbga`, and `Smsdetrca` are described in
 their respective sections in this specification. For any optional extensions not
 implemented, the corresponding configuration bits in `msdcfg` are read-only
 zero. Hence if no optional extensions are implemented, this CSR becomes
 read-only zero.
 
 [caption="Register {counter:rimage}: ", reftext="Register {rimage}"]
-[title="`msdcfg` register for RV64"]
+[title="`msdcfg` register "]
 [id=MSDCFG]
 [wavedrom, ,svg]
 ....
@@ -314,31 +312,6 @@ read-only zero.
   {bits:  6, name:  'SIDN'},
   {bits:  1, name:  'SEDA'},
   {bits:  1, name:  'SETA'},
-  {bits:  10, name: 'WPRI'},
-  {bits:  1, name:  'SSRM'},
-  {bits:  1, name:  'SSSM'},
-  {bits:  4, name:  'SRL'},
-  {bits:  4, name:  'SML'},
-  {bits:  4, name:  'SQRID'},
-  {bits:  32, name: 'WPRI'},
+  {bits:  24, name: 'WPRI'},
 ], config:{lanes: 2, hspace:1600}}
 ....
-
-[caption="Register {counter:rimage}: ", reftext="Register {rimage}"]
-[title="`msdcfg` register for RV32"]
-[id=MSDCFG32]
-[wavedrom, ,svg]
-....
-{reg: [
-  {bits:  6, name:  'SIDN'},
-  {bits:  1, name:  'SEDA'},
-  {bits:  1, name:  'SETA'},
-  {bits:  10, name: 'WPRI'},
-  {bits:  1, name:  'SSRM'},
-  {bits:  1, name:  'SSSM'},
-  {bits:  4, name:  'SRL'},
-  {bits:  4, name:  'SML'},
-  {bits:  4, name:  'SQRID'},
-], config:{lanes: 2, hspace:1600}}
-....
-

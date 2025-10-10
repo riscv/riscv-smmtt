@@ -44,17 +44,20 @@ To support this security objective, the following capabilities are required:
      resource allocation configurations in a capacity or bandwidth controller.
      The QRID, along with the `MCID`, is used to identify the ID of the
      counter used to monitor resource usage in a capacity or bandwidth
-     controller. An ISA extension named Smqosid is specified in <<SMQOSID>>
-     to provide this capability.
+     controller.
+  ** The Smsdqosid <<SMSDQOSID>> extension is specified to enable partitioning
+     the RCID and MCID associated with a QRI among the SDs sharing a QRI.
+  ** The Smqosid extension <<SMQOSID>> is specified to configure QoS identifiers
+     for requests made by a hart with effective privilege mode equal to M.
 
 [[SMQOSID]]
-=== Smqosid - Supervisor Domain Quality-of-Service Identifiers
+=== Smqosid - Machine-Mode Quality-of-Service Identifiers
 
 The Smqosid introduces a read/write M-mode register (`mrmcfg`) to configure
 QoS identifiers for requests made by a hart with effective privilege mode equal
 to M.
 
-The `mrmcfg` register is an MXLEN-bit read/write register used to configure a
+The `mrmcfg` register is an MXLEN-wide read/write register used to configure a
 Resource Control ID (`RCID`), Monitoring Counter ID (`MCID`), and a QRID
 (`QRID`). The `QRID`, `RCID`, and `MCID` are WARL fields. The register is
 formatted as shown in <<MRMCFG64>> when MXLEN=64 and <<MRMCFG32>> when MXLEN=32.
@@ -111,7 +114,10 @@ privilege modes less than M.
 ], config:{lanes: 1, hspace:1024}}
 ....
 
-The Smqosid extension enables the scenario where two or more supervisor domains
+[[SMSDQOSID]]
+=== Smsdqosid - Supervisor Domain Quality-of-Service Identifiers
+
+The Smsdqosid extension enables the scenario where two or more supervisor domains
 share a common set of capacity and bandwidth controllers. In this setup, access
 to the QRI of these controllers is restricted to RDSM, which then provides
 mediated access for these supervisor domains to configure capacity or bandwidth
@@ -124,108 +130,76 @@ enabling domains to program `srmcfg` directly is preferred for performance
 reasons.
 
 To facilitate delegation of `srmcfg` to the SD, the Smqosid extension introduces
-`SRL` (supervisor-RCID-length) and `SML` (supervisor-MCID-length) fields in the
-`msdcfg` register to configure the usable range of `RCID` and `MCID`.
+a 64-bit read/write register called `msrmcfg`. The register is formatted as
+shown in <<MSRMCFG64>>. When MXLEN=32, `msrmcfgh` is a 32-bit read/write
+register that aliases bits 63:32 of `msrmcfg`. The `msrmcfgh` register does not
+exist when MXLEN=64.
 
-The `SRL` field is WARL with legal values from 0 to `RCIDLEN` where `RCIDLEN` is
-the number of implemented bits of the `RCID` field of `srmcfg`. The `SML` field
-is WARL with legal values from 0 to `MCIDLEN` where `MCIDLEN` is the number of
-implemented bits of the `MCID` field of `srmcfg`.
-
-Furthermore, supervisor-srmcfg-rcid-mode (`SSRM`) and supervisor-srmcfg-mcid-mode
-(`SSMM`) fields are introduced, with legal values of 0 and 1. The `SSRM` and
-`SSMM`, along with `SRL` and `SML` settings, determine the range of `RCID` and
-`MCID` values an SD can program into the `srmcfg` register. The RDSM is expected
-to configure these fields such that each SD can select from a disjoint range of
-values for `RCID` and `MCID`.
-
-.`msdcfg` register
+[[MSRMCFG64]]
+.Machine Supervisor Resource Management Configuration (`msrmcfg`) register
 
 [wavedrom, , ]
 ....
 {reg: [
-  {bits:  6, name: 'SIDN'},
-  {bits:  1, name: 'SEDA'},
-  {bits:  1, name: 'SETA'},
-  {bits:  10, name: 'WPRI'},
-  {bits:  1, name: 'SSRM'},
-  {bits:  1, name: 'SSMM'},
+  {bits: 12, name: 'RCID'},
+  {bits:  4, name: 'WPRI'},
+  {bits: 12, name: 'MCID'},
+  {bits:  4, name: 'QRID'},
   {bits:  4, name: 'SRL'},
   {bits:  4, name: 'SML'},
-  {bits:  4, name: 'SQRID'},
-], config:{lanes: 4, hspace:1024}}
+  {bits:  1, name: 'SSRM'},
+  {bits:  1, name: 'SSMM'},
+  {bits: 22, name: 'WPRI'},
+], config:{lanes: 2, hspace:1024}}
 ....
 
-The `srmcfg` CSR is provided with a privilege mode dependent read and write
-logic which enables the RDSM to configure supervisor domain specific prefixes for
-`RCID` and `MCID` fields. These prefixes remain invisible to supervisor domains
-which can only configure `RCID` and `MCID` suffixes within the boundaries set by
-RDSM in `msdcfg`.
+The `SRL` (supervisor-RCID-length) and `SML` (supervisor-MCID-length) fields
+in the `msrmcfg` register specify the usable range of `RCID` and `MCID`. The
+`SRL` field is WARL with legal values from 0 to `RCIDLEN` where `RCIDLEN`
+is the number of implemented bits of the `RCID` field of `srmcfg`. The `SML`
+field is WARL with legal values from 0 to `MCIDLEN` where `MCIDLEN` is the
+number of implemented bits of the `MCID` field of `srmcfg`.
 
-When `SSRM` is 0, the `SRL` configuration enables the RDSM to configure a `RCID`
-prefix value in the `srmcfg.RCID` field while allowing the supervisor domain to
-program the low order `SRL` bits of the field. When `SSRM` is 1, the supervisor
-domain may only program a `RCID` value in the range 0 through
-`2^RCIDLEN^ - 2^SRL^ - 1` where `RCIDLEN` is the number of implemented bits of
-the `RCID` field.
+The supervisor-srmcfg-rcid-mode (`SSRM`) and `SRL` fields determine the legal
+values for the `srmcfg.RCID` field. When `SSRM` is 0, the legal values are
+between 0 and `2^SRL^ - 1`. When `SSRM` is 1, the legal values are between
+0 and `2^RCIDLEN^ - 2^SRL^ - 1` where `RCIDLEN` is the number of implemented
+bits of the `srmcfg.RCID` field.
 
-When `SSMM` is 0, the `SML` configuration enables the RDSM to configure a `MCID`
-prefix value in the `srmcfg.MCID` field while allowing the supervisor domain to
-program the low order `SML` bits of the field. When `SSMM` is 1, the supervisor
-domain may only program a `MCID` value in the range 0 through
-`2^MCIDLEN^ - 2^SML^ - 1` where `MCIDLEN` is the number of implemented bits of
-the `MCID` field.
+The supervisor-srmcfg-mcid-mode (`SSMM`) and `SML` fields determine the legal
+values for the `srmcfg.MCID` field. When `SSMM` is 0, the legal values are
+between 0 and `2^SML^ - 1`. When `SSMM` is 1, the legal values are between
+0 and `2^MCIDLEN^ - 2^SML^ - 1` where `MCIDLEN` is the number of implemented
+bits of the `srmcfg.MCID` field.
 
-When the `srmcfg` CSR is read at privilege modes less than M, the value returned
-for the `RCID` and `MCID` fields of the register is computed as follows:
+The `msrmcfg.RCID` and `SSRM` determine the value of `RCID` that accompanies
+requests made with effective privilege mode less than M by the hart to shared
+resource controllers as follows:
 
-.`RCID` and `MCID` read value computation
 [listing]
 ----
 SRL_MASK = (1 << SRL) - 1
-if SSRM == 0
-    RCID-value = srmcfg.RCID & SRL_MASK
-else
-    RCID-value = srmcfg.RCID
-endif
-
-SML_MASK = (1 << SML) - 1
-if SSMM == 0
-    MCID-value = srmcfg.MCID & SML_MASK
-else
-    MCID-value = srmcfg.MCID
-endif
+RCID = (SSRM == 0) ? ((msrmcfg.RCID & ~SRL_MASK) | (srmcfg.RCID & SRL_MASK)) :
+                     srmcfg.RCID
 ----
 
-On a write to the `srmcfg` CSR at privilege modes less than M, the value
-stored in the `RCID` and `MCID` fields of the register are computed as
-follows:
+The `msrmcfg.MCID` and `SSMM` determine the value of `MCID` that accompanies
+requests made with effective privilege mode less than M by the hart to shared
+resource controllers as follows:
 
-.`RCID` and `MCID` write value processing
 [listing]
 ----
-SRL_MASK = (1 << SRL) - 1
-if SSRM == 0
-    srmcfg.RCID = (srmcfg.RCID & ~SRL_MASK) | (RCID-value & SRL_MASK)
-else
-    if ((RCID-value & ~SRL_MASK) | SRL_MASK) != ((1 << RCIDLEN) - 1)
-        srmcfg.RCID = RCID-value
-    else
-        srmcfg.RCID = <unspecified but legal value>
-    endif
-endif
-
 SML_MASK = (1 << SML) - 1
-if SSMM == 0
-    srmcfg.MCID = (srmcfg.MCID & ~SML_MASK) | (MCID-value & SML_MASK)
-else
-    if ((MCID-value & ~SML_MASK) | SML_MASK) != ((1 << MCIDLEN) - 1)
-        srmcfg.MCID = MCID-value
-    else
-        srmcfg.MCID = <unspecified but legal value>
-    endif
-endif
+MCID = (SSMM == 0) ? ((msrmcfg.MCID & ~SML_MASK) | (srmcfg.MCID & SML_MASK)) :
+                     srmcfg.MCID
 ----
+
+These `RCID` and `MCID` values along with `msrmcfg.QRID` accompany each request
+made with effective privilege mode less than M by the hart to shared resource
+controllers. The `QRID` and `RCID` values are used to determine the resource
+allocations (e.g., cache occupancy limits, memory bandwidth limits, etc.) to
+enforce. The `QRID` and `MCID` values are used to identify a counter to monitor
+resource usage.
 
 [NOTE]
 ====
@@ -235,33 +209,23 @@ The RDSM may allocate 24 RCIDs to the first SD and 8 RCIDs to the second SD. The
 follows:
 
 * The RDSM configures `SRL` to 3 and `SSRM` to 1 for first SD. This allows the
-  first SD to select `RCID` values 0 through 23 in `srmcfg`.
+  first SD to program `RCID` values between 0 and 23 in `srmcfg`. The value of
+  `RCID` that accompanies the requests from this SD is same as the value in
+  `srmcfg`.
 
-* The RDSM configures `SRL` to 3 and `SSRM` to 0 for the second SD and programs
-  the `srmcfg` with a value of 24. The second SD is allowed to program the low
-  order 3 bits of `srmcfg.RCID`, thereby selecting `RCID` values between 24 and 31.
-  When this SD reads `srmcfg.RCID`, the value returned consists of the low 3 bits,
-  with all upper bits set to 0.
+* The RDSM configures `SRL` to 3, `SSRM` to 0, and `msrmcfg.RCID` to 24 for the
+  second SD. This allows the second SD to program `RCID` values 0 through 7 in
+  `srmcfg`. The value of `RCID` that accompanies the requests from this SD are
+  between 24 and 31 depending on the value held in `srmcfg.RCID`.
 ====
 
-The `RCID` and `MCID` values that accompany requests, when made with an effective
-privilege mode equal to M are stored in the `mrmcfg` register. Conversely, for
-requests made with effective privilege modes less than M, these values are
-stored in the `srmcfg` register.
-
-The Smqosid extension introduces a `SQRID` field in the `msdcfg` register to
-hold the QRID for requests made by the hart with effective privilege mode less
-than M respectively. The `SQRID` value along with the `RCID` and `MCID` values
-accompanies each such request made by the hart to the shared resource
-controllers. The `SQRID` and `RCID` values are used to determine the resource
-allocations (e.g., cache occupancy limits, memory bandwidth limits, etc.) to
-enforce. The `SQRID` and `MCID` values are used to identify a counter to monitor
-resource usage.
+The RDSM is expected to configure the `msrmcfg` fields such that each SD is
+assocaited with a disjoint range of values for `RCID` and `MCID`.
 
 [NOTE]
 ====
-The `SQRID` may be updated during the process of switching SDs, to denote the
-QRI allocated to that specific SD by the RDSM.
+The `msrmcfg.QRID` may be updated during the process of switching SDs, to denote
+the QRI allocated to that specific SD by the RDSM.
 
 When a QRI is shared among multiple supervisor domains, the RDSM must mediate
 access to the memory-mapped QoS register interface provided by the capacity
