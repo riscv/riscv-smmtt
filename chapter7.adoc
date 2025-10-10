@@ -173,11 +173,12 @@ this notification to inform its scheduling decisions. To facilitate this
 functionality, the `Smsdia` extension introduces the `msideip` and `msideie`
 CSRs, along with a machine supervisor domain external interrupt (`MSDEI`).
 
-==== Machine supervisor domain configuration (`msdcfg`)
+==== Supervisor Interrupt Domain Number
 
-The `msdcfg` is a 32-bit read/write register, formatted as shown in <<MSDCFG>>.
+The `Smsdia` extension introduces the _supervisor interrupt domain number_
+(`SIDN`) field <<MSDCFG>> of the `msdcfg` register.
 
-The `SIDN` field selects an interrupt domain among the plurality of
+The `SIDN` field selects an supervisor interrupt domain among the plurality of
 _supervisor interrupt domains_ associated with a hart as the active supervisor
 interrupt domain for supervisor-level external interrupt and guest external
 interrupts.
@@ -243,8 +244,11 @@ corresponding to the value of `msdcfg.SIDN`.
 ==== Machine supervisor interrupt domain external interrupt pending (`msideip/msideiph`)
 
 The `msideip` is a 64-bit read-only register, formatted as shown in <<MSIDEIP>>.
+The CSR number is 0xF4F.
+
 When MXLEN=32, `msideiph` is a 32-bit read-only register which aliases bits
-63:32 of `msideip`. When MXLEN=64, `msideiph` does not exist.
+63:32 of `msideip`. The CSR number is 0xF5F. When MXLEN=64, `msideiph` does not
+exist.
 
 [[MSIDEIP]]
 .`msideip` register
@@ -277,9 +281,13 @@ visible in the `msideip` register even when `msdcfg.SIDN` is not the valid numbe
 of an implemented _supervisor interrupt domain_.
 
 ==== Machine supervisor interrupt domain external interrupt enable (`msideie/msideieh`)
+
 The `msideie` is a 64-bit read-write register, formatted as shown in <<MSIDEIE>>.
+The CSR number is 0x74F.
+
 When MXLEN=32, `msideieh` is a 32-bit read-write register which aliases bits
-63:32 of `msideie`. When MXLEN=64, `msideieh` does not exist.
+63:32 of `msideie`. The CSR number is 0x75F. When MXLEN=64, `msideieh` does not
+exist.
 
 [[MSIDEIE]]
 .`msideie` register
@@ -350,7 +358,8 @@ The `Smgeien` extension depends on the `Smaia` and the H extension.
 When `Smgeien` is implemented, the bit 9 of `mvien` must be writable.
 
 This extension introduces an MXLEN read-write WARL register named `mgeien`,
-formatted as shown in <<MGEIEN>> for RV64 and in <<MGEIEN32>> for RV32.
+formatted as shown in <<MGEIEN>> for RV64 and in <<MGEIEN32>> for RV32. The CSR
+number is 0x74D.
 
 [[MGEIEN]]
 .`mgeien` register for RV64
