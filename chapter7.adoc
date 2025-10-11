@@ -176,7 +176,7 @@ CSRs, along with a machine supervisor domain external interrupt (`MSDEI`).
 ==== Supervisor Interrupt Domain Number
 
 The `Smsdia` extension introduces the _supervisor interrupt domain number_
-(`SIDN`) field <<MSDCFG>> of the `msdcfg` register.
+(`SIDN`) field of the `msdcfg` <<MSDCFG>> register.
 
 The `SIDN` field selects an supervisor interrupt domain among the plurality of
 _supervisor interrupt domains_ associated with a hart as the active supervisor

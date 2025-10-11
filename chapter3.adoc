@@ -296,7 +296,7 @@ The following extensions specify the fields of the `msdcfg` register:
   domains.
 . `Smsdetrca` specifies the `SETA` bit to allow external-trace for supervisor
   domains.
-. `Smsdqosid` specifies the `SRL`, `SML`, `SSRM`, and `SSMM` fileds to determine
+. `Smsdqosid` specifies the `SRL`, `SML`, `SSRM`, and `SSMM` fields to determine
   supervisor domain QoS IDs.
 
 Details of `Smsdia`, `Smsdedbga`, `Smsdetrca`, and `Smsdqosid` are described in
