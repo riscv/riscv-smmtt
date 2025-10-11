@@ -444,6 +444,21 @@ Specifically:
    *** the _logical complement_ of `mgeien` if `mgeien.A` is 0; otherwise, a
        value of all 1s.
 
+The number of bits implemented in `hgeip` and `hgeie` is referred to as
+`GEILEN`. When `GEILEN` is nonzero, the Privileged Specification requires that
+the least significant bits, excluding bit 0, be implemented first. Hence, if
+`GEILEN` is nonzero, bits `GEILEN:1` shall be writable in `hgeie`, and all
+other bit positions shall be read-only zeros in both `hgeip` and `hgeie`. When
+the `Ssgeien` extension is implemented, this rule does not apply, and:
+
+* The guest external interrupts and their enables may not be contiguous in
+  `hgeip` and `hgeie`, respectively.
+* The supervisor-level and guest interrupt files may not be laid out
+  contiguously in memory.
+* The supervisor-level interrupt file may not be available to a supervisor
+  domain even when guest interrupt files are available.
+
+
 [NOTE]
 ====
 The `Smgeien` extension is intended for use cases involving supervisor domains
@@ -456,13 +471,6 @@ _guest interrupt files--to a recipient supervisor domain, either temporarily
 or permanently, by invoking SBI functions provided by the RDSM. Once the
 interrupt files have been made accessible to the recipient domain by the RDSM,
 the donor domain is not expected to access them.
-
-Recipient domains must not assume that the donated interrupt files are
-contiguously laid out in memory, nor should they expect the corresponding bits
-in `hgeip` and `hgeie` to be contiguous. Furthermore, a recipient must not
-assume it can use a supervisor-level interrupt file unless it has been
-explicitly made accessible. This behavior is indicated by the `Ssgeien`
-extension.
 
 The memory locations of the accessible guest interrupt files, along with their
 guest external interrupt numbers, are communicated to recipient supervisor
