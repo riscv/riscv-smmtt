@@ -184,8 +184,8 @@ and/or the `SDID` value in `rs2`, and always perform a global fence for all SDs.
 === M-mode Supervisor Domain Fine-Grain Invalidation Instruction
 
 When `Svinval` and `Smsdid` are both implemented, the `MINVAL.PA` instruction
-must be implemented. `MINVAL.MPA` supports batching of MPT invalidations,
-analogous to SINVAL.VMA.
+must be implemented. `MINVAL.SPA` supports batching of MPT invalidations,
+analogous to `SINVAL.VMA`.
 
 [caption="Figure {counter:image}: ", reftext="Figure {image}"]
 [title="MINVAL.PA instruction"]
