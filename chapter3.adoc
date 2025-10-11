@@ -8,18 +8,18 @@ supervisor-domain-related extensions. The interface consists of M-mode CSRs
 implemented; `msdcfg` may be read-only zero if none of the optional supervisor
 domain extensions are implemented.
 
-The SDID programmed via the `mmpt` CSR is a local identifier for the
+The `SDID` programmed via the `mmpt` CSR is a local identifier for the
 hart and may be used to tag hart-local resources to access-control data
-associated with the supervisor domain. The SDID is unique only to a hart, hence
-the SDID must not be used to tag downstream transactions that are globally
+associated with the supervisor domain. The `SDID` is unique only to a hart, hence
+the `SDID` must not be used to tag downstream transactions that are globally
 visible.
 
 [NOTE]
 ====
-For most typical usages, the SDID will remain stable over the life
-of the supervisor domain. However, the SDID can be changed
+For most typical usages, the `SDID` will remain stable over the life
+of the supervisor domain. However, the `SDID` can be changed
 at the cost of flushing any prior cached state that was
-associated with the SDID.
+associated with the `SDID`.
 ====
 
 === Machine-level Memory Protection Tables (`mmpt`)
@@ -30,7 +30,7 @@ page-based physical address space protection. This register holds the
 supervisor domain identifier (`SDID`); the physical page number (`PPN`) of the
 root page of the memory protection tables (`MPT`), which facilitates page-based
 address space protection; and the `MODE` field, which selects the memory
-protection scheme for machine-level physical addresses. The CSR number is 0x382.
+protection scheme for physical addresses. The CSR number is 0x382.
 
 Attempts to read or write `mmpt` while executing in U or S-mode will raise
 an illegal instruction exception.
@@ -126,13 +126,13 @@ updates of virtual memory system page-tables or memory protection tables and
 subsequent address translations or memory protection.
 
 If an `MPT` structure for an address-space has been modified, or if a `SDID` is
-reused, it may be necessary to execute a `MFENCE.MPA` instruction after, or in
+reused, it may be necessary to execute a `MFENCE.PA` instruction after, or in
 some cases before, writing `mmpt`.
 
 === Machine Memory Protection Fence Instruction
 
 [caption="Figure {counter:image}: ", reftext="Figure {image}"]
-[title="MFENCE.MPA instruction"]
+[title="MFENCE.PA instruction"]
 [id=mfence-spa]
 [wavedrom, ,svg]
 ....
@@ -142,55 +142,53 @@ some cases before, writing `mmpt`.
   {bits:  3, name: 'func3 (PRIV)'},
   {bits:  5, name: 'rs1 (PADDR)'},
   {bits:  5, name: 'rs2 (SDID)'},
-  {bits:  7, name: 'func7 (MFENCE.MPA)'},
+  {bits:  7, name: 'func7 (MFENCE.PA)'},
 ], config:{lanes: 1, hspace:1024}}
 ....
 
-The `MFENCE.MPA` fence instruction is used to synchronize updates to
+The `MFENCE.PA` fence instruction is used to synchronize updates to
 memory protection tables with current execution of supervisor domains.
-`MFENCE.MPA` is only valid in M-mode. If operand rs1!=x0, it specifies
-a single machine-level physical address, and if rs2!=x0, it specifies
-a single SDID.
+`MFENCE.PA` is only valid in M-mode. If operand `rs1 != x0`, it specifies
+a single physical address, and if `rs2 != x0`, it specifies a single `SDID`.
 
-The behavior of `MFENCE.MPA` depends on rs1 and rs2 as follows:
+The behavior of `MFENCE.PA` depends on `rs1` and `rs2` as follows:
 
-* If rs1=x0 and rs2=x0, the fence orders all reads and writes to any level
+* If `rs1=x0` and `rs2=x0`, the fence orders all reads and writes to any level
   of the MPTs for all supervisor domain address spaces.
-* If rs1=x0 and rs2!=x0, the fence orders all reads and writes to any level
+* If `rs1=x0` and `rs2!=x0`, the fence orders all reads and writes to any level
   of the MPT for the supervisor domain address space identified by the
-  SDID in rs2.
-* If rs1!=x0 and rs2=x0, the fence orders all reads and writes made to the
-  leaf MPT entries that correspond to the physical address in rs1, for all
+  `SDID` in `rs2`.
+* If `rs1!=x0` and `rs2=x0`, the fence orders all reads and writes made to the
+  leaf MPT entries that correspond to the physical address in `rs1`, for all
   supervisor domain address spaces.
-* If rs1!=x0 and rs2!=x0, the fence orders all reads and writes made to the
-  leaf MPT PTEs that correspond to the physical address in rs1, for the
-  supervisor domain address space identified by the SDID in rs2.
+* If `rs1!=x0` and `rs2!=x0`, the fence orders all reads and writes made to the
+  leaf MPT PTEs that correspond to the physical address in `rs1`, for the
+  supervisor domain address space identified by the `SDID` in `rs2`.
 
-Executing a `MFENCE.MPA` guarantees that any previous stores already visible to
+Executing a `MFENCE.PA` guarantees that any previous stores already visible to
 the current hart are ordered before all implicit reads by that hart to memory
 protection tables.
 
-When SDID is specified in rs2, bits XLEN-1:SDIDMAX held in rs2 are reserved for
-future standard use. Until their use is specified, they should be zeroed by
-software and ignored by implementations. Also, if SDIDLEN < SDIDMAX, the
-implementation shall ignore bits SDIDMAX-1:SDIDLEN of the value held in rs2.
+When `SDID` is specified in `rs2`, bits `XLEN-1:SDIDMAX` held in `rs2` are
+reserved for future standard use. Until their use is specified, they should be
+zeroed by software and ignored by implementations. Also, if `SDIDLEN < SDIDMAX`,
+the implementation shall ignore bits `SDIDMAX-1:SDIDLEN` of the value held in
+`rs2`.
 
 [NOTE]
 ====
-A simpler implementation of MFENCE.MPA may ignore the physical address in rs1,
-and/or the SDID value in rs2, and always perform a global fence for all SDs.
+A simpler implementation of `MFENCE.PA` may ignore the physical address in `rs1`,
+and/or the `SDID` value in `rs2`, and always perform a global fence for all SDs.
 ====
 
 === M-mode Supervisor Domain Fine-Grain Invalidation Instruction
 
-In some high-performance implementations, a finer-granular invalidation and
-fencing is required that allows for synchronization operations to be more
-efficiently batched. When `Svinval` is implemented with `Smsdid`, the
-`MINVAL.MPA` instruction must be implemented to support such fine-granular
-invalidation of cached MPT entries.
+When `Svinval` and `Smsdid` are both implemented, the `MINVAL.PA` instruction
+must be implemented. `MINVAL.MPA` supports batching of MPT invalidations,
+analogous to SINVAL.VMA.
 
 [caption="Figure {counter:image}: ", reftext="Figure {image}"]
-[title="MINVAL.MPA instruction"]
+[title="MINVAL.PA instruction"]
 [id=minval-spa]
 [wavedrom, ,svg]
 ....
@@ -200,87 +198,52 @@ invalidation of cached MPT entries.
   {bits:  3, name: 'func3 (PRIV)'},
   {bits:  5, name: 'rs1 (PADDR)'},
   {bits:  5, name: 'rs2 (SDID)'},
-  {bits:  7, name: 'func7 (MINVAL.MPA)'},
+  {bits:  7, name: 'func7 (MINVAL.PA)'},
 ], config:{lanes: 1, hspace:1024}}
 ....
 
-`MINVAL.MPA` is only ordered against `SFENCE.W.INVAL` and `SFENCE.INVAL.IR`
+`MINVAL.PA` is only ordered against `SFENCE.W.INVAL` and `SFENCE.INVAL.IR`
 instructions.
 
-The SFENCE.W.INVAL instruction guarantees that any previous stores already
-visible to the current RISC-V hart are ordered before subsequent MINVAL.MPA
+The `SFENCE.W.INVAL` instruction guarantees that any previous stores already
+visible to the current RISC-V hart are ordered before subsequent `MINVAL.PA`
 instructions executed by the same hart.
 
-The SFENCE.INVAL.IR instruction guarantees that any previous MINVAL.MPA
+The `SFENCE.INVAL.IR` instruction guarantees that any previous `MINVAL.PA`
 instructions executed by the current hart are ordered before subsequent
 implicit references by that hart to memory-protection data structures.
 
 When executed in order (but not necessarily consecutively) by a single hart,
-the sequence `SFENCE.W.INVAL`, `MINVAL.MPA` and `SFENCE.INVAL.IR` has the same
-effect as a hypothetical `MFENCE.MPA` in which:
+the sequence `SFENCE.W.INVAL`, `MINVAL.PA` and `SFENCE.INVAL.IR` has the same
+effect as a hypothetical `MFENCE.PA` in which:
 
-* the values of rs1 and rs2 for the `MFENCE.MPA` are the same as those used in
-  the `MINVAL.MPA`,
+* the values of rs1 and rs2 for the `MFENCE.PA` are the same as those used in
+  the `MINVAL.PA`,
 * reads and writes prior to the `SFENCE.W.INVAL` are considered to be those
-  prior to the `MINVAL.MPA`, and
+  prior to the `MINVAL.PA`, and
 * reads and writes following the `SFENCE.INVAL.IR` are considered to be those
-  subsequent to the `MFENCE.MPA`
+  subsequent to the `MFENCE.PA`
 
-`MINVAL.MPA` is only valid in M-mode.
+`MINVAL.PA` is only valid in M-mode.
 
-=== Extension to behavior of SFENCE.VMA, HFENCE.GVMA and HFENCE.VVMA
+=== Extension to Behavior of Memory-Management Fences
 
-The behavior of the SFENCE.VMA, HFENCE.GVMA and HFENCE.VVMA instructions are
-affected when the Smsdid extension is implemented.
+The behavior of the `SFENCE.VMA`, `HFENCE.GVMA`, and `HFENCE.VVMA` instructions
+is affected when the `Smsdid` extension is implemented. When the `Svinval`
+extension is also implemented, the behavior of the `SINVAL.VMA`, `HINVAL.GVMA`,
+and `HINVAL.VVMA` instructions is also affected.
 
-When SFENCE.VMA is used within a supervisor domain, the virtual-address argument
-is a virtual address with either the ASID being a S/HS-level ASID (V=0), or a
-VS-level ASID (V=1).
+The `ASID` and `VMID` arguments of these instructions correspond to the `ASID`s
+and `VMID`s that are active within the current supervisor domain, which is
+identified by the `SDID` field of the CSR `mmpt`. The `SDID` augments the `ASID`
+and `VMID` values to form the effective identifiers used by these instructions.
 
-For S/HS-level ASID, the virtual-address argument to SFENCE.VMA is a host
-virtual address within the current supervisor domain, and the ASID argument is
-a S/HS-level ASID within the current supervisor domain. The current supervisor
-domain is identified by the SDID field of the CSR mmpt, and the effective ASID
-can be considered the combination of the SDID and the S/HS-level ASID. The
-SFENCE.VMA orders stores only to this S/HS-level address-translation structures
-with subsequent S/HS-level address translations.
+An effective S/HS-level `ASID` can be considered to be the combination of the
+`SDID` with the S/HS-level `ASID`. Likewise, an effective VS-level `ASID` can be
+considered to be the combination of the `SDID` with the VS-level `ASID`.
 
-When V=1, the virtual-address argument to SFENCE.VMA is a guest virtual address
-within the current virtual machine, and the ASID argument is a VS-level ASID
-within the current virtual machine. The current virtual machine is identified by
-the SDID field of the CSR mmpt and the VMID field of CSR hgatp. The effective
-ASID within this virtual machine can be considered to be the combination of this
-SDID and VMID along with the VS-level ASID. The SFENCE.VMA instruction orders
-stores only to the VS-level address-translation structures with subsequent
-VS-stage address translations for the same virtual machine, i.e., only when
-mmpt.SDID and the hgatp.VMID is the same as when the SFENCE.VMA executed.
-
-For HFENCE.GVMA, the guest-physical address argument is within the context of
-the current virtual machine identified by the combination of the SDID field of the
-CSR mmpt and the VMID value in rs2. Executing an HFENCE.GVMA guarantees
-that any previous stores already visible to the current hart are ordered before
-all implicit reads by that hart done for G-stage address translation for
-instructions that follow the HFENCE.GVMA, and execute with the same mmpt.SDID
-and hgatp.VMID when HFENCE.GVMA executed.
-
-For HFENCE.VVMA, the guest-virtual address argument is within the context of
-the current virtual machine identified by the combination of the ASID value
-in rs2, the VMID field of CSR hgatp, and the SDID field of CSR mmpt.
-Executing an HFENCE.VVMA guarantees that any previous stores already visible to
-the current hart are ordered before all implicit reads by that hart done for
-VS-stage address translations for instructions that are subsequent to the
-HFENCE.VMMA and execute when hgatp.VMID and mmpt.SDID have the same setting as
-it did when HFENCE.VVMA executed.
-
-=== Extension to behavior of `Svinval`
-
-When `Svinval` is implemented with `Smsdid` the behavior of SINVAL.VMA is
-modified to also use the SDID from the CSR mmpt in addition to the ASID provided
-in SINVAL.VMA.
-
-When the `Hypervisor` extension is also implemented, the behavior of HINVAL.VVMA
-and HINVAL.GVMA is modified to also use the SDID from the CSR mmpt in addition
-to the VMID provided in the HINVAL.GVMA or the ASID provided in HINVAL.VVMA.
+An effective `VMID` can be considered to be the combination of the `SDID` with
+the `VMID`.
 
 === Machine supervisor domain configuration (`msdcfg`)
 
