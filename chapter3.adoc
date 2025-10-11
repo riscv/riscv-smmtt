@@ -24,16 +24,14 @@ associated with the `SDID`.
 
 === Machine-level Memory Protection Tables (`mmpt`)
 
-The `mmpt` register is an `MXLEN` wide read/write register, formatted as shown in
-<<sdid-32>> for `MXLEN=32` and <<sdid-64>> for `MXLEN=64`, which controls
-page-based physical address space protection. This register holds the
-supervisor domain identifier (`SDID`); the physical page number (`PPN`) of the
-root page of the memory protection tables (`MPT`), which facilitates page-based
-address space protection; and the `MODE` field, which selects the memory
-protection scheme for physical addresses. The CSR number is 0x382.
-
-Attempts to read or write `mmpt` while executing in U or S-mode will raise
-an illegal instruction exception.
+The `mmpt` register is an `MXLEN` wide read/write machine-mode register,
+formatted as shown in <<sdid-32>> for `MXLEN=32` and <<sdid-64>> for `MXLEN=64`,
+which controls page-based physical address space protection. This register holds
+the supervisor domain identifier (`SDID`); the physical page number (`PPN`) of
+the root page of the memory protection tables (`MPT`), which facilitates
+page-based address space protection; and the `MODE` field, which selects the
+memory protection scheme for physical addresses. The CSR number for `mmpt` is
+0x382.
 
 [caption="Register {counter:rimage}: ", reftext="Register {rimage}"]
 [title="MMPT register (`mmpt`) when `MXLEN=32`."]
@@ -217,8 +215,8 @@ When executed in order (but not necessarily consecutively) by a single hart,
 the sequence `SFENCE.W.INVAL`, `MINVAL.PA` and `SFENCE.INVAL.IR` has the same
 effect as a hypothetical `MFENCE.PA` in which:
 
-* the values of rs1 and rs2 for the `MFENCE.PA` are the same as those used in
-  the `MINVAL.PA`,
+* the values of `rs1` and `rs2` for the `MFENCE.PA` are the same as those used
+  in the `MINVAL.PA`,
 * reads and writes prior to the `SFENCE.W.INVAL` are considered to be those
   prior to the `MINVAL.PA`, and
 * reads and writes following the `SFENCE.INVAL.IR` are considered to be those
@@ -247,9 +245,9 @@ the `VMID`.
 
 === Machine supervisor domain configuration (`msdcfg`)
 
-The `msdcfg` is a MXLEN wide read/write register, formatted as shown in
-<<MSDCFG>>. This CSR is used to hold configurations for a supervisor domain.
-The CSR number is 0x74E.
+The `msdcfg` is a MXLEN wide machine-mode read/write register, formatted as
+shown in <<MSDCFG>>. This CSR is used to hold configurations for a supervisor
+domain. The CSR number for `msdcfg` is 0x74E.
 
 The following extensions specify the fields of the `msdcfg` register:
 

@@ -5,12 +5,12 @@ The following normative architecture extensions are defined.
 
 * `Smsdid` (<<Smsdid>>) - An interface to program the active supervisor domain
 under which a hart is operating. This is a dynamic control state on the hart
-that is held in an M-mode CSR and modifiable by the RDSM via CSR r/w
+that is held in an machine-mode CSR and modifiable by the RDSM via CSR r/w
 instructions  - herewith called the `supervisor domain identifier` assigned to
 the hart. The SDID is a local identifier for the hart and may be used to tag
 hart-local resources to access-control data associated with the supervisor
 domain. The supervisor domain identifier is independent from the hart privilege
-levels and is held in a M-mode CSR. This extension may be
+levels and is held in a machine-mode CSR. This extension may be
 used independently or may be combined with other extensions in this
 specification.
 
@@ -19,7 +19,7 @@ region or page associated with a supervisor domain. This extension allows for
 dynamic changes of access permission. Such dynamic changes may require flushing
 of appropriate state cached in harts. The access properties are programmed via
 a Machine-level Memory Protection Tables (MPT) structure. The physical page
-number (PPN) of the root table of the MPT is programmed into a M-mode CSR. When
+number (PPN) of the root table of the MPT is programmed into a machine-mode CSR. When
 `Smmpt` is implemented, MPT and e(PMP) are always active. Although there is no
 option to disable MPT, it can be effectively disabled if granular memory access
 control is not required by configuring MPT mode to be `Bare`.
@@ -34,7 +34,7 @@ out of scope of this specification.
 
 * `Smsdia` (<<Smsdia>>) - This extension enables assignment of IMSIC
 interrupt file(s) or an APLIC domain to a supervisor domain. The extension also
-provides CSRs to allow M-mode software to retain control on notification of
+provides CSRs to allow machine-mode software to retain control on notification of
 interrupts when Supervisor domains are enabled.
 
 * `Smsdedbga` (<<Smsdedbga>>) - This extension provides the controls to indicate
