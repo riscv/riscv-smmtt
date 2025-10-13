@@ -129,7 +129,7 @@ the RDSM could limit access to `srmcfg` to prevent direct domain configuration,
 enabling domains to program `srmcfg` directly is preferred for performance
 reasons.
 
-To facilitate delegation of `srmcfg` to the SD, the Smqosid extension introduces
+To facilitate delegation of `srmcfg` to the SD, the Smsdqosid extension introduces
 a MXLEN-wide read/write machine-mode register called `msrmcfg`. The register is
 formatted as shown in <<MSRMCFG64>> for MXLEN=64. The CSR number for `msrmcfg`
 is TBA.
@@ -148,8 +148,8 @@ is TBA.
 ], config:{lanes: 2, hspace:1024}}
 ....
 
-Additionally, the extension intoduces the `SRL`, `SML`, `SSRM`, and `SSMM`
-fields in the `msfcfg` <<MSDCFG>> register.
+Additionally, the extension introduces the `SRL`, `SML`, `SSRM`, and `SSMM`
+fields in the `msdcfg` <<MSDCFG>> register.
 
 The `SRL` (supervisor-RCID-length) is a WARL field with legal values from 0 to
 `RCIDLEN` where `RCIDLEN` is the number of implemented bits of the `RCID`
@@ -217,7 +217,7 @@ follows:
 ====
 
 The RDSM is expected to configure the `msrmcfg` fields and the `msdcfg` fields
-such that each SD is assocaited with a disjoint range of values for `RCID` and
+such that each SD is associated with a disjoint range of values for `RCID` and
 `MCID`.
 
 [NOTE]
