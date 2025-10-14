@@ -179,6 +179,13 @@ though for an implicit load or store, not for the original access type. However,
 any exception is always reported for the original access type (instruction,
 load, or store/AMO).
 
+The MXR mechanisms or the use of HLVX instruction cannot be used to affect or
+override the interpretation of permissions encoded in memory-protection-table
+entries.
+
+When Zicfiss extension is also implemeneted, the memory accessed by the shadow
+stack instructions require  read-write permission in MPT entries.
+
 Any level of MPTE may be a leaf MPTE, so in addition to providing access type
 permissions to 4 KiB pages, Smmpt34 supports 4 MiB pages.
 
