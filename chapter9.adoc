@@ -135,7 +135,7 @@ formatted as shown in <<MSRMCFG64>> for MXLEN=64. The CSR number for `msrmcfg`
 is TBA.
 
 [[MSRMCFG64]]
-.Machine Supervisor Resource Management Configuration (`msrmcfg`) register
+.Machine Supervisor Resource Management Configuration (`msrmcfg`) register for MXLEN=64
 
 [wavedrom, , ]
 ....
