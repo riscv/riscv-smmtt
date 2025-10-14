@@ -146,8 +146,8 @@ n = \text{CI} \mathbin{\&} \left( 2^{\text{DXW}} - 1 \right)
 \text{MSI address} =
 \left(
   \text{Base PPN}
-  \mid ( n \ll \text{DXS} )
   \mid ( g \ll (\text{HHXS} + 12) )
+  \mid ( n \ll \text{DXS} )
   \mid ( h \ll \text{LHXS} )
   \mid \text{Guest Index}
 \right) \ll 12
@@ -173,11 +173,12 @@ this notification to inform its scheduling decisions. To facilitate this
 functionality, the `Smsdia` extension introduces the `msideip` and `msideie`
 CSRs, along with a machine supervisor domain external interrupt (`MSDEI`).
 
-==== Machine supervisor domain configuration (`msdcfg`)
+==== Supervisor Interrupt Domain Number
 
-The `msdcfg` is a 32-bit read/write register, formatted as shown in <<MSDCFG>>.
+The `Smsdia` extension introduces the _supervisor interrupt domain number_
+(`SIDN`) field of the `msdcfg` <<MSDCFG>> register.
 
-The `SIDN` field selects an interrupt domain among the plurality of
+The `SIDN` field selects an supervisor interrupt domain among the plurality of
 _supervisor interrupt domains_ associated with a hart as the active supervisor
 interrupt domain for supervisor-level external interrupt and guest external
 interrupts.
@@ -242,9 +243,12 @@ corresponding to the value of `msdcfg.SIDN`.
 
 ==== Machine supervisor interrupt domain external interrupt pending (`msideip/msideiph`)
 
-The `msideip` is a 64-bit read-only register, formatted as shown in <<MSIDEIP>>.
+The `msideip` is a 64-bit read-only machine-mode register, formatted as shown in
+<<MSIDEIP>>. The CSR number for `msideip` is 0xF4F.
+
 When MXLEN=32, `msideiph` is a 32-bit read-only register which aliases bits
-63:32 of `msideip`. When MXLEN=64, `msideiph` does not exist.
+63:32 of `msideip`. When MXLEN=64, `msideiph` does not exist. The CSR number for
+`msideiph` is 0xF5F.
 
 [[MSIDEIP]]
 .`msideip` register
@@ -277,9 +281,13 @@ visible in the `msideip` register even when `msdcfg.SIDN` is not the valid numbe
 of an implemented _supervisor interrupt domain_.
 
 ==== Machine supervisor interrupt domain external interrupt enable (`msideie/msideieh`)
-The `msideie` is a 64-bit read-write register, formatted as shown in <<MSIDEIE>>.
-When MXLEN=32, `msideieh` is a 32-bit read-write register which aliases bits
-63:32 of `msideie`. When MXLEN=64, `msideieh` does not exist.
+
+The `msideie` is a 64-bit read-write machine-mode register, formatted as shown in
+<<MSIDEIE>>. The CSR number for `msideie` is 0x74F.
+
+When MXLEN=32, `msideieh` is a 32-bit read-write machine-mode register which
+aliases bits 63:32 of `msideie`. When MXLEN=64, `msideieh` does not exist. The
+CSR number for `msideieh` is 0x75F.
 
 [[MSIDEIE]]
 .`msideie` register
@@ -291,20 +299,21 @@ When MXLEN=32, `msideieh` is a 32-bit read-write register which aliases bits
 ], config:{lanes: 1, hspace:1024}}
 ....
 
-The `msideie` CSR selects the subset of _supervisor interrupt domains_ that cause
-a machine supervisor interrupt domain external interrupt. The enable bits in `msideie` do not
-affect the supervisor-level external interrupt and guest external interrupt
-pending signals from the _supervisor interrupt domain_ selected by `msdcfg.SIDN`.
+The `msideie` CSR selects the subset of _supervisor interrupt domains_ that
+cause a machine supervisor domain external interrupt (`MSDEI`). The enable
+bits in `msideie` do not affect the supervisor-level external interrupt and
+guest external interrupt pending signals from the _supervisor interrupt
+domain_ selected by `msdcfg.SIDN`.
 
 ==== Machine and Supervisor Interrupt registers (`mip/mie` and `sip/sie`)
 
 The `Smsdia` extension introduces the machine supervisor domain external
-interrupt (`MSDEI`). This interrupt is treated as a standard local
-interrupt that is assigned to bit 14 in the `mip`, `mie`, `sip`, and `sie`
-registers. The bit 14 in `mip` and `sip` is called `MSDEIP` and the same bit in
-`mie` and `sie` is called `MSDEIE`. The `mideleg` register controls the
-delegation of `MSDEI` to S-mode. This interrupt cannot be delegated to
-VS-mode and bit 14 of `hideleg` is read-only zero.
+interrupt (`MSDEI`). This interrupt is assigned to bit 14 in the `mip`,
+`mie`, `sip`, and `sie` registers. The bit 14 in `mip` and `sip` is called
+`MSDEIP` and the same bit in `mie` and `sie` is called `MSDEIE`. The
+`mideleg` register controls the delegation of `MSDEI` to S-mode. This
+interrupt cannot be delegated to VS-mode and bit 14 of `hideleg` is
+read-only zero.
 
 The `mip.MSDEIP` bit read-only and is set to 1 if the bitwise logical AND of CSRs
 `msideip` and `msideie` is nonzero in any bit. The `mie.MSDEIE` bit is writable.
@@ -345,11 +354,12 @@ The `Smgeien` extension enables access to a subset of the guest interrupt
 files within a _supervisor interrupt domain_ in an IMSIC to a supervisor domain.
 The `Smgeien` extension depends on the `Smsdia` extension.
 
-The `Smgeien` extension depends on the `Smaia`, `Ssaia`, and the H extension.
+The `Smgeien` extension depends on the `Smaia` and the H extension.
 When `Smgeien` is implemented, the bit 9 of `mvien` must be writable.
 
 This extension introduces an MXLEN read-write WARL register named `mgeien`,
-formatted as shown in <<MGEIEN>> for RV64 and in <<MGEIEN32>> for RV32.
+formatted as shown in <<MGEIEN>> for RV64 and in <<MGEIEN32>> for RV32. The CSR
+number is 0x74D.
 
 [[MGEIEN]]
 .`mgeien` register for RV64
@@ -384,7 +394,7 @@ interrupt file_ in the _supervisor interrupt domain_ selected by `msdcfg.SIDN`.
 
 The number of writable bits in mgeien is determined by the maximum `GEILEN`
 value across all supervisor interrupt domains, and this maximum is referred to
-as `MGEILEN`. If `MGEILEN` is nonzero, bits `MGEILEN-1:0` shall be writable in
+as `MGEILEN`. If `MGEILEN` is nonzero, bits `MGEILEN:1` shall be writable in
 `mgeien`. All other bit positions in the `GIF` field shall be read-only zeros.
 
 For a supervisor-level environment, extension `Ssgeien` is essentially the same
@@ -434,6 +444,21 @@ Specifically:
    *** the _logical complement_ of `mgeien` if `mgeien.A` is 0; otherwise, a
        value of all 1s.
 
+The number of bits implemented in `hgeip` and `hgeie` is referred to as
+`GEILEN`. When `GEILEN` is nonzero, the Privileged Specification requires that
+the least significant bits, excluding bit 0, be implemented first. Hence, if
+`GEILEN` is nonzero, bits `GEILEN:1` shall be writable in `hgeie`, and all
+other bit positions shall be read-only zeros in both `hgeip` and `hgeie`. When
+the `Ssgeien` extension is implemented, this rule does not apply, and:
+
+* The guest external interrupts and their enables may not be contiguous in
+  `hgeip` and `hgeie`, respectively.
+* The supervisor-level and guest interrupt files may not be laid out
+  contiguously in memory.
+* The supervisor-level interrupt file may not be available to a supervisor
+  domain even when guest interrupt files are available.
+
+
 [NOTE]
 ====
 The `Smgeien` extension is intended for use cases involving supervisor domains
@@ -446,13 +471,6 @@ _guest interrupt files--to a recipient supervisor domain, either temporarily
 or permanently, by invoking SBI functions provided by the RDSM. Once the
 interrupt files have been made accessible to the recipient domain by the RDSM,
 the donor domain is not expected to access them.
-
-Recipient domains must not assume that the donated interrupt files are
-contiguously laid out in memory, nor should they expect the corresponding bits
-in `hgeip` and `hgeie` to be contiguous. Furthermore, a recipient must not
-assume it can use a supervisor-level interrupt file unless it has been
-explicitly made accessible. This behavior is indicated by the `Ssgeien`
-extension.
 
 The memory locations of the accessible guest interrupt files, along with their
 guest external interrupt numbers, are communicated to recipient supervisor

@@ -66,9 +66,9 @@ response to the address translation request on the device translation completion
 to access its in-memory data structures over its data structure interface (DSI).
 
 The I/O Bridge invokes the I/O MPT Checker over the MPT check request (MCR)
-interface and provides it the SDID and machine physical address of the access.
+interface and provides it the SDID and supervisor physical address of the access.
 The I/O MPT Checker uses the SDID to determine the MPT associated with the
-supervisor domain and checks if the machine physical address may be accessed by
+supervisor domain and checks if the supervisor physical address may be accessed by
 the device or IOMMU associated with that supervisor domain. The result of the
 check is provided on the MPT check completion (MCC) interface to the I/O Bridge.
 As part of the MPT check, the I/O MPT Checker may need to perform implicit
@@ -986,14 +986,14 @@ subsequent Translated Requests.
 For a PCIe ATS Translation Request, the IOMMU performs a two-stage address
 translation to determine the permissions and the size of the translation to
 be provided in the completion of the request. The IOMMU may be configured to
-return either the machine physical address (MPA) or a guest physical address
+return either the supervisor physical address (SPA) or a guest physical address
 (GPA) (see `T2GPA` field in the Device Context, cite:[IOMMU]) as the
 translation of an IOVA in the response.
 
 Translated Requests also invoke the IOMMU to determine if the device is
 authorized to use these transactions (see `EN_ATS` field in the Device Context).
 When the IOMMU is configured to return a GPA in response to a PCIe ATS
-Translation Request, the IOMMU translates the GPA to an MPA when invoked to
+Translation Request, the IOMMU translates the GPA to an SPA when invoked to
 process a Translated Request.
 
 If the IOMMU provides an Unsupported Request (UR) or a Completer Abort (CA) as
@@ -1005,7 +1005,7 @@ to the device. In these cases, the I/O MPT Checker is not invoked to check the
 responses.
 
 For all other responses to a PCIe ATS Translation Request, further processing
-by the IOBRIDGE depends on whether the IOMMU is configured to return an MPA
+by the IOBRIDGE depends on whether the IOMMU is configured to return an SPA
 or a GPA in the response.
 
 When the IOMMU is configured to return a GPA as the translated address in
@@ -1013,7 +1013,7 @@ response to a PCIe ATS Translation Request, the IOBRIDGE forwards such
 responses directly to the device. The I/O MPT Checker is not invoked in this
 case.
 
-When the response to a PCIe ATS Translation Request is an MPA, the IOBRIDGE
+When the response to a PCIe ATS Translation Request is an SPA, the IOBRIDGE
 invokes the I/O MPT Checker on the entire range of translated addresses
 returned by the IOMMU. If the IOMMU grants read permission to the device, the
 MPT must also grant read permission; if the IOMMU grants write permission to the
@@ -1027,7 +1027,7 @@ completion is returned to the device.
 
 For a Translated Request, if the IOMMU provides a UR or CA response, the
 request is aborted. Otherwise, the IOBRIDGE invokes the I/O MPT Checker on the
-MPA range provided by the IOMMU. If the MPT check fails, the request is aborted.
+SPA range provided by the IOMMU. If the MPT check fails, the request is aborted.
 If the MPT check succeeds, the IOBRIDGE allows the request to access memory.
 
 When protocols other than PCIe ATS are used to support a device-side ATC, the
