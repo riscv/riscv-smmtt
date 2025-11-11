@@ -28,7 +28,7 @@ more supervisor domains are used.
 
 [NOTE]
 ====
-The values of `msdcfg.SEDA` and `msdcfg.SETA s`hall be obtained from the
+The values of `msdcfg.SEDA` and `msdcfg.SETA` shall be obtained from the
 configuration information defined for the supervisor domain and reflected in the
 attestation report for that domain and its workloads. The RDSM shall preserve
 and restore this configuration state across context switches using secure
