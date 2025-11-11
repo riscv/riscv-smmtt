@@ -28,11 +28,11 @@ more supervisor domains are used.
 
 [NOTE]
 ====
-The configuration for `msdcfg.SEDA` and `msdcfg.SETA` is expected to
-be obtained from the manifest/configuration of the supervisor domain and
-reported in the attestation report for the supervisor domain and it's workloads.
-The RDSM should manage this supervisor domain configuration state for context
-switching using secure memory.
+The values of `msdcfg.SEDA` and `msdcfg.SETA s`hall be obtained from the
+configuration information defined for the supervisor domain and reflected in the
+attestation report for that domain and its workloads. The RDSM shall preserve
+and restore this configuration state across context switches using secure
+memory.
 
 These configurations allow external debug and trace but do not enable them. If
 external debug and/or trace is allowed for a supervisor doamin, an external
