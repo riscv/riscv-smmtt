@@ -13,9 +13,9 @@ supervisor domain is allowed to be externally-debugged.
 Similarly, `Smsdetrca` defines the `SETA` bit in the `msdcfg` CSR that specifies
 if a supervisor domain is allowed to be externally-traced cite:[ExtDbg].
 
-External trace refers to tracing software running on a separate target RISC-V
-platform, via a trace control/data transport that provides external access to
-the trace encoder controls cite:[ETrc].
+External trace refers to tracing the execution of software running on a separate
+target RISC-V platform through a trace control and data transport mechanism that
+provides external access to the trace encoder controls cite:[ETrc].
 
 These two extensions only affect debug and trace orchestrated by an external
 actor - self-hosted debug (and trace) are managed directly by the RDSM.
