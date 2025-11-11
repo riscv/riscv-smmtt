@@ -75,8 +75,7 @@ requirements listed below. +
 . Entry into Debug Mode from the currently active supervisor domain is allowed.
 
 To enforce the above controls specified by this extension, the following
-functional and security requirements must be met by the external secure debug
-system cite:[ExtDbgSec]:
+functional and security requirements cite:[ExtDbgSec] must be met:
 
 . External debug of M-mode can be enabled only by the HW RoT of the RDSM.
 . The RDSM must be able to context switch all triggers even when `d-mode` = 1.
