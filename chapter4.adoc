@@ -217,10 +217,9 @@ follows:
    the value of _G_ is reserved for the current MPT mode, raise an access-fault
    exception corresponding to the original access type.
 
-7. Determine if the requested memory access is allowed by the _XWR_ bits, given
-   the effective privilege mode. If not, stop and raise an access-fault
-   exception corresponding to the original access type, else the requested
-   memory access is allowed.
+7. Determine if the requested memory access is allowed by the _XWR_ bits
+   If not, stop and raise an access-fault exception corresponding to the
+   original access type, else the requested memory access is allowed.
 
    ** The MXR mechanisms or the use of HLVX instruction cannot be used to affect
    or override the interpretation of permissions encoded in
@@ -228,7 +227,6 @@ follows:
 
    ** When Zicfiss extension is also implemented, the memory accessed by the
    shadow stack instructions require read-write permission in MPT entries.
-
 
 Implicit accesses to MPT by this process are checked by PMP/Smepmp as implicit
 M-mode accesses. The endianness of such implicit accesses is controlled by
