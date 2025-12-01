@@ -404,10 +404,10 @@ When the `MODE` field value is changed to `Off` the I/O MPT Checker guarantees
 that in-flight transactions, observed at the time of the write to this field,
 from devices connected to the I/O MPT Checker will either be processed with the
 configurations applicable to the old value of the `MODE` field or are aborted
-<<IOMPTABORT>>. It also ensures that all transactions and previous requests from
-devices that have already been processed by the I/O MPT Checker are committed to
-a global ordering point such that they can be observed by all RISC-V harts,
-devices, I/O MPT Checkers, and IOMMUs in the platform.
+as described in <<IOMPTABORT>>. It also ensures that all transactions and
+previous requests from devices that have already been processed by the I/O MPT
+Checker are committed to a global ordering point such that they can be observed
+by all RISC-V harts, devices, I/O MPT Checkers, and IOMMUs in the platform.
 
 When an I/O MPT Checker is transitioned to `Off` state, the I/O MPT Checker
 may retain information configured into it. The I/O MPT Checker may retain
