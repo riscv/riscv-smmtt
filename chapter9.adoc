@@ -165,22 +165,31 @@ Additionally, the extension introduces the `SRL`, `SML`, `SSRM`, and `SSMM`
 fields in the `msdcfg` <<MSDCFG>> register.
 
 The `SRL` (supervisor-RCID-length) is a WARL field with legal values from 0 to
-`RCIDLEN` where `RCIDLEN` is the number of implemented bits of the `RCID`
-field of `srmcfg`.
+`RCIDLEN`, where `RCIDLEN` is the number of implemented bits of the `RCID`
+field of `srmcfg`. The least-significant bits of `RCID` are implemented first.
+That is, if `RCIDLEN` is nonzero, then `RCID[RCIDLEN-1:0]` is writable.
 
 The `SML` (supervisor-MCID-length) is a WARL field with legal values from 0 to
-`MCIDLEN` where `MCIDLEN` is the number of implemented bits of the `MCID`
-field of `srmcfg`.
+`MCIDLEN`, where `MCIDLEN` is the number of implemented bits of the `MCID`
+field of `srmcfg`. The least-significant bits of `MCID` are implemented first.
+That is, if `MCIDLEN` is nonzero, then `MCID[MCIDLEN-1:0]` is writable.
 
 The supervisor-srmcfg-rcid-mode (`SSRM`) and `SRL` fields in the `msdcfg`
 determine the legal values for the `srmcfg.RCID` field. When `SSRM` is 0, the
 legal values are between 0 and `2^SRL^ - 1`. When `SSRM` is 1, the legal values
-are between 0 and `2^RCIDLEN^ - 2^SRL^ - 1`.
+are between 0 and `2^RCIDLEN^ - 2^SRL^ - 1`, and in this mode `SRL` must satisfy
+`0 ≤ SRL < RCIDLEN`.
 
 The supervisor-srmcfg-mcid-mode (`SSMM`) and `SML` fields determine the legal
 values for the `srmcfg.MCID` field. When `SSMM` is 0, the legal values are
 between 0 and `2^SML^ - 1`. When `SSMM` is 1, the legal values are between
-0 and `2^MCIDLEN^ - 2^SML^ - 1`.
+0 and `2^MCIDLEN^ - 2^SML^ - 1`, and in this mode `SML` must satisfy
+`0 ≤ SML < MCIDLEN`.
+
+These ranges constrain only the values that may be written to and held in
+`srmcfg.RCID` and `srmcfg.MCID`. The effective `RCID` and `MCID` values that
+accompany requests to the shared resource controllers may differ when `SSRM` or
+`SSMM` is 0, as defined by the following equations.
 
 The `mnrmcfg.RCID` and `SSRM` determine the value of `RCID` that accompanies
 requests made with effective privilege mode less than M by the hart to shared
