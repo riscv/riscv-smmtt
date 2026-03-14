@@ -357,7 +357,7 @@ requested operation.
 [%header, cols="12,70"]
 |===
 |`STATUS` | Description
-| 0       | Reserved.
+| 0       | No status available; reason UNSPECIFIED.
 | 1       | Operation completed successfully.
 | 2       | Invalid operation (`OP`) requested.
 | 3       | Operation requested for invalid `RULEID`.
@@ -366,6 +366,12 @@ requested operation.
 | 6-127   | Reserved for future standard use.
 | 128-255 | Designated for custom use.
 |===
+
+The `status.CODE` value of `0` is designated as the reset default. If a value of
+`0` is returned in response to a command execution, the command should be
+considered to have failed for UNSPECIFIED reasons. It is recommended that this
+status code be returned only if all other defined status codes are determined to
+be inapplicable.
 
 [[CTRL]]
 === Control (`control`)
