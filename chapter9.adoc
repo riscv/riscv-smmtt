@@ -24,10 +24,10 @@ to associate QoS Identifiers with requests made by devices to shared resources.
 
 === Security objective
 
-With supervisor domains, the resource accesses from an SD or the RDSM must not
-be observable by entities that are not within their TCB using the resource usage
-monitors. Similarly, the resource allocations for an SD or the RDSM must not be
-influenced by entities outside their TCB.
+With supervisor domains, resource-usage information associated with an SD or the RDSM 
+shall not be visible through resource monitoring mechanisms to entities outside that SD's 
+or RDSM's TCB. Similarly, resource allocation policies and limits associated with an SD or 
+the RDSM shall not be modifiable or influenceable by entities outside the corresponding TCB
 
 To support this security objective, the following capabilities are required:
 
@@ -53,11 +53,11 @@ To support this security objective, the following capabilities are required:
 [[SMQOSID]]
 === Smqosid - Machine-Mode Quality-of-Service Identifiers
 
-The Smqosid introduces a read/write M-mode register (`mrmcfg`) to configure
+The Smqosid introduces a read/write M-mode CSR (`mrmcfg`) to configure
 QoS identifiers for requests made by a hart with effective privilege mode equal
 to M.
 
-The `mrmcfg` register is an MXLEN-wide read/write machine-mode register used to
+The `mrmcfg` register is an MXLEN-wide read/write machine-mode CSR used to
 configure a Resource Control ID (`RCID`), Monitoring Counter ID (`MCID`), and a
 QoS Register Interface ID (`QRID`). The `QRID`, `RCID`, and `MCID` are WARL
 fields. The register is formatted as shown in <<MRMCFG64>> when MXLEN=64 and
@@ -83,7 +83,7 @@ The `QRID` is typically selected once at startup by the RDSM to designate the
 QRI utilized by the RDSM itself.
 ====
 
-When Smqosid is implemented, the configurations in the `srmcfg` register
+When Smqosid is implemented, the configurations in the `srmcfg` CSR
 introduced by Ssqosid extension only apply to requests made with effective
 privilege modes less than M.
 
@@ -178,13 +178,13 @@ The supervisor-srmcfg-rcid-mode (`SSRM`) and `SRL` fields in the `msdcfg`
 determine the legal values for the `srmcfg.RCID` field. When `SSRM` is 0, the
 legal values are between 0 and `2^SRL^ - 1`. When `SSRM` is 1, the legal values
 are between 0 and `2^RCIDLEN^ - 2^SRL^ - 1`, and in this mode `SRL` must satisfy
-`0 ≤ SRL < RCIDLEN`.
+`0 <= SRL < RCIDLEN`.
 
 The supervisor-srmcfg-mcid-mode (`SSMM`) and `SML` fields determine the legal
 values for the `srmcfg.MCID` field. When `SSMM` is 0, the legal values are
 between 0 and `2^SML^ - 1`. When `SSMM` is 1, the legal values are between
 0 and `2^MCIDLEN^ - 2^SML^ - 1`, and in this mode `SML` must satisfy
-`0 ≤ SML < MCIDLEN`.
+`0 <= SML < MCIDLEN`.
 
 These ranges constrain only the values that may be written to and held in
 `srmcfg.RCID` and `srmcfg.MCID`. The effective `RCID` and `MCID` values that
@@ -269,13 +269,13 @@ namespace.
 === Supervisor Domain QoS Register interfaces (QRI)
 
 Capacity and bandwidth controllers that support supervisor domains provide one
-or more memory-mapped QoS register interfaces (QRI). A QRI may be made
+or more memory-mapped QoS register interfaces (QRIs). A QRI may be made
 exclusively accessible to a supervisor domain or the RDSM may mediate access to
 the QRI using an SBI. The RDSM can control access to the QRI from supervisor
 domains using MPT and/or PMP. The RDSM controls access to the QRI from devices
 using IOMPT and/or IOPMP.
 
-The number of `RCID` and `MCID` supported by the controllers for each QRI need
+The number of `RCID` and `MCID` supported by the controllers for different QRI need
 not be identical. For maximal flexibility in allocation of `RCID` and `MCID`
 values, it is recommended that the number of `RCID` and `MCID` supported for a
 given QRID be identical in all capacity and bandwidth controllers in the
@@ -287,7 +287,7 @@ to the QRID in the request. Likewise the counters to count resource usage are
 selected using `MCID` and the QRID in the request and a QRI can be used to
 access counters associated with the corresponding QRID.
 
-When a controller supports only a single QRI, machine mode is required to
+When a controller supports only a single QRI, M-mode software is required to
 mediate access to that QRI. The RDSM may implement this mediation either
 by emulating a virtual QoS register interface--intercepting and emulating
 loads and stores to those registers--or by providing a supervisor binary
@@ -302,7 +302,7 @@ enables effective partitioning of shared resources among supervisor domains
 (SDs) that share the controller.
 
 When multiple QRIs are implemented, one of them must be designated for use
-by machine mode. This QRI is known as the __machine-mode QRI__ (MQRI).
+by M-mode software. This QRI is known as the __machine-mode QRI__ (MQRI).
 
 The MQRI supports a new operation, `CONFIG_QRI_LIMIT` (`OP=4`), which enables
 partitioning of shared resources--such as cache capacity or memory
@@ -313,7 +313,7 @@ on any QRI other than the MQRI, it shall fail with `STATUS=2`.
 The MQRI may not support any `RCID` or `MCID`, and when these are unsupported,
 its primary role is to configure resource limits for other QRIs managed by
 the controller. When `RCID` and/or `MCID` are supported, the MQRI may be used
-exclusively by machine mode or may be shared with one or more supervisor
+exclusively by M-mode software or may be shared with one or more supervisor
 domains.
 
 Bits 31:28 of the `cc_alloc_ctl` and the `bc_alloc_ctl` registers of an MQRI

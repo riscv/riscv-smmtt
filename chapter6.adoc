@@ -171,11 +171,21 @@ the IOMMU instance that governs that device.
 To support MPT checks, the RDSM provides two types of configurations to the
 I/O MPT Checker:
 
-* SDCL rules that classify one or more devices to an SDID and an IOMMU ID.
+To support MPT enforcement, the RDSM programs two classes of configuration into the I/O MPT Checker:
 
-* Configurations that determine the MPT used to check memory requests
-  originated by the IOMMUs and devices associated with that SDID, and
-  configurations that determine the QoS IDs carried with such memory requests.
+
+* Supervisor Domain Classification (SDCL) rules, which classify DMA transactions to a supervisor domain identifier
+(SDID) and, optionally, an IOMMU instance. Classification may use implementation-defined transaction attributes 
+such as a device identifier, requester identifier, PCIe IDE stream identifier, TEE-association information, or 
+other source-identification metadata carried with the transaction.
+
+* Supervisor-domain configuration entries, which associate each SDID with the MPT configuration used to perform access 
+checks for transactions originating from that supervisor domain, and with any QoS identifiers that accompany such memory requests.
+
+A transaction is TEE-associated when it originates from a device context that is assigned to a trusted execution 
+environment and carries platform-defined metadata indicating that association. SDCL rules may distinguish between 
+TEE-associated and non-TEE-associated transactions originating from the same device or communication channel.
+
 
 These configurations are programmed through the I/O MPT Checker register
 interface.
@@ -285,7 +295,7 @@ The reset value is 0 for the following registers fields.
 
 * `status` - `BUSY` and `CODE` fields
 
-The reset value for `control.MODE` is recommended to be `Off`.
+The reset value for `control.MODE` must reset to `Off`, unless a platform defines alternative behavior
 
 After a reset the MPT PTE caches in the I/O MPT Checker must have no
 valid entries.
@@ -421,10 +431,6 @@ information cached from the MPTs. Software must use suitable invalidation
 commands to invalidate the cached entries. Software must initialize all SDCL
 rules and SDID configurations prior to transitioning the I/O MPT Checker to `On`
 state.
-
-When the `MODE` is not `Off`, software changes to fields besides `MODE` may
-cause UNSPECIFIED behavior. When the state is `On`, software must first change
-the `MODE` to `Off` without changing the values of any other field.
 
 When the `MODE` is `Bare`, the I/O MPT Checker shall request the I/O Bridge to
 allow inbound transactions that are not TEE-associated and to abort those that
@@ -682,7 +688,7 @@ The interpretation of the `command` and `data1` registers for this operation is
 identical to that of the `SET_SDCL_ENTRY` operation.
 
 When the I/O MPT Checker is not associated with an IOMMU, the value held in
-`IOMMU_ID` field on successful completion of this operation is UNSPECIFIED.
+`IOMMU_ID` field on successful completion of this operation is `UNSPECIFIED`.
 
 ==== Set Supervisor Domain Configurations - `SET_SDCFG_ENTRY`
 
@@ -695,7 +701,7 @@ are interpreted as follows.
 [wavedrom, , ]
 ....
 {reg: [
-  {bits:  8, name: 'OP (WARL)'},
+  {bits:  8, name: 'OP'},
   {bits:  6, name: 'SDID'},
   {bits: 18, name: 'reserved'},
 ], config:{lanes: 2, hspace:1024}}
@@ -771,7 +777,8 @@ is `Bare`, the `PPN` field must be set to zero.
 
 The `MBE` field determines the endianness of the access made by I/O MPT
 Checker to MPT configured in this entry. When this field is 0, the accesses are
-performed as little-endian accesses and when 1 as big-endian accesses.
+performed as little-endian accesses and when 1 as big-endian accesses. MBE can be 
+hardwired when only one endiannessis supported
 
 The `SRL`, `SML`, `SSRM`, `SSMM`, `S-RCID`, and `S-MCID` fields are used to
 determine the effective `RCID` and `MCID` for device-originated and
@@ -830,7 +837,7 @@ operation is identical to that of the `SET_SDCFG_ENTRY` operation.
 
 When the I/O MPT Checker does not support associating QoS IDs with requests, the
 value held in the `data2` register on successful completion of this operation is
-UNSPECIFIED.
+`UNSPECIFIED`.
 
 ==== MPT Permission Cache Invalidation - `MPTINVAL`
 
@@ -881,7 +888,7 @@ denoted as `x`, the size of the range is computed as `(1 << (13 + x))`.
 When `PPNV` is set to 1, if the address range specified by `PPN` and `S` is
 invalid, the operation may or may not be performed. If the `PPNV` and `S` are
 both set to 1 and all bits of the `PPN` operand are 1, the behavior of
-`MPTINVAL` operation is UNSPECIFIED.
+`MPTINVAL` operation is `UNSPECIFIED`.
 
 .`MPTINVAL` operands and operations
 [%autowidth,float="center",align="center"]
@@ -939,7 +946,7 @@ corresponding MPT entry if it is valid.
 ==== I/O Fence Operation - `IOFENCE`
 
 Ensure that all previous read and write requests from devices already processed
-by I/O MPT Checker are committed to a global ordering point such that they can be
+by I/O MPT Checker are committed to the global ordering such that they can be
 observed by all RISC-V harts, IOMMUs, and devices in the system.
 
 The contents of the `data1` and `data2` registers are ignored by this
