@@ -62,7 +62,7 @@ protection on a per supervisor domain basis. Supervisor domains must rely
 on a TCB which consists of the RDSM (software) and hardware (hart, SoC,
 Root-of-trust) that enforces the isolation properties for the supervisor domain.
 The RDSM may utilize `Smepmp` (Extended M-mode Physical Memory Protection Registers) - or equivalent 
-and/or the `Smmpt` (Machine-level Memory Protection Tables, MPT) 
+and/or the `Smsd` (Supervisor Domains) 
 extension described in this specification to isolate physical memory between
 supervisor domains. Memory Protection Tables are memory-resident data structures that encode the 
 physical memory permissions map for a given supervisor domain.  Typically, implementations would 
@@ -104,7 +104,7 @@ rich-OS memory management models.
 === Memory Isolation - Theory of operation (informative)
 
 Supervisor Domain Access Protection extensions are used by the RDSM to
-program access policies for supervisor domain operation. The `Smmpt` extension
+program access policies for supervisor domain operation. The `Smsd` extension
 enables the RDSM to program permissions for physically addressed memory (or
 device mapped regions) by a hart/device operating within a supervisor domain.
 When supervisor domains are enabled on a hart , all physical memory accesses 
