@@ -778,7 +778,7 @@ is `Bare`, the `PPN` field must be set to zero.
 The `MBE` field determines the endianness of the access made by I/O MPT
 Checker to MPT configured in this entry. When this field is 0, the accesses are
 performed as little-endian accesses and when 1 as big-endian accesses. MBE can be 
-hardwired when only one endiannessis supported
+hardwired when only one endianness is supported
 
 The `SRL`, `SML`, `SSRM`, `SSMM`, `S-RCID`, and `S-MCID` fields are used to
 determine the effective `RCID` and `MCID` for device-originated and
