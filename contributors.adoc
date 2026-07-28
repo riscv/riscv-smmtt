@@ -4,4 +4,4 @@ This RISC-V specification has been contributed to directly or indirectly by (in
 alphabetical order): Alvin Che-Chia Chang, Andy Chiu, Andrew Dellow, Anup Patel,
 Dean Liberty, Deepak Gupta, Eckhard Delfs, Gregor Haas, Guerney Hunt, Jack Andrew,
 Krste Asanovic, Mark Hill, Nick Wood, Osman Koyuncu, Paul Elliott, Ricardo Ramirez,
-Ravi Sahita, Samuel Holland, Samuel Ortiz, Ved Shanbhogue, Wojchiech Ozga
+Ravi Sahita (Editor), Samuel Holland, Samuel Ortiz, Ved Shanbhogue, Wojchiech Ozga
