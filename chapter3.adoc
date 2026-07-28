@@ -2,10 +2,9 @@
 
 == `Smsd`: Supervisor Domains 
 
-`Smsd` defines Memory Protection Tables to set the access permissions for a memory
-region or page associated with a supervisor domain, and an interface to program the configuration for
-supervisor-domain-related extensions, 
-
+`Smsd` comprises Memory Protection Tables to set the access permissions for a memory
+region or page associated with a supervisor domain, described in <<Smmpt>>, 
+and an interface to program the configuration for supervisor-domain-related extensions 
 
 The interface consists of M-mode CSRs
 `msdcfg` and `mmpt`. When `Smsd` is implemented, both CSRs must be
