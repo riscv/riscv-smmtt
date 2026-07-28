@@ -26,7 +26,7 @@ at the cost of flushing any prior cached state that was
 associated with the `SDID`.
 ====
 
-=== Machine-level Memory Protection Tables (`mmpt`)
+=== M-mode Memory Protection Table Configuration (`mmpt`)
 
 The `mmpt` register is an `MXLEN` wide read/write machine-mode register,
 formatted as shown in <<sdid-32>> for `MXLEN=32` and <<sdid-64>> for `MXLEN=64`,
