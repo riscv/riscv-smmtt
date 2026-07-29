@@ -44,7 +44,7 @@ memory protection scheme for physical addresses. The CSR number for `mmpt` is
 {reg: [
   {bits:  22, name: 'PPN (WARL)'},
   {bits:   6, name: 'SDID (WARL)'},
-  {bits:   2, name: '0 (WARL)'},
+  {bits:   2, name: '0 (NZR)'},
   {bits:   2, name: 'MODE (WARL)'},
 ], config:{lanes: 2, hspace:1024}}
 ....
@@ -56,9 +56,9 @@ memory protection scheme for physical addresses. The CSR number for `mmpt` is
 ....
 {reg: [
   {bits:  44, name: 'PPN (WARL)'},
-  {bits:   8, name: '0 (WARL)'},
+  {bits:   8, name: '0 (NZR)'},
   {bits:   6, name: 'SDID (WARL)'},
-  {bits:   2, name: '0 (WARL)'},
+  {bits:   2, name: '0 (NZR)'},
   {bits:   4, name: 'MODE (WARL)'},
 ], config:{lanes: 2, hspace:1024}}
 ....
@@ -69,7 +69,10 @@ writing one to every bit position in the `SDID` field, then reading back the
 value in `mmpt` to see which bit positions in the `SDID` field hold a one. The
 least-significant bits of `SDID` are implemented first: that is, if
 `SDIDLEN` > 0, `SDID`[`SDIDLEN`-1:0] is writable. The maximal value of
-`SDIDLEN`, termed `SDIDMAX`, is 6.
+`SDIDLEN`, termed `SDIDMAX`, is 6. Bits labelled 0 (NZR) are reserved for future 
+standard use and, until its use is defined by some standard extension, must be
+zeroed by software for forward compatibility. Implementations without a 
+defined use for these bits shall return zero when read
 
 <<mpt-32>> shows the encodings of the `MODE` field when `MXLEN=32` and
 <<mpt-64>> shows the encodings of the `MODE` field when `MXLEN=64`.
@@ -277,5 +280,5 @@ read-only zero.
 ], config:{lanes: 2, hspace:1600}}
 ....
 
-Bits 21:8 are reserved for future standards use. Software shall write zero to these bits. 
-Implementations without a defined use for these bits shall return zero when read
+Bits 21:8 are reserved for future standards use and, until its use is defined by some standard extension, must be
+zeroed by software for forward compatibility. Implementations without a defined use for these bits shall return zero when read.

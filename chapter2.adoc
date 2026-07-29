@@ -13,7 +13,7 @@ for the hart and may be used to tag hart-local resources to control access to da
 associated with the supervisor domain. This extension allows for dynamic changes of 
 access permission. Such dynamic changes may require flushing of appropriate state 
 cached in harts. The access properties are programmed via a Machine-level Memory 
-Protection Tables (MPT) structure. The physical page number (PPN) of the root table 
+Protection Tables (MPT) structure (<<Smmpt>>). The physical page number (PPN) of the root table 
 of the MPT is programmed into a machine-mode CSR. When `Smsd` is implemented, MPT and 
 e(PMP) are always active. Although there is no option to disable MPT, it can be 
 effectively disabled if granular memory access control is not required by configuring 
