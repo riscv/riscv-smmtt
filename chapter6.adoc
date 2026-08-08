@@ -958,11 +958,12 @@ interpreted as follows.
 If a previously valid SDCL rule, and/or the supervisor domain configurations
 referenced by a valid SDCL rule, are modified, then the I/O MPT Checker must
 observe the new configurations within a bounded but UNSPECIFIED time. Software
-may use the `IOFENCE` operation after updating the configurations. Successful
-completion of an `IOFENCE` operation also guarantees that the I/O MPT Checker
-has observed all configuration updates made prior to the `IOFENCE`. If the
-configuration updates modify the MPT mode and/or PPN, an `MPTINVAL` operation
-with `PPNV` set to 0 must be issued before the `IOFENCE`.
+must issue an `IOFENCE` after the modifications, and wait for successful
+completion, before permitting any request whose handling depends on them.
+Successful completion of an `IOFENCE` operation also guarantees that the I/O
+MPT Checker has observed all configuration updates made prior to the `IOFENCE`.
+If the configuration updates modify the MPT mode and/or PPN, an `MPTINVAL`
+operation with `PPNV` set to 0 must be issued before the `IOFENCE`.
 
 === Treatment of Device-Side Address Translation Caches
 
