@@ -962,7 +962,7 @@ may use the `IOFENCE` operation after updating the configurations. Successful
 completion of an `IOFENCE` operation also guarantees that the I/O MPT Checker
 has observed all configuration updates made prior to the `IOFENCE`. If the
 configuration updates modify the MPT mode and/or PPN, an `MPTINVAL` operation
-with `PPNV` set to 0 must be issued before the `IOFENCE`.
+with `PPNV` set to 0 must be issued after the `IOFENCE`.
 
 === Treatment of Device-Side Address Translation Caches
 
