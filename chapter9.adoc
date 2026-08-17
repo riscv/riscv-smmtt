@@ -130,7 +130,7 @@ enabling domains to program `srmcfg` directly is preferred for performance
 reasons.
 
 To facilitate delegation of `srmcfg` to the SD, the Smsdqosid extension
-introduces a MXLEN-wide read/write machine-mode register called `mnrmcfg`.
+introduces a MXLEN-wide WARL read/write machine-mode register called `mnrmcfg`.
 The register is formatted as shown in <<MNRMCFG64>> for MXLEN=64 and
 <<MNRMCFG32>> for MXLEN=32. The CSR number for `mnrmcfg` is 0x781.
 
