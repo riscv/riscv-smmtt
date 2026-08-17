@@ -57,7 +57,7 @@ The Smqosid introduces a read/write M-mode CSR (`mrmcfg`) to configure
 QoS identifiers for requests made by a hart with effective privilege mode equal
 to M.
 
-The `mrmcfg` register is an MXLEN-wide read/write machine-mode CSR used to
+The `mrmcfg` register is an MXLEN-wide WARL read/write machine-mode CSR used to
 configure a Resource Control ID (`RCID`), Monitoring Counter ID (`MCID`), and a
 QoS Register Interface ID (`QRID`). The `QRID`, `RCID`, and `MCID` are WARL
 fields. The register is formatted as shown in <<MRMCFG64>> when MXLEN=64 and
