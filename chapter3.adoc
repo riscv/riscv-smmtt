@@ -72,7 +72,7 @@ least-significant bits of `SDID` are implemented first: that is, if
 `SDIDLEN`, termed `SDIDMAX`, is 6. Bits labelled 0 (NZR) are reserved for future 
 standard use and, until its use is defined by some standard extension, must be
 zeroed by software for forward compatibility. Implementations without a 
-defined use for these bits shall return zero when read
+defined use for these bits shall return zero when read.
 
 <<mpt-32>> shows the encodings of the `MODE` field when `MXLEN=32` and
 <<mpt-64>> shows the encodings of the `MODE` field when `MXLEN=64`.
@@ -272,7 +272,7 @@ read-only zero.
 ....
 {reg: [
   {bits:  6, name:  'SIDN'},
-  {bits: 14, name:  'Non Zero Reserved'},
+  {bits: 16, name:  'NZR'},
   {bits:  1, name:  'SSRM'},
   {bits:  1, name:  'SSMM'},
   {bits:  4, name:  'SRL'},
@@ -280,5 +280,5 @@ read-only zero.
 ], config:{lanes: 2, hspace:1600}}
 ....
 
-Bits 21:8 are reserved for future standards use and, until its use is defined by some standard extension, must be
+Bits 21:6 are reserved for future standards use and, until its use is defined by some standard extension, must be
 zeroed by software for forward compatibility. Implementations without a defined use for these bits shall return zero when read.

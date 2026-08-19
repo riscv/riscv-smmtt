@@ -32,7 +32,7 @@ In Confidential Computing deployments, trust boundaries are defined by superviso
 than solely by privilege levels. Software executing with higher privilege in one supervisor domain 
 is not implicitly trusted by, and should not have access to, the resources assigned to another 
 supervisor domain. This enables confidential workloads to remain isolated from privileged software 
-outside their trust boundary and limits the impact of software compromise in other domains
+outside their trust boundary and limits the impact of software compromise in other domains.
 
 Multi-tenant platforms rely on hardware-enforced isolation mechanisms managed by privileged 
 software. Conventional operating systems and virtual machine monitors typically have unrestricted 
@@ -107,7 +107,7 @@ Supervisor Domain Access Protection extensions are used by the RDSM to
 program access policies for supervisor domain operation. The `Smsd` extension
 enables the RDSM to program permissions for physically addressed memory (or
 device mapped regions) by a hart/device operating within a supervisor domain.
-When supervisor domains are enabled on a hart , all physical memory accesses 
+When supervisor domains are enabled on a hart, all physical memory accesses 
 from privilege modes lower than M-mode are subject to access-checks for that domain. 
 A device context may also be assigned to a supervisor domain with all device accesses checked for that domain.
 In typical security deployments, write access to Memory Protection Table (MPT) structures is restricted to M-mode 
