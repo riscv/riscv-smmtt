@@ -8,7 +8,7 @@ to the RDSM in M-mode by default.
 To increase performance, the RDSM can delegate the handling of certain
 interrupts, like the timer interrupt or the local performance counter
 overflow interrupt (LCOFI), to the supervisor domain by setting the
-appropriate `mideleg` bits. This delegation could necessitate the RDSM to
+appropriate `mideleg` bits. This delegation could require the RDSM to
 context switch additional state related to such delegated interrupts,
 including `stimecmp` and the HPM CSRs.
 
@@ -28,21 +28,25 @@ external interrupts could be directly assigned to the supervisor domain.
 
 To accommodate such supervisor domains, this specification extends the IMSIC
 and APLIC specified by the RISC-V Advanced Interrupt Architecture (AIA)
-specification cite:[AIA] to support multiple _supervisor interrupt domains_,
-enabling an individual _supervisor interrupt domain_ to be associated with each
-such supervisor domain.
+specification cite:[AIA] to support multiple _supervisor interrupt domains_, 
+enabling a supervisor domain to be allocated an individual _supervisor interrupt domain_.
 
 In some systems, a _supervisor interrupt domain_ in both an APLIC and an IMSIC
 may be associated with a supervisor domain, with the supervisor interrupt domain
 of the APLIC configured to route interrupts as MSIs to the corresponding
 _supervisor interrupt domain_ of the IMSIC.
 
-Interrupt controllers other than APLIC and/or IMSIC that support multiple
-_supervisor interrupt domains_ may also serve a supervisor domain.
+Existing interrupt controllers not aware of supervisor domains can be associated with a single supervisor domain.
 
 If there are N implemented _supervisor interrupt domains_, they are numbered
 from 0 to N − 1, and the maximum implemented _supervisor interrupt domain
 number_ is N − 1.
+
+[NOTE]
+
+Not every supervisor domain may require an individual _supervisor interrupt domain_, and the specification supports 
+flexible allocation of fewer supervisor interrupt domains among a larger number of supervisor domains.
+
 
 [[SD-IMSIC]]
 === IMSIC Extension for Supervisor Domains
@@ -183,38 +187,33 @@ _supervisor interrupt domains_ associated with a hart as the active supervisor
 interrupt domain for supervisor-level external interrupt and guest external
 interrupts.
 
-The `SIDN` field is a WLRL field that must be able to hold a value between 0
+The `SIDN` field is a WLRL field where the only legal values are between 0
 and the maximum implemented _supervisor interrupt domain number_, inclusive.
+SIDN is a 6-bit field and hence supports up to 64 supervisor interrupt domains.
 If there is only a single _supervisor interrupt domain_ connected to the hart,
 then `SIDN` may be read-only zero.
 
 When the _supervisor interrupt domain_ selected by `msdcfg.SIDN` is an IMSIC,
 the following rules apply:
 
-* The supervisor-level external interrupt pending signal of supervisor-level
-  interrupt file of the selected _supervisor interrupt domain_ is indicated in
-  `mip.SEIP`.
+* The supervisor-level external interrupt pending signal of the supervisor-level
+  interrupt file is indicated in `mip.SEIP`.
 * The `siselect` and `stopei` CSRs operate on the registers of the
-  supervisor-level interrupt file in the selected _supervisor interrupt
-  domain_.
+  supervisor-level interrupt file.
 * The guest external interrupt pending signals of the _guest interrupt files_
-  of selected _supervisor interrupt domain_ are indicated in the `hgeip` CSR.
-* The `hstatus.VGEIN` selects a _guest interrupt file_ in the selected supervisor
-  interrupt domain and `vsiselect` and `vstopei` CSRs operate on the registers
-  of the corresponding _guest interrupt file_.
+  are indicated in the `hgeip` CSR.
+* The `hstatus.VGEIN` selects a _guest interrupt file_ and `vsiselect` and `vstopei` 
+  CSRs operate on the registers of the corresponding _guest interrupt file_.
 
-When the _supervisor interrupt domain_ selected by `msdcfg.SIDN` is an APLIC,
-the following rules apply:
+When the harts's interrupt controller is an APLIC, the following rules apply for the supervisor interrupt domain selected by SIDN:
 
-* The supervisor-level external interrupt pending signal of the selected APLIC
-  _supervisor interrupt domain_ is indicated in `mip.SEIP`.
+* The supervisor-level external interrupt pending signal is indicated in `mip.SEIP`.
 
 [NOTE]
 ====
-The `Smsdia` extension provides for directly associating a _supervisor interrupt
-domain_ with up to 64 supervisor domains. The RDSM may emulate interrupt
-controllers for additional supervisor domains.
-
+If the number of implemented supervisor interrupt domains is fewer than the number of supervisor domains that need interrupt controllers, 
+the RDSM may emulate interrupt controllers for the additional supervisor domains.
+An APLIC can be emulated by trapping memory accesses.
 To emulate an IMSIC _supervisor interrupt domain_, the RDSM may use the illegal
 instruction trap facilitated by AIA-added state-enable bits to
 `mstateen0/mstateen0h` for emulation purposes.
@@ -290,7 +289,7 @@ domain_ selected by `msdcfg.SIDN`.
 
 ==== Machine and Supervisor Interrupt registers (`mip/mie` and `sip/sie`)
 
-The `Smsdia` extension introduces the machine supervisor domain external
+The `Smsdia` extension introduces the machine supervisor-domain external
 interrupt (`MSDEI`). This interrupt is assigned to bit 14 in the `mip`,
 `mie`, `sip`, and `sie` registers. The bit 14 in `mip` and `sip` is called
 `MSDEIP` and the same bit in `mie` and `sie` is called `MSDEIE`. The
@@ -314,27 +313,26 @@ LCOFI.
 
 [NOTE]
 ====
-The RDSM may use the machine supervisor interrupt domain external interrupt to determine if
+The RDSM may use the machine supervisor-domain external interrupt (MSDEI) to determine if
 a supervisor domain has become ready to run since it was last descheduled. When
 a supervisor domain that has a supervisor domain interrupt controller directly
-assigned to it, the RDSM updates the `msdcfg.SIDN` to select that supervisor
+assigned to it is scheduled, the RDSM updates the `msdcfg.SIDN` to select that supervisor
 interrupt domain and may clear the bit corresponding to that supervisor
 interrupt domain in `msideie` prior to resuming execution of the supervisor
 domain.
 
-The RDSM may delegate `MSDEI` to a supervisor domain that may be entrusted by
-the RDSM to get notified about supervisor domain external interrupts pending for
+The RDSM may delegate `MSDEI` to a supervisor domain to be notified about supervisor domain external interrupts pending for
 one or more other supervisor domains. Typically, this use case involves a single
 supervisor domain that is trusted by the RDSM to receive such notifications. The
-delegation supports optimizing the exit sequence from such supervisor domain by
+delegation supports optimizing the exit sequence from such a supervisor domain by
 enabling such supervisor domains to voluntarily yield execution in response to
 pending interrupts for the other supervisor domains.
 ====
 
 === "Smgeien/Ssgeien" : Standard Extension for Machine Guest External Interrupt Enables
 
-The `Smgeien` extension enables access to a subset of the guest interrupt
-files within a _supervisor interrupt domain_ in an IMSIC to a supervisor domain.
+The `Smgeien` extension enables access by a supervisor domain to a subset of the guest interrupt
+files within a _supervisor interrupt domain_ in an IMSIC.
 The `Smgeien` extension depends on the `Smsdia` extension.
 
 The `Smgeien` extension depends on the `Smaia` and the H extension.
@@ -384,8 +382,7 @@ For a supervisor-level environment, extension `Ssgeien` is essentially the same
 as `Smgeien` except excluding the machine-level CSRs and behavior not directly
 visible to supervisor level.
 
-For the _supervisor interrupt domain_ selected by `msdcfg.SIDN` the following
-rules apply:
+The following rules apply:
 
 * Bits `GEILEN:1` of `hgeip` are read-only aliases of the same bits in the
   internal `hgeip` register selected by `msdcfg.SIDN` if the bit at the same
@@ -402,10 +399,10 @@ rules apply:
   `vstopei` CSRs operate as-if the `VGEIN` is the number of an unimplemented
   guest external interrupt.
 
-The `mgeien.A` bit, when set to 1, enables `msideip` to accumulate all external
-interrupts for the supervisor interrupt domain; otherwise, `msideip` accumulates
+The `mgeien.A` bit, when set to 1, enables `msideip` to reflect the OR of all external
+interrupts for the supervisor interrupt domain; otherwise, `msideip` reflects
 only the subset of guest external interrupts determined by `mgeien.GIF`. When
-`mgeien.A` is 0, the SEIP for the supervisor interrupt domain is accumulated in
+`mgeien.A` is 0, the SEIP for the supervisor interrupt domain is reflected in
 `msideip` if it is not delegated to the supervisor domain.
 
 Each bit __i__ of `msideip`, corresponding to an implemented _supervisor
@@ -428,17 +425,17 @@ Specifically:
        value of all 1s.
 
 The number of bits implemented in `hgeip` and `hgeie` is referred to as
-`GEILEN`. When `GEILEN` is nonzero, the Privileged Specification requires that
+`GEILEN`. When `GEILEN` is nonzero, the H extension requires that
 the least significant bits, excluding bit 0, be implemented first. Hence, if
 `GEILEN` is nonzero, bits `GEILEN:1` shall be writable in `hgeie`, and all
 other bit positions shall be read-only zeros in both `hgeip` and `hgeie`. When
 the `Ssgeien` extension is implemented, this rule does not apply, and:
 
-* The guest external interrupts and their enables may not be contiguous in
+* The implemented guest external interrupts and their enables might not be contiguous in
   `hgeip` and `hgeie`, respectively.
-* The supervisor-level and guest interrupt files may not be laid out
+* The supervisor-level and guest interrupt files might not be laid out
   contiguously in memory.
-* The supervisor-level interrupt file may not be available to a supervisor
+* The supervisor-level interrupt file might not be available to a supervisor
   domain even when guest interrupt files are available.
 
 

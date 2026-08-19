@@ -1,10 +1,13 @@
-[[Smsdid]]
+[[Smsd]]
 
-== `Smsdid`: Supervisor Domain Identifier and Protection Register
+== `Smsd`: Supervisor Domains 
 
-`Smsdid` defines an interface to program the configuration for
-supervisor-domain-related extensions. The interface consists of M-mode CSRs
-`msdcfg` and `mmpt`. When `Smsdid` is implemented, both CSRs must be
+`Smsd` comprises Memory Protection Tables to set the access permissions for a memory
+region or page associated with a supervisor domain, described in <<Smmpt>>, 
+and an interface to program the configuration for supervisor-domain-related extensions 
+
+The interface consists of M-mode CSRs
+`msdcfg` and `mmpt`. When `Smsd` is implemented, both CSRs must be
 implemented; `msdcfg` may be read-only zero if none of the optional supervisor
 domain extensions are implemented.
 
@@ -22,7 +25,7 @@ at the cost of flushing any prior cached state that was
 associated with the `SDID`.
 ====
 
-=== Machine-level Memory Protection Tables (`mmpt`)
+=== M-mode Memory Protection Table Configuration (`mmpt`)
 
 The `mmpt` register is an `MXLEN` wide read/write machine-mode register,
 formatted as shown in <<sdid-32>> for `MXLEN=32` and <<sdid-64>> for `MXLEN=64`,
@@ -41,7 +44,7 @@ memory protection scheme for physical addresses. The CSR number for `mmpt` is
 {reg: [
   {bits:  22, name: 'PPN (WARL)'},
   {bits:   6, name: 'SDID (WARL)'},
-  {bits:   2, name: '0 (WARL)'},
+  {bits:   2, name: '0 (NZR)'},
   {bits:   2, name: 'MODE (WARL)'},
 ], config:{lanes: 2, hspace:1024}}
 ....
@@ -53,9 +56,9 @@ memory protection scheme for physical addresses. The CSR number for `mmpt` is
 ....
 {reg: [
   {bits:  44, name: 'PPN (WARL)'},
-  {bits:   8, name: '0 (WARL)'},
+  {bits:   8, name: '0 (NZR)'},
   {bits:   6, name: 'SDID (WARL)'},
-  {bits:   2, name: '0 (WARL)'},
+  {bits:   2, name: '0 (NZR)'},
   {bits:   4, name: 'MODE (WARL)'},
 ], config:{lanes: 2, hspace:1024}}
 ....
@@ -66,7 +69,10 @@ writing one to every bit position in the `SDID` field, then reading back the
 value in `mmpt` to see which bit positions in the `SDID` field hold a one. The
 least-significant bits of `SDID` are implemented first: that is, if
 `SDIDLEN` > 0, `SDID`[`SDIDLEN`-1:0] is writable. The maximal value of
-`SDIDLEN`, termed `SDIDMAX`, is 6.
+`SDIDLEN`, termed `SDIDMAX`, is 6. Bits labelled 0 (NZR) are reserved for future 
+standard use and, until its use is defined by some standard extension, must be
+zeroed by software for forward compatibility. Implementations without a 
+defined use for these bits shall return zero when read.
 
 <<mpt-32>> shows the encodings of the `MODE` field when `MXLEN=32` and
 <<mpt-64>> shows the encodings of the `MODE` field when `MXLEN=64`.
@@ -77,7 +83,7 @@ least-significant bits of `SDID` are implemented first: that is, if
 |Value |Name |Description
 |0 |`Bare` |No page-based memory protection beyond the physical memory
 protection scheme described in Section 3.7 of the RISC-V privileged architecture
-specification cite:[ISA]. The remaining fields in `mmpt` (`SDID`, `PPN`) must be
+specification cite:[ISA]. The field `PPN` must be
 set to zeros.
 |1 |`Smmpt34` |Page-based memory protection for up to 34-bit physical address
 spaces.
@@ -92,7 +98,7 @@ spaces.
 |Value |Name |Description
 |0 |`Bare` | No page-based memory protection beyond the physical memory
 protection scheme described in Section 3.7 of the RISC-V privileged architecture
-specification cite:[ISA]. The remaining fields in `mmpt` (`SDID`, `PPN`) must be
+specification cite:[ISA]. The field `PPN` must be
 set to zeros.
 |1 |`Smmpt43` |Page-based memory protection for up to 43-bit physical address
 spaces.
@@ -146,8 +152,8 @@ some cases before, writing `mmpt`.
 
 The `MFENCE.PA` fence instruction is used to synchronize updates to
 memory protection tables with current execution of supervisor domains.
-`MFENCE.PA` is only valid in M-mode. If operand `rs1 != x0`, it specifies
-a single physical address, and if `rs2 != x0`, it specifies a single `SDID`.
+`MFENCE.PA` is only valid in M-mode. If operand `rs1 != x0`, contents of register rs1 specifies
+a single physical address, and if `rs2 != x0`, contents of register rs2 specifies a single `SDID`.
 
 The behavior of `MFENCE.PA` depends on `rs1` and `rs2` as follows:
 
@@ -181,8 +187,7 @@ and/or the `SDID` value in `rs2`, and always perform a global fence for all SDs.
 
 === M-mode Supervisor Domain Fine-Grain Invalidation Instruction
 
-When `Svinval` and `Smsdid` are both implemented, the `MINVAL.PA` instruction
-must be implemented. `MINVAL.PA` supports batching of MPT invalidations,
+The `MINVAL.PA` instruction supports batching of MPT invalidations,
 analogous to `SINVAL.VMA`.
 
 [caption="Figure {counter:image}: ", reftext="Figure {image}"]
@@ -226,10 +231,8 @@ effect as a hypothetical `MFENCE.PA` in which:
 
 === Extension to Behavior of Memory-Management Fences
 
-The behavior of the `SFENCE.VMA`, `HFENCE.GVMA`, and `HFENCE.VVMA` instructions
-is affected when the `Smsdid` extension is implemented. When the `Svinval`
-extension is also implemented, the behavior of the `SINVAL.VMA`, `HINVAL.GVMA`,
-and `HINVAL.VVMA` instructions is also affected.
+The behavior of the `SFENCE.VMA`, `HFENCE.GVMA`, `HFENCE.VVMA`, `SINVAL.VMA`, `HINVAL.GVMA`,
+and `HINVAL.VVMA` instructions are affected when the `Smsd` extension is implemented. 
 
 The `ASID` and `VMID` arguments of these instructions correspond to the `ASID`s
 and `VMID`s that are active within the current supervisor domain, which is
@@ -253,14 +256,10 @@ The following extensions specify the fields of the `msdcfg` register:
 
 . `Smsdia` specifies the `SIDN` field to identify the _supervisor interrupt
   domain_ associated with the hart.
-. `Smsdedbga` specifies the `SEDA` bit to allow external-debug for supervisor
-  domains.
-. `Smsdetrca` specifies the `SETA` bit to allow external-trace for supervisor
-  domains.
 . `Smsdqosid` specifies the `SRL`, `SML`, `SSRM`, and `SSMM` fields to determine
   supervisor domain QoS IDs.
 
-Details of `Smsdia`, `Smsdedbga`, `Smsdetrca`, and `Smsdqosid` are described in
+Details of `Smsdia` and `Smsdqosid` are described in
 their respective sections in this specification. If an extension is not
 implemented, the corresponding configuration bits in `msdcfg` are read-only
 zero. Hence if no optional extensions are implemented, this CSR becomes
@@ -273,12 +272,13 @@ read-only zero.
 ....
 {reg: [
   {bits:  6, name:  'SIDN'},
-  {bits:  1, name:  'SEDA'},
-  {bits:  1, name:  'SETA'},
-  {bits: 14, name:  'WPRI'},
+  {bits: 16, name:  'NZR'},
   {bits:  1, name:  'SSRM'},
   {bits:  1, name:  'SSMM'},
   {bits:  4, name:  'SRL'},
   {bits:  4, name:  'SML'},
 ], config:{lanes: 2, hspace:1600}}
 ....
+
+Bits 21:6 are reserved for future standards use and, until its use is defined by some standard extension, must be
+zeroed by software for forward compatibility. Implementations without a defined use for these bits shall return zero when read.

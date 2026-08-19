@@ -6,14 +6,13 @@ Memory Protection table is a radix-tree table used to provide read, write, and
 execute permissions for implicit and explicit memory accesses by effective
 privilege modes less than M.
 
-The following MPT extensions are defined:
+The following MPT modes are defined:
 
 * Smmpt34 - Page-based 34-bit memory protection system (RV32 only)
 * Smmpt43 - Page-based 43-bit memory protection system (RV64 only)
 * Smmpt52 - Page-based 52-bit memory protection system (RV64 only)
 * Smmpt64 - Page-based 64-bit memory protection system (RV64 only)
 
-These MPT extensions depend on `Smsdid`.
 
 === Smmpt34: Page-Based Memory Protection System
 
@@ -37,7 +36,7 @@ table.
 
 The root memory protection table has 2^9^ memory-protection-table entries
 (MPTEs) and the memory protection tables linked to the root table have 2^10^
-MPTEs. Each MPTE is a four byte value. Each memory protection table,
+MPTEs. Each MPTE is a four-byte value. Each memory protection table,
 including the root MPT, must always be aligned to a page boundary.
 
 If the MPTE points to the next level of the memory protection table, it is a
@@ -150,8 +149,9 @@ accommodate other NAPOT sizes should that need arise.
 
 A non-leaf MPTE holds the PPN of the next level of the memory protection table.
 
-A leaf MPTE holds eight tuples of access type permission bits - one for each
-page in the range determined by that MPTE. Each tuple consists of 3 bits `XWR`,
+A leaf MPTE holds eight tuples of access-type permission bits - one for each
+page in the range determined by that MPTE, as shown in <<rv32-mpte-leaf>>.
+Each tuple consists of 3 bits `XWR`,
 that provide the Execute (`X`), Write (`W`), and Read (`R`) permissions. The most
 significant 3 bits of the range offset identify a page in that range and are
 used to identify the access type permission bits for an access to that page.

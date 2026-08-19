@@ -38,7 +38,7 @@ endif::[]
 :xrefstyle: short
 
 = RISC-V Supervisor Domains Access Protection
-RISC-V SmMTT Task Group
+
 
 // Preamble
 [WARNING]
@@ -70,7 +70,7 @@ include::chapter4.adoc[]
 //include::chapter5.adoc[]
 include::chapter6.adoc[]
 include::chapter7.adoc[]
-include::chapter8.adoc[]
+//include::chapter8.adoc[]
 include::chapter9.adoc[]
 
 //the index must precede the bibliography
