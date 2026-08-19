@@ -29,7 +29,7 @@ external interrupts could be directly assigned to the supervisor domain.
 To accommodate such supervisor domains, this specification extends the IMSIC
 and APLIC specified by the RISC-V Advanced Interrupt Architecture (AIA)
 specification cite:[AIA] to support multiple _supervisor interrupt domains_, 
-enabling a supervisor domain to be allocated an individual supervisor interrupt domain.
+enabling a supervisor domain to be allocated an individual _supervisor interrupt domain_.
 
 In some systems, a _supervisor interrupt domain_ in both an APLIC and an IMSIC
 may be associated with a supervisor domain, with the supervisor interrupt domain
@@ -43,10 +43,9 @@ from 0 to N − 1, and the maximum implemented _supervisor interrupt domain
 number_ is N − 1.
 
 [NOTE]
-====
-Not every supervisor domain may require an individual supervisor interrupt domain, and the specification supports 
+
+Not every supervisor domain may require an individual _supervisor interrupt domain_, and the specification supports 
 flexible allocation of fewer supervisor interrupt domains among a larger number of supervisor domains.
-====
 
 
 [[SD-IMSIC]]
