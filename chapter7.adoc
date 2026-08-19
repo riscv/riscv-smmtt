@@ -44,7 +44,7 @@ number_ is N − 1.
 
 [NOTE]
 ====
-Not every supervisor domain may require an individual supervisor interrupt domain, and the specification supports 
+Not every supervisor domain may require an individual _supervisor interrupt domain_, and the specification supports 
 flexible allocation of fewer supervisor interrupt domains among a larger number of supervisor domains..
 ====
 
