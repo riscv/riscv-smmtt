@@ -35,7 +35,7 @@ interrupt file(s) or an APLIC domain to a supervisor domain. The extension also
 provides CSRs to allow machine-mode software to retain control on notification of
 interrupts when Supervisor domains are enabled.
 
-* `Smsdqosid`, `Smsqosid` and CBQRI for Supervisor Domains (<<Smsdqos>>) - This extension
+* `Smsdqosid`, `Smqosid` and CBQRI for Supervisor Domains (<<Smsdqos>>) - This extension
 provides an interface for the RDSM to enforce that resource accesses from a
 supervisor domain or the RDSM must not be observable by entities that are not
 within their TCB using the resource usage monitors. Similarly, the resource
