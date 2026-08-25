@@ -397,7 +397,8 @@ the `MODE` field.
 ....
 {reg: [
   {bits:  4, name: 'MODE (WARL)'},
-  {bits: 28, name: 'reserved'},
+  {bits: 8, name: 'BARE_IOMMU_ID(WARL)'},
+  {bits: 20, name: 'reserved'},
 ], config:{lanes: 2, hspace:1024}}
 ....
 
@@ -432,9 +433,20 @@ commands to invalidate the cached entries. Software must initialize all SDCL
 rules and SDID configurations prior to transitioning the I/O MPT Checker to `On`
 state.
 
-When the `MODE` is `Bare`, the I/O MPT Checker shall request the I/O Bridge to
-allow inbound transactions that are not TEE-associated and to abort those that
-are TEE-associated.
+When the `MODE` is `Bare`, SDCL rules are not consulted for inbound transactions,
+and the following rules apply:
+
+* The I/O MPT Checker shall request the I/O Bridge to allow inbound transactions that are 
+  not TEE-associated and to abort those that are TEE-associated.
+
+* For allowed transactions, the I/O Bridge shall use the IOMMU instance identified by 
+  `control.BARE_IOMMU_ID` to perform address translation. If the implementation does not 
+  include an IOMMU, `BARE_IOMMU_ID` is read-only zero and address translation is not performed. 
+
+The `BARE_IOMMU_ID` field must contain a value in the range 0 to N–1, where N is the maximum number 
+of IOMMU IDs supported by the implementation. Programming a value outside this range is UNSPECIFIED.
+Software must program `BARE_IOMMU_ID` before transitioning MODE to Bare.
+
 
 A write to `control` register may require the I/O MPT Checker to perform many
 operations that may not occur synchronously to the write. When a write is
