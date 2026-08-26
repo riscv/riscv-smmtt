@@ -99,12 +99,12 @@ Software is allowed to make updates to a MPT entry that has the `V` bit set to
 
 * If the update to a field of the MPT entry will make the field inconsistent
   with another field of the entry then software must first set the `V` bit to 0
-  and use the `MPTINVAL` operation outlined in <<CTRL>> to invalidate previous
+  and use the `MPTINVAL` operation outlined in <<CMD>> to invalidate previous
   copies of the entry that may be in the I/O MPT Checker caches to synchronize
   the updates to the entry with the operation of I/O MPT Checker.
 
 * I/O MPT Checker is not required to immediately observe the software updates to
-  an MPT entry. Software must use the `MPTINVAL` operation outlined in <<CTRL>>
+  an MPT entry. Software must use the `MPTINVAL` operation outlined in <<CMD>>
   to invalidate any previous copies of that entry that may be in the I/O MPT
   Checker caches to synchronize the updates to the entry with the operation of
   I/O MPT Checker.
