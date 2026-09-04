@@ -445,7 +445,8 @@ and the following rules apply:
 
 The `BARE_IOMMU_ID` field must contain a value in the range 0 to N–1, where N is the maximum number 
 of IOMMU IDs supported by the implementation. Programming a value outside this range is UNSPECIFIED.
-Software must program `BARE_IOMMU_ID` before transitioning MODE to Bare.
+Software must program `BARE_IOMMU_ID` with a valid IOMMU ID before transitioning `MODE` to `Bare`.
+Additionally, if `MODE` resets to `Bare`, `BARE_IOMMU_ID` must reset to a valid IOMMU ID.
 
 
 A write to `control` register may require the I/O MPT Checker to perform many
