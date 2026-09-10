@@ -158,7 +158,7 @@ The register is formatted as shown in <<MNRMCFG64>> for MXLEN=64 and
   {bits:  4, name: 'WPRI'},
   {bits: 12, name: 'MCID'},
   {bits:  4, name: 'QRID'},
-], config:{lanes: 2, hspace:1024}}
+], config:{lanes: 1, hspace:1024}}
 ....
 
 Additionally, the extension introduces the `SRL`, `SML`, `SSRM`, and `SSMM`
