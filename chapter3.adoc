@@ -272,12 +272,12 @@ read-only zero.
 ....
 {reg: [
   {bits:  6, name:  'SIDN'},
-  {bits: 16, name:  'NZR'},
+  {bits: 16, name:  '0 (NZR)'},
   {bits:  1, name:  'SSRM'},
   {bits:  1, name:  'SSMM'},
   {bits:  4, name:  'SRL'},
   {bits:  4, name:  'SML'},
-], config:{lanes: 2, hspace:1600}}
+], config:{lanes: 2, hspace:1024}}
 ....
 
 Bits 21:6 are reserved for future standards use and, until its use is defined by some standard extension, must be
