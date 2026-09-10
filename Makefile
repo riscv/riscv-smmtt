@@ -14,7 +14,7 @@
 
 DATE ?= $(shell date +%Y-%m-%d)
 VERSION ?= 0.9.0
-REVMARK ?= 'Draft - Frozen for ARC review'
+REVMARK ?= Draft - Frozen for ARC review
 DOCKER_RUN := docker run --rm -v ${PWD}:/build -w /build \
 ghcr.io/riscv/riscv-docs-base-container-image:latest
 
@@ -25,9 +25,9 @@ ASCIIDOCTOR_PDF := asciidoctor-pdf
 OPTIONS := --trace \
            -a compress \
            -a mathematical-format=svg \
-           -a revnumber=${VERSION} \
-           -a revremark=${REVMARK} \
-           -a revdate=${DATE} \
+           -a revnumber="${VERSION}" \
+           -a revremark="${REVMARK}" \
+           -a revdate="${DATE}" \
            -a pdf-fontsdir=docs-resources/fonts \
            -a pdf-style=docs-resources/themes/riscv-pdf.yml \
            --failure-level=ERROR
@@ -51,7 +51,7 @@ build:
 
 build-container:
 	@echo "Starting build inside Docker container..."
-	$(DOCKER_RUN) /bin/sh -c "$(ASCIIDOCTOR_PDF) $(OPTIONS) $(REQUIRES) --out-file=$(PDF_RESULT) $(HEADER_SOURCE)"
+	$(DOCKER_RUN) /bin/sh -c '$(ASCIIDOCTOR_PDF) $(OPTIONS) $(REQUIRES) --out-file=$(PDF_RESULT) $(HEADER_SOURCE)'
 	@echo "Build completed successfully inside Docker container."
 
 build-no-container:
