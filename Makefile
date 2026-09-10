@@ -14,7 +14,7 @@
 
 DATE ?= $(shell date +%Y-%m-%d)
 VERSION ?= 0.9.0
-REVMARK ?= Draft - Frozen for ARC review
+REVMARK ?= 'Draft - Frozen for ARC review'
 DOCKER_RUN := docker run --rm -v ${PWD}:/build -w /build \
 ghcr.io/riscv/riscv-docs-base-container-image:latest
 
