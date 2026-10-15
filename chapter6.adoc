@@ -511,8 +511,8 @@ operation. Fields not used by an operation are ignored. If the `command.OP`
 encoding is invalid or not supported then the operation fails with "Invalid
 operation (`OP`) requested" (`status.CODE=2`). If the `SDID` or the `RULEID`
 operands are invalid then the operation fails with "Operation requested for
-invalid `SDID` " (`status.CODE=3`) or "Operation requested for invalid
-`RULEID` " (`status.CODE=4`) respectively. If other register fields used by
+invalid `RULEID` " (`status.CODE=3`) or "Operation requested for invalid
+`SDID` " (`status.CODE=4`) respectively. If other register fields used by
 the operation have an unsupported or invalid encoding then the operation
 fails with "Illegal or invalid operand encodings" (`status.CODE=5`). The order
 of checking the validity of `SDID`, `RULEID`, and other operands of when a valid
