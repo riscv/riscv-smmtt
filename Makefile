@@ -18,7 +18,7 @@ REVMARK ?= Draft - Frozen for ARC review
 DOCKER_RUN := docker run --rm -v ${PWD}:/build -w /build \
 ghcr.io/riscv/riscv-docs-base-container-image:latest
 
-HEADER_SOURCE := header.adoc
+HEADER_SOURCE := supervisor-domains.adoc
 PDF_RESULT := supervisor-domains.pdf
 
 ASCIIDOCTOR_PDF := asciidoctor-pdf
