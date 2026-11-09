@@ -1,8 +1,8 @@
 [[intro]]
 
-== Introduction
+= Introduction
 
-=== Motivation and Goals
+== Motivation and Goals
 
 RISC-V privileged architecture cite:[ISA] defines an execution mode for supervisor
 software known as S-mode, for operating systems and other supervisor-level software. 
@@ -50,7 +50,7 @@ to platform resources.
 
 [caption="Figure {counter:image}: ", reftext="Figure {image}"]
 [title= "Supervisor Domains"]
-image::images/fig1.svg[]
+image::fig1.svg[]
 
 A supervisor domain is associated with a set of physical address regions that
 are isolated from other supervisor domains on the same platform, set up by M-mode software
@@ -101,7 +101,7 @@ robust isolation of supervisor domains. The hardware primitives must support
 performant and scalable physical memory isolation at a page-level to support
 rich-OS memory management models. 
 
-=== Memory Isolation - Theory of operation (informative)
+== Memory Isolation - Theory of operation (informative)
 
 Supervisor Domain Access Protection extensions are used by the RDSM to
 program access policies for supervisor domain operation. The `Smsd` extension
@@ -129,7 +129,7 @@ normative details).
 
 [caption="Figure {counter:image}: ", reftext="Figure {image}"]
 [title= "MPT lookup for Supervisor Domain Access", id=mpt-lookup]
-image::images/fig2.svg[width=70%,align=center]
+image::fig2.svg[width=70%,align=center]
 
 The MPT checker is a functional block that looks up the `MPT` using the physical
 address of the access as an index to retrieve the access permissions for the

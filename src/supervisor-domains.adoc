@@ -9,15 +9,15 @@
 :preface-title: Preamble
 :colophon:
 :appendix-caption: Appendix
-:imagesdir: .
-:title-logo-image: image:images/risc-v_logo.svg[pdfwidth=3.25in,align=center]
+:imagesdir: ../modules/ROOT/images
+:title-logo-image: image:../../../docs-resources/images/risc-v_logo.svg[pdfwidth=3.25in,align=center]
 // Settings:
 :experimental:
 :reproducible:
 // needs to be changed? bug discussion started
 //:WaveDromEditorApp: app/wavedrom-editor.app
 :imagesoutdir: images
-:bibtex-file: sup_domain.bib
+:bibtex-file: modules/ROOT/resources/sup_domain.bib
 :bibtex-order: appearance
 :bibtex-style: ieee
 :icons: font
@@ -54,30 +54,32 @@ ifndef::spec_short[:spec_short: supervisor-domains]
 
 toc::[]
 
+// The chapters live under modules/ROOT/pages/ so they double as standalone Antora
+// pages, each with a level-0 title. leveloffset=+1 demotes those titles by one
+// level here, which reproduces the section structure the PDF has always had.
+// This file is the single PDF assembler; the pages are the single content source.
 [preface]
-== Copyright and license information
-This specification is licensed under the Creative Commons
-Attribution 4.0 International License (CC-BY 4.0). The full
-license text is available at
-https://creativecommons.org/licenses/by/4.0/.
-
-Copyright 2026 by RISC-V International.
+include::../modules/ROOT/pages/copyright.adoc[leveloffset=+1]
 
 [preface]
-include::contributors.adoc[]
+include::../modules/ROOT/pages/contributors.adoc[leveloffset=+1]
+
 [preface]
-include::glossary.adoc[]
+include::../modules/ROOT/pages/glossary.adoc[leveloffset=+1]
+
 :!chapter-signifier:
-include::intro.adoc[]
-include::chapter2.adoc[]
-include::chapter3.adoc[]
-include::chapter4.adoc[]
-//include::chapter5.adoc[]
-include::chapter6.adoc[]
-include::chapter7.adoc[]
-//include::chapter8.adoc[]
-include::chapter9.adoc[]
+include::../modules/ROOT/pages/intro.adoc[leveloffset=+1]
+include::../modules/ROOT/pages/summary.adoc[leveloffset=+1]
+include::../modules/ROOT/pages/smsd.adoc[leveloffset=+1]
+include::../modules/ROOT/pages/smmpt.adoc[leveloffset=+1]
+//include::../modules/ROOT/pages/svpams.adoc[leveloffset=+1]
+include::../modules/ROOT/pages/io-mpt.adoc[leveloffset=+1]
+include::../modules/ROOT/pages/smsdia.adoc[leveloffset=+1]
+//include::../modules/ROOT/pages/smsdedbga-smsdetrca.adoc[leveloffset=+1]
+include::../modules/ROOT/pages/smsdqos.adoc[leveloffset=+1]
 
-//the index must precede the bibliography
+// The index must precede the bibliography. The index macro is PDF-only (Antora
+// does not generate a back-of-book index), so it lives next to the assembler and
+// not in a page.
 //include::index.adoc[]
-include::bibliography.adoc[]
+include::../modules/ROOT/pages/bibliography.adoc[leveloffset=+1]

@@ -1,6 +1,6 @@
 [[Smmpt]]
 
-== Machine-mode Memory Protection Table (MPT)
+= Machine-mode Memory Protection Table (MPT)
 
 Memory Protection table is a radix-tree table used to provide read, write, and
 execute permissions for implicit and explicit memory accesses by effective
@@ -14,7 +14,7 @@ The following MPT modes are defined:
 * Smmpt64 - Page-based 64-bit memory protection system (RV64 only)
 
 
-=== Smmpt34: Page-Based Memory Protection System
+== Smmpt34: Page-Based Memory Protection System
 
 The RV32 Memory Protection Table provides memory access type permissions
 for pages in a 34-bit supervisor physical address (SPA) space. The SPA is
@@ -183,7 +183,7 @@ Any level of MPTE may be a leaf MPTE, so in addition to providing access type
 permissions to 4 KiB pages, Smmpt34 supports 4 MiB pages.
 
 [[MPT_ACC_LKUP]]
-==== MPT access type permissions lookup process
+=== MPT access type permissions lookup process
 Access type permissions for a physical address PA are determined as
 follows:
 
@@ -232,7 +232,7 @@ Implicit accesses to MPT by this process are checked by PMP/Smepmp as implicit
 M-mode accesses. The endianness of such implicit accesses is controlled by
 `mstatus.MBE`.
 
-=== Smmpt43: Page-Based 43-bit Memory Protection System
+== Smmpt43: Page-Based 43-bit Memory Protection System
 
 This section describes a page-based memory protection system for RV64, which
 supports a 43-bit supervisor physical address space. The design of Smmpt43
@@ -358,7 +358,7 @@ Depending on need, the NAPOT scheme may be extended to other page sizes in
 the future.
 ====
 
-=== Smmpt52: Page-Based 52-bit Memory Protection System
+== Smmpt52: Page-Based 52-bit Memory Protection System
 
 This section describes a page-based memory protection system for RV64 that
 supports 52-bit supervisor physical address spaces. It closely follows the design of
@@ -401,7 +401,7 @@ equals 4.
 
 The encodings 0-3 and 5-15 of `G` are reserved for Smmpt52.
 
-=== Smmpt64: Page-Based 64-bit Memory Protection System
+== Smmpt64: Page-Based 64-bit Memory Protection System
 
 This section describes a page-based memory protection system for RV64 that
 supports 64-bit supervisor physical address spaces. It closely follows the design of

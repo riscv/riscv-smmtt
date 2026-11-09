@@ -1,5 +1,5 @@
 [[chapter2]]
-==  Summary of extensions for Supervisor Domain Access Protection
+=  Summary of extensions for Supervisor Domain Access Protection
 
 The following normative architecture extensions are defined.
 
