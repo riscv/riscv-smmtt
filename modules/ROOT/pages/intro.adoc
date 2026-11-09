@@ -124,7 +124,7 @@ domain active on the hart is programmed on the hart along with the supervisor
 domain identifier. The MPT does not perform any address translation; it simply
 provides access permissions for the physically addressed regions
 to enforce the isolation properties per the use case requirements (see
-<<mpt-lookup>> for a high-level illustration and <<Smmpt>> for
+<<mpt-lookup>> for a high-level illustration and <<smmpt.adoc#Smmpt>> for
 normative details).
 
 [caption="Figure {counter:image}: ", reftext="Figure {image}"]

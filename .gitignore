@@ -1,2 +1,6 @@
 *.pdf
 /build/
+# Generated diagram and math images (asciidoctor-diagram, asciidoctor-mathematical);
+# regenerated on every build, never committed.
+/images/
+/src/images/

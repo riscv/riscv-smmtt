@@ -162,7 +162,7 @@ The register is formatted as shown in <<MNRMCFG64>> for MXLEN=64 and
 ....
 
 Additionally, the extension introduces the `SRL`, `SML`, `SSRM`, and `SSMM`
-fields in the `msdcfg` <<MSDCFG>> register.
+fields in the `msdcfg` <<smsd.adoc#MSDCFG>> register.
 
 The `SRL` (supervisor-RCID-length) is a WARL field with legal values from 0 to
 `RCIDLEN`, where `RCIDLEN` is the number of implemented bits of the `RCID`
