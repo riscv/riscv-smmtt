@@ -25,8 +25,9 @@
 :listing-caption: Listing
 :sectnums:
 :rimage:
-:toc: left
+:toc: macro
 :toclevels: 4
+:toc-title: Table of Contents
 :source-highlighter: pygments
 ifdef::backend-pdf[]
 :source-highlighter: coderay
@@ -36,18 +37,22 @@ endif::[]
 :stem: latexmath
 :footnote:
 :xrefstyle: short
+ifndef::phase[:phase: draft-and-development]
+ifndef::phase_display[:phase_display: {phase}]
+ifndef::phase_notice[:phase_notice: Assume everything is subject to change. At this stage, ideas, structures, and content are still evolving. Feedback and iteration are encouraged as nothing is final, and adjustments may be frequent.]
+ifndef::milestone_id[:milestone_id: {phase}]
+ifndef::spec_short[:spec_short: supervisor-domains]
 
 = RISC-V Supervisor Domains Access Protection
 
+// "Document State" is page 2 of the PDF and the table of contents is page 3, as
+// ARC requires. The phase attributes above are only fallbacks for a manual
+// asciidoctor run; the Makefile passes the real ones from release-info.sh.
+[preface]
+== Document State
+*Note:* {phase_notice}
 
-// Preamble
-[WARNING]
-.This document is in the link:http://riscv.org/spec-state[Development state]
-====
-Assume everything can change. This draft specification will change before
-being accepted as standard, so implementations made to this draft
-specification will likely not conform to the future standard.
-====
+toc::[]
 
 [preface]
 == Copyright and license information

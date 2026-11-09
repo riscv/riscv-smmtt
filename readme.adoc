@@ -30,9 +30,15 @@ This project uses submodules to include the RISC-V documentation toolchain.
 ```
   git clone --recurse-submodules https://github.com/riscv/riscv-smmtt.git
   cd ./riscv-smmtt.git
-  make VERSION=v1.0.0 REVMARK=Draft
+  make
 ```
 
-`VERSION`: Represents the version of the specification being built. By default, this is set to 'v0.0.0'. You can change this to a different value, like 'v1.0.0', 'v1.1.0', etc., based on the current version of your specification.
+The PDF and HTML are written to `build/`. The PDF is named
+`supervisor-domains-v<MAJOR>.<MINOR>-<YYYYMMDD>.pdf`, as the Architecture Review
+Committee requires.
 
-`REVMARK`: This represents a revision marker for the project. Its default value is 'Draft'. You may want to change this to something like 'Release', 'Stable' or 'Ratified'.
+`VERSION`: The version of the specification being built. By default it is derived from the git tags by `scripts/release-info.sh`; an untagged build is named `<latest tag>-<commit>` and is a development build, not an ARC submission artifact. To build a specific version, for example `make VERSION=v0.9`. Versions are two-digit, `vMAJOR.MINOR`, and compare as decimals (`v0.8` is higher than `v0.61`).
+
+`DATE`: The build date, `YYYY-MM-DD`; it defaults to today.
+
+The revision remark and the Document State preface are generated from the version, so there is no `REVMARK` to set.
