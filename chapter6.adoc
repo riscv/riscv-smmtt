@@ -398,7 +398,8 @@ the `MODE` field.
 {reg: [
   {bits:  4, name: 'MODE (WARL)'},
   {bits: 8, name: 'BARE_IOMMU_ID(WARL)'},
-  {bits: 20, name: 'reserved'},
+  {bits : 4, name: 'BARE_QRID(WARL)'},
+  {bits: 16, name: 'reserved'},
 ], config:{lanes: 2, hspace:1024}}
 ....
 
@@ -440,8 +441,11 @@ and the following rules apply:
   not TEE-associated and to abort those that are TEE-associated.
 
 * For allowed transactions, the I/O Bridge shall use the IOMMU instance identified by 
-  `control.BARE_IOMMU_ID` to perform address translation. If the implementation does not 
-  include an IOMMU, `BARE_IOMMU_ID` is read-only zero and address translation is not performed. 
+  `control.BARE_IOMMU_ID` to perform address translation. The `QRID` associated with the transaction 
+  shall be the value held in `control.BARE_QRID`. If the implementation does not 
+  include an IOMMU, `BARE_IOMMU_ID` is read-only zero, address translation is not performed, and the 
+  the `RCID` and `MCID` associated with transactions processed while `MODE` is `Bare` are `UNSPECIFIED`.  
+  
 
 The `BARE_IOMMU_ID` field must contain a value in the range 0 to N–1, where N is the maximum number 
 of IOMMU IDs supported by the implementation. Programming a value outside this range is UNSPECIFIED.
