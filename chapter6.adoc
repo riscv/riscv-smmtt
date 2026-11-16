@@ -444,7 +444,7 @@ and the following rules apply:
   `control.BARE_IOMMU_ID` to perform address translation. The `QRID` associated with the transaction 
   shall be the value held in `control.BARE_QRID`. If the implementation does not 
   include an IOMMU, `BARE_IOMMU_ID` is read-only zero, address translation is not performed, and the 
-  the `RCID` and `MCID` associated with transactions processed while `MODE` is `Bare` are `UNSPECIFIED`.  
+  `RCID` and `MCID` associated with transactions processed while `MODE` is `Bare` are `UNSPECIFIED`.  
   
 
 The `BARE_IOMMU_ID` field must contain a value in the range 0 to N–1, where N is the maximum number 
