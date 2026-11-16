@@ -383,7 +383,7 @@ considered to have failed for UNSPECIFIED reasons. It is recommended that this
 status code be returned only if all other defined status codes are determined to
 be inapplicable.
 
-[[CTRL]]
+[[CTL]]
 === Control (`control`)
 
 This register is used to control the operations of the I/O MPT Checker.
