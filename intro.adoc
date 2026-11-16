@@ -50,7 +50,7 @@ to platform resources.
 
 [caption="Figure {counter:image}: ", reftext="Figure {image}"]
 [title= "Supervisor Domains"]
-image::images/fig1.png[]
+image::images/fig1.svg[]
 
 A supervisor domain is associated with a set of physical address regions that
 are isolated from other supervisor domains on the same platform, set up by M-mode software
@@ -94,7 +94,7 @@ assign resources to other domains.
 * A service-provider domain that has exclusive access to some devices.
 
 In order to avoid re-factoring of deployed software, workloads and
-applications, this proposal adds new hardware primitives required to support flexible isolation
+applications, this extansion adds new hardware primitives required to support flexible isolation
 of data in caches and memory. The new primitives are also required to isolate
 resources such as interrupts, IO, QoS mechanisms and debug/trace mechanisms for
 robust isolation of supervisor domains. The hardware primitives must support
@@ -129,7 +129,7 @@ normative details).
 
 [caption="Figure {counter:image}: ", reftext="Figure {image}"]
 [title= "MPT lookup for Supervisor Domain Access", id=mpt-lookup]
-image::images/fig2.png[]
+image::images/fig2.svg[]
 
 The MPT checker is a functional block that looks up the `MPT` using the physical
 address of the access as an index to retrieve the access permissions for the

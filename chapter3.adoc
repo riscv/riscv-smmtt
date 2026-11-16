@@ -152,8 +152,8 @@ some cases before, writing `mmpt`.
 
 The `MFENCE.PA` fence instruction is used to synchronize updates to
 memory protection tables with current execution of supervisor domains.
-`MFENCE.PA` is only valid in M-mode. If operand `rs1 != x0`, contents of register rs1 specifies
-a single physical address, and if `rs2 != x0`, contents of register rs2 specifies a single `SDID`.
+`MFENCE.PA` is only valid in M-mode. If operand `rs1 != x0`, contents of register rs1 specify
+a single physical address, and if `rs2 != x0`, contents of register rs2 specify a single `SDID`.
 
 The behavior of `MFENCE.PA` depends on `rs1` and `rs2` as follows:
 

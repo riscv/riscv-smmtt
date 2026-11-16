@@ -1,0 +1,47 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="2025" height="893" viewBox="0 0 2025 893">
+<style>
+ text{font-family:Arial,Helvetica,sans-serif;fill:#111}.h{font-size:30px}.t{font-size:29px}.s{font-size:20px}.xs{font-size:15px}.band{fill:#000}.white{fill:#fff}.box{fill:none;stroke:#111;stroke-width:2}.dash{fill:none;stroke:#111;stroke-width:2;stroke-dasharray:7 5}.wall{stroke:#000;stroke-width:5}.thin{stroke:#111;stroke-width:2}
+</style>
+<rect width="2025" height="893" fill="white"/>
+<text x="315" y="68" class="h" font-weight="700">Isolation between supervisor domains via <tspan fill="#9b0000" font-style="italic">Smmpt</tspan></text>
+<line x1="394" y1="125" x2="570" y2="96" class="thin"/><line x1="662" y1="90" x2="810" y2="121" class="thin"/>
+<!-- outer walls -->
+<line x1="394" y1="121" x2="394" y2="799" class="wall"/><line x1="810" y1="113" x2="810" y2="799" class="wall"/>
+<line x1="1560" y1="120" x2="1560" y2="801" class="wall"/><line x1="1821" y1="119" x2="1821" y2="801" class="wall"/>
+<!-- headings -->
+<text x="90" y="198" class="t">Host Supervisor</text><text x="90" y="233" class="t">Domain (required)</text>
+<text x="458" y="198" class="t">Secondary Supervisor</text><text x="458" y="233" class="t">Domain (optional)</text>
+<text x="904" y="198" class="t">Secondary Supervisor Domain with</text><text x="904" y="233" class="t">H-extension (optional)</text>
+<text x="1574" y="198" class="t">Secondary</text><text x="1574" y="233" class="t">Supervisor</text><text x="1574" y="267" class="t">Domain (optional)</text>
+<!-- host SDID -->
+<rect x="75" y="292" width="297" height="506" class="dash"/><text x="90" y="318" class="t">Supervisor Domain</text><text x="90" y="352" class="t">(SDID)</text>
+<rect x="75" y="531" width="126" height="70" class="dash"/><text x="90" y="561" class="t">ASID</text>
+<rect x="75" y="601" width="126" height="70" class="box"/><text x="112" y="647" class="t">App</text>
+<rect x="75" y="671" width="126" height="35" class="band"/><text x="114" y="698" class="t white">ABI</text>
+<rect x="246" y="601" width="126" height="70" class="box"/><text x="283" y="647" class="t">App</text><rect x="246" y="671" width="126" height="35" class="band"/><text x="285" y="698" class="t white">ABI</text>
+<text x="32" y="658" class="t">U</text><text x="32" y="743" class="t">S</text><text x="32" y="830" class="t">M</text>
+<text x="201" y="739" class="t">OS</text><text x="97" y="759" class="xs">(Supervisor Domain Security Manager)</text><rect x="75" y="770" width="297" height="35" class="band"/><text x="198" y="798" class="t white">SBI</text>
+<!-- second supervisor -->
+<rect x="442" y="292" width="297" height="506" class="dash"/><text x="456" y="318" class="t">Supervisor Domain</text><text x="456" y="352" class="t">(SDID)</text>
+<rect x="442" y="531" width="126" height="70" class="dash"/><text x="456" y="561" class="t">ASID</text><rect x="442" y="601" width="126" height="70" class="box"/><text x="479" y="647" class="t">App</text><rect x="442" y="671" width="126" height="35" class="band"/><text x="481" y="698" class="t white">ABI</text>
+<rect x="613" y="601" width="126" height="70" class="box"/><text x="650" y="647" class="t">App</text><rect x="613" y="671" width="126" height="35" class="band"/><text x="652" y="698" class="t white">ABI</text>
+<text x="568" y="739" class="t">OS</text><text x="465" y="759" class="xs">(Supervisor Domain Security Manager)</text><rect x="442" y="770" width="297" height="35" class="band"/><text x="565" y="798" class="t white">SBI</text>
+<!-- H-extension domain -->
+<rect x="881" y="292" width="662" height="506" class="dash"/><text x="895" y="318" class="t">Supervisor Domain (SDID)</text>
+<!-- VM 1 --> <rect x="881" y="380" width="302" height="326" class="dash"/><text x="895" y="418" class="t">VMID</text>
+<rect x="881" y="431" width="143" height="70" class="dash"/><text x="895" y="461" class="t">ASID</text><rect x="881" y="501" width="143" height="69" class="box"/><text x="925" y="547" class="t">App</text><rect x="881" y="570" width="143" height="35" class="band"/><text x="929" y="599" class="t white">ABI</text>
+<rect x="1041" y="431" width="142" height="70" class="dash"/><text x="1055" y="461" class="t">ASID</text><rect x="1041" y="501" width="142" height="69" class="box"/><text x="1085" y="547" class="t">App</text><rect x="1041" y="570" width="142" height="35" class="band"/><text x="1089" y="599" class="t white">ABI</text>
+<text x="824" y="548" class="t">VU</text><text x="824" y="633" class="t">VS</text><text x="1011" y="647" class="t">OS</text><rect x="881" y="671" width="302" height="35" class="band"/><text x="1008" y="699" class="t white">SBI</text>
+<!-- VM 2 --> <rect x="1240" y="380" width="303" height="326" class="dash"/><text x="1254" y="418" class="t">VMID</text>
+<rect x="1240" y="431" width="143" height="70" class="dash"/><text x="1254" y="461" class="t">ASID</text><rect x="1240" y="501" width="143" height="69" class="box"/><text x="1284" y="547" class="t">App</text><rect x="1240" y="570" width="143" height="35" class="band"/><text x="1288" y="599" class="t white">ABI</text>
+<rect x="1400" y="431" width="143" height="70" class="dash"/><text x="1414" y="461" class="t">ASID</text><rect x="1400" y="501" width="143" height="69" class="box"/><text x="1444" y="547" class="t">App</text><rect x="1400" y="570" width="143" height="35" class="band"/><text x="1448" y="599" class="t white">ABI</text>
+<text x="1370" y="647" class="t">OS</text><rect x="1240" y="671" width="303" height="35" class="band"/><text x="1367" y="699" class="t white">SBI</text>
+<text x="824" y="744" class="t">HS</text><text x="1144" y="735" class="t">Hypervisor</text><text x="1035" y="760" class="s">(Supervisor Domain Security Manager)</text><rect x="881" y="770" width="662" height="35" class="band"/><text x="1164" y="798" class="t white">SBI</text>
+<!-- right secondary -->
+<rect x="1585" y="292" width="202" height="506" class="dash"/><text x="1599" y="334" class="t">Supervisor</text><text x="1599" y="369" class="t">Domain</text><text x="1599" y="404" class="t">(SDID)</text>
+<rect x="1585" y="531" width="109" height="70" class="dash"/><text x="1599" y="561" class="t">ASID</text><rect x="1585" y="601" width="109" height="70" class="box"/><text x="1611" y="647" class="t">App</text><rect x="1701" y="601" width="86" height="70" class="box"/><text x="1718" y="647" class="t">App</text>
+<text x="1840" y="658" class="t">U</text><text x="1840" y="830" class="t">M</text><rect x="1585" y="770" width="202" height="35" class="band"/><text x="1661" y="798" class="t white">SBI</text>
+<text x="1836" y="416" class="t">… additional</text><text x="1836" y="451" class="t">supervisor</text><text x="1836" y="486" class="t">domains</text>
+<!-- root -->
+<rect x="75" y="799" width="1747" height="67" class="box"/><text x="625" y="842" class="t">M-Mode (Root Domain Security Manager - RDSM)</text>
+</svg>
