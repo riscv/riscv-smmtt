@@ -14,8 +14,8 @@ associated with the supervisor domain. This extension allows for dynamic changes
 access permission. Such dynamic changes may require flushing of appropriate state 
 cached in harts. The access properties are programmed via a Machine-level Memory 
 Protection Tables (MPT) structure (<<Smmpt>>). The physical page number (PPN) of the root table 
-of the MPT is programmed into a machine-mode CSR. When `Smsd` is implemented, MPT and 
-e(PMP) are always active. Although there is no option to disable MPT, it can be 
+of the MPT is programmed into a machine-mode CSR. When `Smsd` is implemented, MPT, PMP, and 
+ePMP are always active. Although there is no option to disable MPT, it can be 
 effectively disabled if granular memory access control is not required by configuring 
 MPT mode to be `Bare`.
 

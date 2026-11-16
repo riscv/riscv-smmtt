@@ -1,0 +1,27 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="568" height="826" viewBox="0 0 568 826">
+<defs><marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 Z" fill="#000"/></marker></defs>
+<style>text{font-family:Arial,Helvetica,sans-serif;fill:#111}.lg{font-size:21px}.md{font-size:17px}.sm{font-size:12px}.box{fill:#fff;stroke:#777;stroke-width:1.5}.line{stroke:#000;stroke-width:2;fill:none}.arr{stroke:#000;stroke-width:2;fill:none;marker-end:url(#arrow)}</style>
+<rect width="568" height="826" fill="#fff"/>
+<text x="284" y="24" class="lg" text-anchor="middle">Guest Virtual Address, Hart SDID</text><path d="M283 31 V89" class="arr"/>
+<rect x="0.75" y="89.5" width="566.5" height="40.5" class="box"/><text x="284" y="118" class="lg" text-anchor="middle">VS-stage Page Table</text>
+<path d="M283 130 V189" class="arr"/><text x="293" y="153" class="sm">Guest Physical Address</text><text x="339" y="168" class="sm">(GPA)</text>
+<rect x="0.75" y="189.5" width="566.5" height="40.5" class="box"/><text x="284" y="218" class="lg" text-anchor="middle">G-stage Page Table</text>
+<path d="M283 230 V289" class="arr"/><text x="293" y="253" class="sm">Supervisor Physical Address</text><text x="354" y="268" class="sm">(SPA)</text>
+<rect x="0.75" y="289.5" width="566.5" height="40.5" class="box"/>
+<text x="33" y="306" class="md">SPA</text><path d="M75 300 H95" class="arr"/><text x="112" y="306" class="md">Memory Protection Table Lookup</text><path d="M370 300 H392" class="arr"/><text x="410" y="306" class="md">Allow/Disallow</text>
+<text x="102" y="326" class="md">And SPA</text><path d="M175 320 H196" class="arr"/><text x="212" y="326" class="md">PMP Check</text><path d="M302 320 H324" class="arr"/><text x="342" y="326" class="md">Allow/Disallow</text>
+<path d="M283 330 V368" class="arr"/>
+<polygon points="283,370 378,410 283,450 188,410" fill="#fff" stroke="#000" stroke-width="1"/><text x="283" y="405" class="lg" text-anchor="middle">Access</text><text x="283" y="429" class="lg" text-anchor="middle">Allowed ?</text>
+<path d="M188 410 H121" class="arr"/><text x="156" y="404" class="sm">No</text><text x="82" y="405" class="lg" text-anchor="middle">Access</text><text x="82" y="430" class="lg" text-anchor="middle">Fault</text>
+<path d="M378 410 H444" class="arr"/><text x="395" y="404" class="sm">Yes</text><text x="505" y="405" class="lg" text-anchor="middle">Access</text><text x="505" y="430" class="lg" text-anchor="middle">Allowed</text>
+<path d="M283 490 V452" class="arr"/>
+<rect x="0.75" y="490" width="566.5" height="40.5" class="box"/>
+<text x="33" y="506" class="md">SPA</text><path d="M75 500 H95" class="arr"/><text x="112" y="506" class="md">Memory Protection Table Lookup</text><path d="M370 500 H392" class="arr"/><text x="410" y="506" class="md">Allow/Disallow</text>
+<text x="92" y="526" class="md">And SPA</text><path d="M175 520 H196" class="arr"/><text x="204" y="526" class="md">IOPMP Check</text><path d="M318 520 H340" class="arr"/><text x="353" y="526" class="md">Allow/Disallow</text>
+<path d="M283 590 V531" class="arr"/><text x="293" y="562" class="sm">Supervisor Physical Address</text><text x="354" y="577" class="sm">(SPA)</text>
+<rect x="0.75" y="590" width="566.5" height="40.5" class="box"/><text x="284" y="619" class="lg" text-anchor="middle">Device Second-stage Page Table</text>
+<path d="M283 690 V631" class="arr"/><text x="293" y="662" class="sm">Guest Physical Address</text><text x="339" y="677" class="sm">(GPA)</text>
+<rect x="0.75" y="690" width="566.5" height="40.5" class="box"/><text x="284" y="719" class="lg" text-anchor="middle">Device First-stage Page Table</text>
+<path d="M283 789 V731" class="arr"/>
+<text x="52" y="812" class="lg">Device ID, IO Virtual Address</text><path d="M309 805 H340" class="arr"/><text x="359" y="812" class="lg">SDID, IOMMU ID</text>
+</svg>
