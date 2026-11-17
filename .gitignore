@@ -4,3 +4,8 @@
 # regenerated on every build, never committed.
 /images/
 /src/images/
+# Local Antora preview tooling (see package.json)
+/node_modules/
+/.cache/
+# Cover logo staged out of the docs-resources submodule by the content-source gate
+/modules/ROOT/images/risc-v_logo.svg

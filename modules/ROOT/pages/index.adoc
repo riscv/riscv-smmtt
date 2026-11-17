@@ -2,7 +2,7 @@
 //
 // This page is the Antora start_page and is SITE-ONLY: it is NOT part of the
 // ARC submission PDF, whose title page, preamble, TOC, and copyright are built
-// by the assembler at src/spec-sample.adoc. Edit only the title for this file as the
+// by the assembler at src/supervisor-domains.adoc. Edit only the title for this file as the
 //rest is automatically updated.
 //
 // The cover treatment below (logo, title, version, phase banner) mirrors the
