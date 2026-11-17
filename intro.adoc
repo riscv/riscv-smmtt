@@ -129,7 +129,7 @@ normative details).
 
 [caption="Figure {counter:image}: ", reftext="Figure {image}"]
 [title= "MPT lookup for Supervisor Domain Access", id=mpt-lookup]
-image::images/fig2.svg[]
+image::images/fig2.svg[width=70%,align=center]
 
 The MPT checker is a functional block that looks up the `MPT` using the physical
 address of the access as an index to retrieve the access permissions for the
