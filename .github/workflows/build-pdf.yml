@@ -234,3 +234,138 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GHTOKEN || secrets.GITHUB_TOKEN }}
         if: env.RELEASABLE == 'true' && env.OFFICIAL_RELEASE != 'true'
+
+  # Keep the Antora HTML site version in EXACT lockstep with the PDF this run just
+  # built: stamp the SAME resolved version/date into antora.yml on main, so the
+  # central playbook publishes the version the PDF carries. The PDF and this stamp
+  # come from one build job (same source, same VERSION/DATE) -- they cannot drift.
+  #
+  # Runs only for real releases: not PR previews (nothing to publish) and not
+  # drafts (not public yet). Never moves main's version backwards, so rebuilding
+  # an older tag will not regress the site.
+  #
+  # The stamp lands as a REVIEW PR, not a direct push to `main`. This template is
+  # seeded into many spec repos whose branch protection we do not control, and a
+  # rejected push would leave the release green while the site version silently
+  # lagged the PDF -- the exact divergence this job exists to prevent. Opening a
+  # PR works under any protection setting and matches the milestone-PR idiom in
+  # version-bot.yml. Cost: a maintainer must merge it for the site to catch up,
+  # so treat that merge as part of cutting a release (see MIGRATION.md Step 14).
+  # FALLBACK path. version-bot.yml stamps antora.yml and commits it to main
+  # before it cuts the tag, so the descriptor is normally already correct and the
+  # guard below skips this job. It still exists for the case that push was
+  # refused (branch protection, or main moved since checkout), where opening a
+  # review PR is the only way to get the stamp onto main.
+  stamp-site-version:
+    needs: build
+    runs-on: ubuntu-latest
+    #
+    # Gated purely on the build job's own verdict: under workflow_call
+    # `github.event_name` and `github.ref_type` describe the CALLER, so testing
+    # them here would stamp on preview runs and skip real releases.
+    if: >-
+      needs.build.outputs.releasable == 'true' &&
+      inputs.draft != true
+    permissions:
+      contents: write
+      pull-requests: write
+    # `secrets` cannot be read from a step's `if:` -- GitHub's context
+    # availability table allows it in `env`, `with` and `run`, but not in
+    # `jobs.<id>.steps.if`. It IS allowed in `jobs.<id>.env`, so hoist the
+    # "is an App configured?" test to the job and let the gate read `env`.
+    env:
+      HAS_APP: ${{ secrets.TEMPLATE_SYNC_APP_CLIENT_ID != '' }}
+    steps:
+      - name: Checkout main
+        uses: actions/checkout@v7
+        with:
+          ref: main
+          fetch-depth: 0
+          token: ${{ secrets.GHTOKEN || secrets.GITHUB_TOKEN }}
+          # Do not persist the token as a git extraheader. create-pull-request
+          # injects its own auth header; a persisted one here makes git send two
+          # Authorization headers -> GitHub 400 "Duplicate header: Authorization".
+          persist-credentials: false
+
+      - name: Stamp antora.yml to match the released PDF version
+        id: stamp
+        env:
+          VERSION: ${{ needs.build.outputs.version }}
+          DATE: ${{ needs.build.outputs.date }}
+        run: |
+          set -euo pipefail
+
+          current="$(grep -E '^version:' antora.yml | awk '{print $2}')"
+          echo "main antora.yml version: ${current:-<none>}; released version: $VERSION"
+
+          # Monotonic guard: never stamp main backwards (e.g. when an old tag is
+          # rebuilt). Compare by DECIMAL order via release-info.sh -- `sort -V`
+          # would rank v0.8 below v0.61 and stamp the site backwards.
+          #
+          # Skip at >=, not just at >. At an EQUAL version the only field that can
+          # still differ is page-revdate, and a PR that moves a released version's
+          # date forward is pure churn that also misdates the release. (Rebuilding
+          # v0.01 a day later opened exactly such a PR; the tag-derived DATE in the
+          # build job closes the other half of that hole.)
+          if [ -n "$current" ] && [ "$current" != "~" ]; then
+            if [ "$(./scripts/release-info.sh compare "$current" "$VERSION")" != "-1" ]; then
+              echo "main is already at $current (>= $VERSION); skipping stamp."
+              echo "changed=false" >> "$GITHUB_OUTPUT"
+              exit 0
+            fi
+          fi
+
+          # Leaves antora.yml modified in the worktree; create-pull-request below
+          # is what commits it. stamp-antora fails loudly if it cannot stamp, so a
+          # no-op here means "already correct", never "silently did nothing".
+          make stamp-antora VERSION="$VERSION" DATE="$DATE"
+
+          if git diff --quiet -- antora.yml; then
+            echo "antora.yml already matches $VERSION; nothing to commit."
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          echo "changed=true" >> "$GITHUB_OUTPUT"
+
+      # Signed commits -- see the matching step in template-sync.yml.
+      - name: Mint GitHub App token
+        id: app-token
+        if: steps.stamp.outputs.changed == 'true' && env.HAS_APP == 'true'
+        uses: actions/create-github-app-token@v3
+        with:
+          client-id: ${{ secrets.TEMPLATE_SYNC_APP_CLIENT_ID }}
+          private-key: ${{ secrets.TEMPLATE_SYNC_PRIVATE_KEY }}
+
+      - name: Open site version stamp PR
+        if: steps.stamp.outputs.changed == 'true'
+        uses: peter-evans/create-pull-request@v8
+        with:
+          token: ${{ steps.app-token.outputs.token || secrets.GHTOKEN || secrets.GITHUB_TOKEN }}
+          sign-commits: ${{ steps.app-token.outputs.token != '' }}
+          base: main
+          # Signed off as the dispatching user, for the DCO check -- see the
+          # matching note in version-bot.yml's milestone PR step.
+          commit-message: |
+            chore(site): stamp Antora version ${{ needs.build.outputs.version }} to match PDF
+
+            Signed-off-by: ${{ github.actor }} <${{ github.actor_id }}+${{ github.actor }}@users.noreply.github.com>
+          branch: gitbot/stamp-site-${{ needs.build.outputs.version }}
+          delete-branch: true
+          title: Stamp Antora site version ${{ needs.build.outputs.version }} to match released PDF
+          body: |
+            This PR was opened automatically by the `${{ needs.build.outputs.version }}` release build.
+
+            The ARC Author Guide requires the published HTML site version to match
+            the submission PDF exactly. Antora reads a static `version:` from the
+            committed `antora.yml`, so a release has to stamp that file.
+
+            Released PDF version: `${{ needs.build.outputs.version }}` (${{ needs.build.outputs.date }})
+
+            **Until this merges, the site version lags the released PDF.** The
+            values come from `scripts/release-info.sh` -- the same source the PDF
+            build uses -- so this needs a merge, not an edit.
+          labels: |
+            site-version
+            automated
+          add-paths: |
+            antora.yml

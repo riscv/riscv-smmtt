@@ -96,7 +96,7 @@ REQUIRES := --require=asciidoctor-bibtex \
 
 DOCS_RESOURCES_CONFIG := docs-resources/global-config.adoc
 
-.PHONY: all build clean build-container build-no-container build-docs check-docs-resources
+.PHONY: all build clean build-container build-no-container build-docs stamp-antora check-docs-resources
 
 all: build
 
@@ -116,6 +116,13 @@ check-docs-resources:
 			exit 1; \
 		fi; \
 	fi
+
+# Stamp antora.yml with the current VERSION/DATE so the Antora HTML site version
+# stays in EXACT lockstep with the ARC PDF (both derive from release-info.sh /
+# the git tag). Run at release time -- e.g. `make stamp-antora VERSION=v0.8`.
+# No Docker needed; edits antora.yml in place and must be committed.
+stamp-antora:
+	./scripts/stamp-antora-version.sh "$(VERSION)" "$(DATE)"
 
 build-docs: check-docs-resources $(DOCS_PDF) $(DOCS_HTML)
 
