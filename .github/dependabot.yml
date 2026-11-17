@@ -6,3 +6,37 @@ updates:
     directory: /
     schedule:
       interval: daily
+
+  # Local Antora preview tooling (package.json / package-lock.json). These exist
+  # to mirror what the central playbook (antora.riscv.org) runs in production, so
+  # major bumps are opt-in: taking one here without the central playbook moving
+  # first makes the local preview stop predicting the published site.
+  - package-ecosystem: npm
+    directory: /
+    schedule:
+      interval: weekly
+    ignore:
+      # asciidoctor-kroki 1.x needs a newer Asciidoctor.js than Antora 3.1.x
+      # bundles and dies with `block.$!= is not a function`. The central playbook
+      # pins 0.18.1 -- stay there until Antora itself moves. See ANTORA.md Phase 5.
+      - dependency-name: asciidoctor-kroki
+        update-types: [version-update:semver-major]
+      # Antora majors must follow the central playbook, not lead it.
+      - dependency-name: '@antora/cli'
+        update-types: [version-update:semver-major]
+      - dependency-name: '@antora/site-generator'
+        update-types: [version-update:semver-major]
+
+  # The actions used by the workflows above. Without this, action versions only
+  # move when someone edits a workflow by hand, and a repository can sit on a
+  # deprecated runtime for a long time without noticing -- the Node 20 runner
+  # deprecation reached specs seeded from this template as warnings on every
+  # run, with nothing opening a PR about it. Grouped so a bump arrives as one
+  # reviewable PR per month rather than one per action.
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: monthly
+    groups:
+      actions:
+        patterns: ['*']

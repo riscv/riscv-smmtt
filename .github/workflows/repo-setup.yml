@@ -1,0 +1,263 @@
+---
+name: Repository Setup
+
+# Applies the one-time repository settings that the Repository Setup Checklist in
+# README.adoc (and the setup checklist in MIGRATION.md) otherwise asks an admin to
+# click through. Run it once per repository, by hand.
+#
+# Why this exists: every one of these settings is invisible to a pull request, so
+# the checklist is the only thing enforcing them -- and a skipped item does not
+# fail loudly, it fails months later at an awkward moment. The tag rule below was
+# added to the checklist only after a release deploy failed on
+# riscv-performance-event-sampling, and the Dependabot switch only after a spec
+# repository had accrued eleven open advisories with nothing opening a PR for any
+# of them. A migrated repository is the most exposed, because MIGRATION.md walks
+# it through the files one by one and the settings are easy to read past.
+#
+# GITHUB_TOKEN cannot do any of this: creating a Pages site, changing environment
+# settings and toggling Dependabot are all admin-level operations the Actions app
+# is refused for, with `Resource not accessible by integration`. So the job
+# authenticates as GHTOKEN, the same secret template-sync.yml already requires --
+# note it needs repo ADMIN here (classic `repo`, or fine-grained
+# `administration: write`), which is more than the `workflow` scope that sync
+# needs. If the secret is scoped for sync only, each step reports what to do by
+# hand instead, and the checklist in README.adoc remains the fallback.
+#
+# Safe to re-run. Every step reads the current state first and skips when the
+# setting is already correct, so this is also a way to audit a repository.
+
+on:
+  workflow_dispatch:
+    inputs:
+      enable_pages:
+        description: Set Pages source to GitHub Actions
+        type: boolean
+        default: true
+      add_tag_rule:
+        description: Allow v* tags to deploy to the github-pages environment
+        type: boolean
+        default: true
+      enable_dependabot:
+        description: Enable Dependabot alerts and security updates
+        type: boolean
+        default: true
+      delete_merged_branches:
+        description: Automatically delete head branches when pull requests merge
+        type: boolean
+        default: true
+
+# Everything is done as GHTOKEN; nothing is needed from GITHUB_TOKEN.
+permissions: {}
+
+jobs:
+  setup:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Apply repository settings
+        env:
+          GH_TOKEN: ${{ secrets.GHTOKEN }}
+          REPO: ${{ github.repository }}
+          IS_PRIVATE: ${{ github.event.repository.private }}
+          WANT_PAGES: ${{ inputs.enable_pages }}
+          WANT_TAG_RULE: ${{ inputs.add_tag_rule }}
+          WANT_DEPENDABOT: ${{ inputs.enable_dependabot }}
+          WANT_BRANCH_CLEANUP: ${{ inputs.delete_merged_branches }}
+        run: |
+          set -uo pipefail
+
+          if [ -z "${GH_TOKEN:-}" ]; then
+            echo "::error::GHTOKEN is not available to this repository. It may be an" \
+                 "organization secret that is not shared here, or not set at all." \
+                 "See README.adoc, 'Repository Setup Checklist'."
+            exit 1
+          fi
+
+          failed=0
+
+          # Records one line per setting, printed at the end and copied to the run
+          # summary. A step that cannot apply a setting records FAIL and carries on:
+          # these are independent settings, and applying two of three beats
+          # stopping at the first refusal.
+          note() { printf '%s\n' "$1" >> /tmp/report.txt; }
+
+          say_403() {
+            echo "::warning::$1 was refused. If this is a 403 or 'Resource not" \
+                 "accessible', GHTOKEN lacks repo admin (classic 'repo', or" \
+                 "fine-grained 'administration: write'). Apply it by hand per" \
+                 "README.adoc, 'Repository Setup Checklist'."
+          }
+
+          # ---------------------------------------------------------------- Pages
+          if [ "$WANT_PAGES" = "true" ]; then
+            echo "==> Pages source"
+            if [ "$IS_PRIVATE" = "true" ]; then
+              note "SKIP  Pages -- private repository (needs Team/Enterprise)"
+            else
+              # `gh api` prints its error body on stdout, so a 404 would otherwise
+              # be captured as the value. Take the output only when it succeeded.
+              current=none
+              if out="$(gh api "repos/$REPO/pages" --jq '.build_type // "none"' 2>/dev/null)"; then
+                current="${out:-none}"
+              fi
+              case "$current" in
+                workflow)
+                  note "OK    Pages source is already 'workflow'"
+                  ;;
+                none|'')
+                  # No Pages site at all: create one already set to Actions. Going
+                  # through 'Deploy from a branch' first is what queues a stray
+                  # pages-build-deployment run that can overwrite the site later.
+                  if gh api -X POST "repos/$REPO/pages" -f build_type=workflow >/dev/null 2>&1; then
+                    note "DONE  Pages created with source 'workflow'"
+                  else
+                    say_403 "Creating the Pages site"
+                    note "FAIL  Pages could not be created -- set Settings -> Pages -> Source to 'GitHub Actions'"
+                    failed=1
+                  fi
+                  ;;
+                *)
+                  if gh api -X PUT "repos/$REPO/pages" -f build_type=workflow >/dev/null 2>&1; then
+                    note "DONE  Pages source changed from '$current' to 'workflow'"
+                  else
+                    say_403 "Changing the Pages source"
+                    note "FAIL  Pages source is '$current' -- change it to 'GitHub Actions'"
+                    failed=1
+                  fi
+                  ;;
+              esac
+            fi
+          fi
+
+          # ------------------------------------------------------------- tag rule
+          if [ "$WANT_TAG_RULE" = "true" ]; then
+            echo "==> github-pages deployment policy"
+            # Enabling Pages creates the environment, but not always by the time
+            # this runs, so give it a few seconds before concluding it is absent.
+            policy=""
+            for attempt in 1 2 3 4 5; do
+              if out="$(gh api "repos/$REPO/environments/github-pages" \
+                          --jq '.deployment_branch_policy | if . == null then "unrestricted" else "custom=\(.custom_branch_policies) protected=\(.protected_branches)" end' 2>/dev/null)"; then
+                policy="$out"
+                break
+              fi
+              [ "$attempt" -lt 5 ] && sleep 3
+            done
+
+            case "$policy" in
+              '')
+                note "SKIP  github-pages environment does not exist yet -- re-run this workflow once a deploy has created it"
+                ;;
+              unrestricted)
+                note "OK    github-pages accepts any ref -- no tag rule needed"
+                ;;
+              *custom=true*)
+                api="repos/$REPO/environments/github-pages/deployment-branch-policies"
+                tags=""
+                if out="$(gh api "$api" --jq '.branch_policies[] | select(.type == "tag") | .name' 2>/dev/null)"; then
+                  tags="$out"
+                else
+                  echo "::warning::Could not list the current policies; attempting the add anyway."
+                fi
+                if printf '%s\n' "$tags" | grep -qxF 'v*'; then
+                  note "OK    a v* tag rule already exists"
+                else
+                  if gh api -X POST "$api" -f name='v*' -f type=tag >/dev/null 2>&1; then
+                    note "DONE  added the v* tag rule to github-pages"
+                  else
+                    say_403 "Adding the v* tag rule"
+                    note "FAIL  v* tag rule missing -- a hand-cut release tag will be refused at the deploy step"
+                    failed=1
+                  fi
+                fi
+                ;;
+              *)
+                note "FAIL  github-pages uses 'protected branches only' ($policy); switch it to 'selected branches and tags' before a tag rule can be added"
+                failed=1
+                ;;
+            esac
+          fi
+
+          # ------------------------------------------------------------ Dependabot
+          if [ "$WANT_DEPENDABOT" = "true" ]; then
+            echo "==> Dependabot"
+            # Alerts first: security updates have nothing to act on without them.
+            if gh api "repos/$REPO/vulnerability-alerts" >/dev/null 2>&1; then
+              note "OK    Dependabot alerts already enabled"
+            elif gh api -X PUT "repos/$REPO/vulnerability-alerts" >/dev/null 2>&1; then
+              note "DONE  enabled Dependabot alerts"
+            else
+              say_403 "Enabling Dependabot alerts"
+              note "FAIL  Dependabot alerts could not be enabled"
+              failed=1
+            fi
+
+            # Separate switch from the version updates .github/dependabot.yml
+            # configures, and off by default -- which is how a repository ends up
+            # with open advisories and no pull requests about them.
+            fixes=unknown
+            if out="$(gh api "repos/$REPO/automated-security-fixes" --jq '.enabled' 2>/dev/null)"; then
+              fixes="$out"
+            fi
+            if [ "$fixes" = "true" ]; then
+              note "OK    Dependabot security updates already enabled"
+            elif gh api -X PUT "repos/$REPO/automated-security-fixes" >/dev/null 2>&1; then
+              note "DONE  enabled Dependabot security updates"
+            else
+              say_403 "Enabling Dependabot security updates"
+              note "FAIL  Dependabot security updates could not be enabled"
+              failed=1
+            fi
+          fi
+
+          # ------------------------------------------------- Delete merged branches
+          if [ "$WANT_BRANCH_CLEANUP" = "true" ]; then
+            echo "==> Delete head branches on merge"
+            # template-sync.yml, version-bot.yml and build-pdf.yml all open their
+            # PRs from a gitbot/* branch. create-pull-request's `delete-branch`
+            # does not cover this: it removes the branch when a PR is closed
+            # UNMERGED, while deletion on merge is this repository setting. Without
+            # it, every merged bot PR leaves its branch behind permanently --
+            # riscv-high-assurance-cryptography had accumulated five, from three
+            # merged and two closed PRs, before anyone looked.
+            cleanup=unknown
+            if out="$(gh api "repos/$REPO" --jq '.delete_branch_on_merge' 2>/dev/null)"; then
+              cleanup="$out"
+            fi
+            if [ "$cleanup" = "true" ]; then
+              note "OK    head branches already deleted on merge"
+            elif gh api -X PATCH "repos/$REPO" -F delete_branch_on_merge=true >/dev/null 2>&1; then
+              note "DONE  enabled 'Automatically delete head branches'"
+            else
+              say_403 "Enabling 'Automatically delete head branches'"
+              note "FAIL  'Automatically delete head branches' could not be enabled"
+              failed=1
+            fi
+          fi
+
+          # ----------------------------------------------------------------- report
+          echo
+          echo "=============================== Result ==============================="
+          if [ -s /tmp/report.txt ]; then
+            cat /tmp/report.txt
+          else
+            echo "Nothing selected -- every input was set to false."
+          fi
+          echo "======================================================================"
+
+          {
+            echo '### Repository setup'
+            echo
+            echo '```'
+            cat /tmp/report.txt 2>/dev/null || echo 'Nothing selected.'
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
+
+          if [ "$failed" -ne 0 ]; then
+            echo "::error::At least one setting could not be applied. The lines marked" \
+                 "FAIL above say what to do by hand; re-running this workflow after" \
+                 "fixing GHTOKEN's scopes is safe."
+            exit 1
+          fi
+
+          echo "All selected settings are in place."
