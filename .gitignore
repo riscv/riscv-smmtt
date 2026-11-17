@@ -12,3 +12,6 @@
 # GitHub Pages build artifacts (scripts/build-pages-site.sh): the playbook it
 # derives from antora-playbook.yml. Regenerated on every build.
 /antora-pages-playbook.yml
+# Vale style packages, downloaded into StylesPath by `vale sync` at lint time
+# (see .vale.ini). Fetched on every run, never committed.
+/.github/styles/
