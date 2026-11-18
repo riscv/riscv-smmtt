@@ -1,0 +1,17 @@
+---
+name: Linting with Vale using Reusable Config
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+# The reusable workflow only reads the tree to lint it. Declaring this
+# explicitly also clears the CodeQL "Workflow does not contain permissions"
+# finding, which otherwise fires in every repository that adopts this file.
+permissions:
+  contents: read
+
+jobs:
+  call-reusable-vale-workflow-in-riscv-vale-repo:
+    uses: riscv-admin/riscv-vale/.github/workflows/vale-reusable.yml@main
