@@ -1,0 +1,275 @@
+---
+# Runs in a repository created from docs-spec-template (via "Use this
+# template"). It automates the parts of UPGRADING.md that are safe to
+# automate -- copying template-owned files wholesale -- and opens a PR so a
+# maintainer can review, run the checks in UPGRADING.md section 3, and do the
+# manual merge for shared files (section 2.5) and src/<spec>.adoc (2.6) that
+# this workflow deliberately leaves untouched.
+#
+# This file is itself template-owned (see UPGRADING.md, "Which files are
+# whose") and copies its own newer version like any other workflow below --
+# changes land on the PR branch, so they take effect only once merged, never
+# mid-run.
+name: Template Sync
+
+on:
+  schedule:
+    # Every Monday. Cadence, not urgency -- see UPGRADING.md section 6 for
+    # when an upgrade is actually worth doing.
+    - cron: 0 6 * * 1
+  workflow_dispatch: {}
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    if: github.repository != 'riscv/docs-spec-template'
+    # `secrets` cannot be read from a step's `if:` -- GitHub's context
+    # availability table allows it in `env`, `with` and `run`, but not in
+    # `jobs.<id>.steps.if`. It IS allowed in `jobs.<id>.env`, so hoist the
+    # "is an App configured?" test to the job and let the gate read `env`.
+    env:
+      HAS_APP: ${{ secrets.TEMPLATE_SYNC_APP_CLIENT_ID != '' }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+          # See milestone-pr in version-bot.yml: create-pull-request adds its
+          # own auth header, so a persisted token here yields a duplicate
+          # Authorization header (400).
+          persist-credentials: false
+
+      - name: Check for bot token
+        env:
+          GHTOKEN: ${{ secrets.GHTOKEN }}
+        run: |
+          set -euo pipefail
+          if [[ "$HAS_APP" == "true" ]]; then
+            echo "Using the GitHub App token (TEMPLATE_SYNC_APP_CLIENT_ID); commits will be signed."
+          elif [[ -z "$GHTOKEN" ]]; then
+            # Unlike milestone-pr in version-bot.yml, this is not just a
+            # "checks stall" warning: GITHUB_TOKEN is hard-blocked by GitHub
+            # from pushing any change under .github/workflows/, which this
+            # workflow always touches. Without GHTOKEN (a PAT with the
+            # `workflow` scope) the create-pull-request step below will fail
+            # outright.
+            echo "::warning::GHTOKEN is not set. This workflow updates files under .github/workflows/, and GITHUB_TOKEN cannot push those -- the pull request step below will fail. Set a GHTOKEN repository secret (a PAT with the 'workflow' scope). See README.adoc, 'Recommended repository secret'."
+          else
+            echo "::warning::No GitHub App configured (TEMPLATE_SYNC_APP_CLIENT_ID), so the sync commit will be pushed with GHTOKEN and will not be signed. If main requires signed commits, the PR cannot merge until a maintainer re-signs it. See README.adoc, 'Recommended repository secret'."
+          fi
+
+      - name: Add template remote
+        run: |
+          set -euo pipefail
+          git remote add template https://github.com/riscv/docs-spec-template.git
+          # Fully-qualified refspec, not the bare name "main": a tag of the
+          # same name anywhere in this repository would otherwise win the
+          # ambiguity, and `git fetch template main` would resolve to the tag
+          # and write only FETCH_HEAD -- leaving no refs/remotes/template/main
+          # for the next step's `git rev-parse template/main` to resolve.
+          git fetch template '+refs/heads/main:refs/remotes/template/main'
+
+      - name: Determine baseline and target
+        id: refs
+        run: |
+          set -euo pipefail
+
+          target="$(git rev-parse template/main)"
+          echo "target=$target" >> "$GITHUB_OUTPUT"
+          echo "short_target=$(git rev-parse --short template/main)" >> "$GITHUB_OUTPUT"
+
+          baseline=""
+          if [[ -f .template-version ]]; then
+            baseline="$(awk -F': *' '/^template_sha:/ {print $2}' .template-version)"
+            if [[ -n "$baseline" ]] && ! git cat-file -e "$baseline" 2>/dev/null; then
+              echo "::warning::.template-version's template_sha ($baseline) is not reachable from the template remote. Falling back to template/main as the baseline -- see UPGRADING.md section 1.3 to fix it by hand instead."
+              baseline=""
+            fi
+          fi
+
+          bootstrap=false
+          if [[ -z "$baseline" ]]; then
+            # No usable record. This is the normal state for a repository
+            # freshly created via "Use this template" -- GitHub copies the
+            # file tree but writes no history-tracking file of its own, so
+            # there is nothing here yet for UPGRADING.md section 1 to have
+            # produced. template/main is the correct baseline for that case:
+            # it is what "Use this template" just copied from. (It is also a
+            # reasonable fallback for an older repository that never adopted
+            # the convention -- the first PR will simply be larger, and is
+            # reviewable like any other.)
+            baseline="$target"
+            bootstrap=true
+            echo "No usable .template-version -- bootstrapping baseline to template/main ($target)."
+          fi
+
+          echo "baseline=$baseline" >> "$GITHUB_OUTPUT"
+          echo "bootstrap=$bootstrap" >> "$GITHUB_OUTPUT"
+
+          if [[ "$bootstrap" == "false" && "$baseline" == "$target" ]]; then
+            echo "Already at template/main ($target). Nothing to sync."
+            echo "skip=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "skip=false" >> "$GITHUB_OUTPUT"
+          fi
+
+          {
+            echo 'note<<EOF'
+            if [[ "$bootstrap" == "true" ]]; then
+              echo "**This is the initial opt-in PR** for this repository: no \`.template-version\` was found, so the baseline was bootstrapped to \`docs-spec-template@$(git rev-parse --short "$baseline")\` -- what *Use this template* copied from. It adds \`.template-version\` so future runs only diff against what actually changed."
+            else
+              echo "Compare: https://github.com/riscv/docs-spec-template/compare/$baseline...$target"
+            fi
+            echo 'EOF'
+          } >> "$GITHUB_OUTPUT"
+
+      # Template-owned files: no per-repository content, safe to overwrite.
+      # Kept in sync by hand with the list in UPGRADING.md, "Template-owned".
+      - name: Copy template-owned files
+        if: steps.refs.outputs.skip == 'false'
+        run: |
+          set -euo pipefail
+          target="${{ steps.refs.outputs.target }}"
+
+          git checkout "$target" -- \
+            scripts/release-info.sh \
+            scripts/stamp-antora-version.sh \
+            scripts/update-spec-state.sh \
+            scripts/build-pages-site.sh \
+            scripts/gen-pages-playbook.js \
+            scripts/cross-page-xrefs.rb \
+            tests/release-info-test.sh \
+            .github/workflows/build-pdf.yml \
+            .github/workflows/version-bot.yml \
+            .github/workflows/publish-site.yml \
+            .github/workflows/validate-content-source.yml \
+            .github/workflows/pre-commit.yml \
+            .github/workflows/vale-linting.yml \
+            .github/workflows/template-sync.yml \
+            .github/workflows/repo-setup.yml \
+            .github/dependabot.yml \
+            docker-compose.yml \
+            ANTORA.md \
+            MIGRATION.md \
+            ARC_SUBMISSION.md \
+            UPGRADING.md \
+            LICENSE \
+            CODE_OF_CONDUCT.md \
+            docs-resources
+
+          git submodule update --init --recursive
+
+      - name: Report shared files that need a manual merge
+        if: steps.refs.outputs.skip == 'false'
+        id: shared
+        run: |
+          set -euo pipefail
+          baseline="${{ steps.refs.outputs.baseline }}"
+          target="${{ steps.refs.outputs.target }}"
+          bootstrap="${{ steps.refs.outputs.bootstrap }}"
+
+          # A bootstrap run has no real baseline -- the step above set it to
+          # target -- so diffing baseline..target compares a commit with
+          # itself, finds nothing, and the checklist below reports "no shared
+          # files changed" on precisely the run where the manual merge burden
+          # is largest. Diff this repository's own tree against the template
+          # instead, which is the question a first sync should answer: how far
+          # has this repo drifted from the template it was created from?
+          #
+          # HEAD is still the pre-sync commit here: the Create branch step
+          # only switched branches, and the copy step staged its files without
+          # committing, so this compares the repository as it stands today.
+          if [[ "$bootstrap" == "true" ]]; then
+            base="HEAD"
+            verb="differs from the template"
+            none="- No shared files differ from the template."
+          else
+            base="$baseline"
+            verb="changed upstream"
+            none="- No shared files changed upstream in this range."
+          fi
+
+          {
+            echo 'checklist<<EOF'
+            changed=false
+            for f in Makefile antora.yml antora-playbook.yml package.json README.adoc .gitignore .gitmodules .vale.ini .pre-commit-config.yaml CONTRIBUTING.md GOVERNANCE.md src/; do
+              if ! git diff --quiet "$base" "$target" -- "$f" 2>/dev/null; then
+                echo "- [ ] \`$f\` $verb -- merge by hand per UPGRADING.md section 2.5/2.6"
+                changed=true
+              fi
+            done
+            if [[ "$changed" == "false" ]]; then
+              echo "$none"
+            fi
+            echo 'EOF'
+          } >> "$GITHUB_OUTPUT"
+
+      - name: Update .template-version
+        if: steps.refs.outputs.skip == 'false'
+        run: |
+          set -euo pipefail
+          target="${{ steps.refs.outputs.target }}"
+          cat > .template-version <<EOF
+          # Records which docs-spec-template release this repository's tooling came from.
+          # Nothing reads this file. Updated automatically by template-sync.yml.
+          template_ref: template/main
+          template_sha: $target
+          upgraded_on: $(date +%Y-%m-%d)
+          EOF
+          git add .template-version
+
+      # See README.adoc, 'Recommended repository secret'. create-pull-request
+      # signs commits (sign-commits) only with a bot token -- with a PAT such as
+      # GHTOKEN it pushes them unsigned, which a "require signed commits" rule
+      # on main blocks. An App token lets GitHub sign them as the App's bot.
+      - name: Mint GitHub App token
+        id: app-token
+        if: steps.refs.outputs.skip == 'false' && env.HAS_APP == 'true'
+        uses: actions/create-github-app-token@v3
+        with:
+          client-id: ${{ secrets.TEMPLATE_SYNC_APP_CLIENT_ID }}
+          private-key: ${{ secrets.TEMPLATE_SYNC_PRIVATE_KEY }}
+
+      - name: Create pull request
+        if: steps.refs.outputs.skip == 'false'
+        uses: peter-evans/create-pull-request@v8
+        with:
+          token: ${{ steps.app-token.outputs.token || secrets.GHTOKEN || secrets.GITHUB_TOKEN }}
+          # With an App token the commit is authored by the App's bot, which the
+          # DCO check skips; the trailer below then only records who ran it.
+          sign-commits: ${{ steps.app-token.outputs.token != '' }}
+          # Same reason as milestone-pr in version-bot.yml: the DCO check that
+          # RISC-V spec repos run requires a Signed-off-by matching the
+          # commit's author. create-pull-request authors the commit as the user
+          # who triggered this workflow and adds no trailer of its own, so the
+          # sync PR is blocked until someone amends it. Sign off as that same
+          # user. (The action's own `signoff: true` is no use here -- it signs
+          # as the *committer*, which defaults to github-actions[bot] and so
+          # would not match the author.)
+          commit-message: |
+            chore: sync template-owned files from docs-spec-template@${{ steps.refs.outputs.short_target }}
+
+            Signed-off-by: ${{ github.actor }} <${{ github.actor_id }}+${{ github.actor }}@users.noreply.github.com>
+          branch: gitbot/template-sync-${{ steps.refs.outputs.short_target }}
+          delete-branch: true
+          title: 'Template sync: pick up docs-spec-template changes (${{ steps.refs.outputs.short_target }})'
+          body: |
+            This PR was opened automatically by `template-sync.yml`. It copies
+            **template-owned files only** (see UPGRADING.md, "Which files are
+            whose") from `riscv/docs-spec-template@main`. Nothing in
+            `modules/ROOT/`, `src/<your-spec>.adoc`, or the shared files listed
+            below was touched.
+
+            ${{ steps.refs.outputs.note }}
+
+            **Before merging:**
+            ${{ steps.shared.outputs.checklist }}
+            - [ ] Re-read the *Repository Setup Checklist* in README.adoc -- a new workflow may need new repository settings.
+            - [ ] Run the checks in UPGRADING.md section 3 (tests, `make build`, `npm run preview`).
+            - [ ] If `src/` changed upstream, compare it against your own assembler per UPGRADING.md section 2.6 before merging.
+          labels: |
+            template-sync
