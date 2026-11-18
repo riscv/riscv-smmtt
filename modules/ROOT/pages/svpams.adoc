@@ -1,6 +1,6 @@
 [[chapter5]]
 [[Svpams]]
-== `Svpams`: Supervisor domain physical address metadata selector
+= `Svpams`: Supervisor domain physical address metadata selector
 
 M-mode software uses the MPT to create isolated physical memory regions
 associated with specific supervisor domains to enforce the required software
@@ -37,7 +37,7 @@ The Svpams mechanism is independent of the Smmpt mechanism since Svpams enables
 additional properties to be enforced for memory accesses beyond the
 access-control/isolation mechanism that Smmpt enables.
 
-=== Svpams
+== Svpams
 
 Svpams may be enabled via the `menvcfg` (and `henvcfg`) registers. Once
 enabled, the 4 bit PA metadata is derived as part of the address translation

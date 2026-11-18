@@ -1,4 +1,4 @@
-== Contributors
+= Contributors
 
 This RISC-V specification has been contributed to directly or indirectly by (in
 alphabetical order): Alvin Che-Chia Chang, Andy Chiu, Andrew Dellow, Anup Patel,

@@ -1,6 +1,6 @@
 [[Smsdia]]
 
-== Supervisor Domain Interrupt Assignment
+= Supervisor Domain Interrupt Assignment
 
 Interrupts that occur during the execution of a supervisor domain cause a trap
 to the RDSM in M-mode by default.
@@ -49,7 +49,7 @@ flexible allocation of fewer supervisor interrupt domains among a larger number 
 
 
 [[SD-IMSIC]]
-=== IMSIC Extension for Supervisor Domains
+== IMSIC Extension for Supervisor Domains
 
 The IMSIC is extended to support multiple _supervisor interrupt domains_, where
 each _supervisor interrupt domain_ may be associated with a supervisor domain.
@@ -113,7 +113,7 @@ _supervisor interrupt domain_ implements _guest interrupt files_ then the
 of that _supervisor interrupt domain_, as determined by `hstatus.VGEIN`.
 
 [[SD-APLIC]]
-=== APLIC Extension for Supervisor Domains
+== APLIC Extension for Supervisor Domains
 
 The APLIC supports the concept of multiple interrupt domains where each
 interrupt domain may be associated with a subset of RISC-V harts at one
@@ -164,7 +164,7 @@ Refer to cite:[AIA] for the detailed definitions of constants `HHXS`, `g`, `h`,
 `LHXS`, and Guest Index.
 
 [[SDI]]
-=== "Smsdia" : Standard Extension for Supervisor Domain Interrupt Assignment
+== "Smsdia" : Standard Extension for Supervisor Domain Interrupt Assignment
 
 The `Smsdia` extension adds supports to select a _supervisor interrupt domain_
 in an interrupt controller as a source of supervisor-level and guest external
@@ -177,10 +177,10 @@ this notification to inform its scheduling decisions. To facilitate this
 functionality, the `Smsdia` extension introduces the `msideip` and `msideie`
 CSRs, along with a machine supervisor domain external interrupt (`MSDEI`).
 
-==== Supervisor Interrupt Domain Number
+=== Supervisor Interrupt Domain Number
 
 The `Smsdia` extension introduces the _supervisor interrupt domain number_
-(`SIDN`) field of the `msdcfg` <<MSDCFG>> register.
+(`SIDN`) field of the `msdcfg` <<smsd.adoc#MSDCFG>> register.
 
 The `SIDN` field selects an supervisor interrupt domain among the plurality of
 _supervisor interrupt domains_ associated with a hart as the active supervisor
@@ -219,7 +219,7 @@ instruction trap facilitated by AIA-added state-enable bits to
 `mstateen0/mstateen0h` for emulation purposes.
 ====
 
-==== Hypervisor Guest External Interrupt Registers (`hgeip` and `hgeie`)
+=== Hypervisor Guest External Interrupt Registers (`hgeip` and `hgeie`)
 
 When the H extension is also implemented, the implementation must internally
 maintain an array of registers that hold the state of the `hgeip` and `hgeie`
@@ -227,7 +227,7 @@ CSRs, with one pair of registers per implemented supervisor interrupt domain
 number. The `hgeip` and `hgeie` CSRs access the element of this array
 corresponding to the value of `msdcfg.SIDN`.
 
-==== Machine supervisor interrupt domain external interrupt pending (`msideip/msideiph`)
+=== Machine supervisor interrupt domain external interrupt pending (`msideip/msideiph`)
 
 The `msideip` is a 64-bit read-only machine-mode register, formatted as shown in
 <<MSIDEIP>>. The CSR number for `msideip` is 0xF4F.
@@ -262,7 +262,7 @@ conditions holds:
   _supervisor interrupt domain_ __i__ is nonzero (i.e., the value that SGEIP
   would have for that domain).
 
-==== Machine supervisor interrupt domain external interrupt enable (`msideie/msideieh`)
+=== Machine supervisor interrupt domain external interrupt enable (`msideie/msideieh`)
 
 The `msideie` is a 64-bit read-write machine-mode register, formatted as shown in
 <<MSIDEIE>>. The CSR number for `msideie` is 0x74F.
@@ -287,7 +287,7 @@ bits in `msideie` do not affect the supervisor-level external interrupt and
 guest external interrupt pending signals from the _supervisor interrupt
 domain_ selected by `msdcfg.SIDN`.
 
-==== Machine and Supervisor Interrupt registers (`mip/mie` and `sip/sie`)
+=== Machine and Supervisor Interrupt registers (`mip/mie` and `sip/sie`)
 
 The `Smsdia` extension introduces the machine supervisor-domain external
 interrupt (`MSDEI`). This interrupt is assigned to bit 14 in the `mip`,
@@ -329,7 +329,7 @@ enabling such supervisor domains to voluntarily yield execution in response to
 pending interrupts for the other supervisor domains.
 ====
 
-=== "Smgeien/Ssgeien" : Standard Extension for Machine Guest External Interrupt Enables
+== "Smgeien/Ssgeien" : Standard Extension for Machine Guest External Interrupt Enables
 
 The `Smgeien` extension enables access by a supervisor domain to a subset of the guest interrupt
 files within a _supervisor interrupt domain_ in an IMSIC.

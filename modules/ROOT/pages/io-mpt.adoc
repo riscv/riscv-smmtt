@@ -1,6 +1,6 @@
 [[IO-MPT]]
 
-== I/O MPT Checker
+= I/O MPT Checker
 
 Supervisor domains may be granted control over DMA-capable devices. When such
 direct device association is supported, the system might also incorporate
@@ -38,7 +38,7 @@ functions:
 Collectively, these two functionalities form a logical block in the I/O
 subsystem, referred to as the I/O MPT Checker.
 
-=== Placement of I/O MPT Checker
+== Placement of I/O MPT Checker
 
 The I/O Bridge serves as an intermediary, situated between the I/O devices and the
 system interconnect, with the primary role of processing DMA transactions. These
@@ -50,7 +50,7 @@ represented in <<io-mpt-checker>>.
 
 [caption="Figure {counter:image}: ", reftext="Figure {image}"]
 [title= "I/O MPT checker placement", id=io-mpt-checker]
-image::images/IOMPTCHK.svg[width=800]
+image::IOMPTCHK.svg[width=800]
 [[fig:IOMPTCHK]]
 
 The I/O Bridge invokes the I/O MPT Checker using the SDID request interface (SDR)
@@ -196,7 +196,7 @@ rules classify devices to an SDID alone and no IOMMU ID is associated with the
 rules.
 
 [[IOMPTABORT]]
-=== Handling I/O MPT Checker violations
+== Handling I/O MPT Checker violations
 
 A transaction shall be aborted if:
 
@@ -234,7 +234,7 @@ Transactions permitted by the I/O MPT Checker may still be disallowed by
 additional checks outside the I/O MPT. The nature of such checks and the
 handling of their violations are outside the scope of this specification.
 
-=== I/O MPT Checker Register Interface
+== I/O MPT Checker Register Interface
 
 Each I/O MPT Checker register interface is memory-mapped starting at
 an 8-byte aligned physical address and includes the registers used to configure
@@ -303,7 +303,7 @@ valid entries.
 The reset value is `UNSPECIFIED` for all other registers and/or fields.
 
 [[CAP]]
-=== Capabilities (`capabilities`)
+== Capabilities (`capabilities`)
 
 The `capabilities` register is a read-only register that holds the I/O MPT
 Checker capabilities.
@@ -326,7 +326,7 @@ specification. For example, an implementation that supports version 1.0 of the
 specification reports 0x10.
 
 [[STS]]
-=== Status register (`status`)
+== Status register (`status`)
 
 The `status` register provides the status of the operation requested using the
 `command` register.
@@ -384,7 +384,7 @@ status code be returned only if all other defined status codes are determined to
 be inapplicable.
 
 [[CTL]]
-=== Control (`control`)
+== Control (`control`)
 
 This register is used to control the operations of the I/O MPT Checker.
 An implementation may allow one or more fields in the register to be
@@ -471,7 +471,7 @@ write to the `control` register. The value held in `status.CODE` on completing
 the operations associated with a write to `control` register is UNSPECIFIED.
 
 [[CMD]]
-=== Command register (`command`)
+== Command register (`command`)
 
 The `command` register is used to initiate I/O MPT Checker operations. The
 specific operation is identified by the `OP` field within the `command`
@@ -528,7 +528,7 @@ fails with "Illegal or invalid operand encodings" (`status.CODE=5`). The order
 of checking the validity of `SDID`, `RULEID`, and other operands of when a valid
 operation is requested operation is UNSPECIFIED.
 
-==== Configure a SDCL rule - `SET_SDCL_ENTRY`
+=== Configure a SDCL rule - `SET_SDCL_ENTRY`
 
 The `SET_SDCL_ENTRY` operation configures an SDCL rule to classify DMA requests
 based on the identifiers associated with the requests, in order to determine the
@@ -695,7 +695,7 @@ act based on any one of those matching rules.
 If a transaction does not match any of the rules, the I/O Bridge is notified of
 this condition.
 
-==== Read the configuration of an SDCL rule - `GET_SDCL_ENTRY`
+=== Read the configuration of an SDCL rule - `GET_SDCL_ENTRY`
 
 The `GET_SDCL_ENTRY` operation reads the configuration of an SDCL rule
 identified by `RULEID`. This operation ignores the contents of the `data*`
@@ -713,7 +713,7 @@ identical to that of the `SET_SDCL_ENTRY` operation.
 When the I/O MPT Checker is not associated with an IOMMU, the value held in
 `IOMMU_ID` field on successful completion of this operation is `UNSPECIFIED`.
 
-==== Set Supervisor Domain Configurations - `SET_SDCFG_ENTRY`
+=== Set Supervisor Domain Configurations - `SET_SDCFG_ENTRY`
 
 The `SET_SDCFG_ENTRY` operation configures MPT and QoS ID parameters for a
 supervisor domain in the I/O MPT Checker. This operation uses the operands in
@@ -853,7 +853,7 @@ together with the effective `RCID` and `MCID` for that
 supervisor domain. The effective `RCID` and `MCID` shall be
 determined using the rules defined above for IOMMU-originated requests.
 
-==== Get Supervisor Domain Configurations - `GET_SDCFG_ENTRY`
+=== Get Supervisor Domain Configurations - `GET_SDCFG_ENTRY`
 
 The `GET_SDCFG_ENTRY` operation reads the configuration of the supervisor domain
 identified by `SDID` from the I/O MPT Checker. This operation ignores the
@@ -872,7 +872,7 @@ When the I/O MPT Checker does not support associating QoS IDs with requests, the
 value held in the `data2` register on successful completion of this operation is
 `UNSPECIFIED`.
 
-==== MPT Permission Cache Invalidation - `MPTINVAL`
+=== MPT Permission Cache Invalidation - `MPTINVAL`
 
 This operation ensures that stores to an MPT are observed by the I/O MPT
 Checker before subsequent implicit reads by I/O MPT Checker to the
@@ -976,7 +976,7 @@ Even if the I/O MPT Checker denies a request, it is allowed to cache the
 corresponding MPT entry if it is valid.
 ====
 
-==== I/O Fence Operation - `IOFENCE`
+=== I/O Fence Operation - `IOFENCE`
 
 Ensure that all previous read and write requests from devices already processed
 by I/O MPT Checker are committed to the global ordering such that they can be
@@ -1004,7 +1004,7 @@ has observed all configuration updates made prior to the `IOFENCE`. If the
 configuration updates modify the MPT mode and/or PPN, an `MPTINVAL` operation
 with `PPNV` set to 0 must be issued after the `IOFENCE`.
 
-=== Treatment of Device-Side Address Translation Caches
+== Treatment of Device-Side Address Translation Caches
 
 Some devices may participate in the translation process and provide a
 device-side ATC (DevATC) for their own memory accesses. By providing a

@@ -9,7 +9,7 @@ See the link:LICENSE[LICENSE] file for details.
 
 = Contributors
 
-Contributors to this specification are contained in the link:contributors.adoc[contributors] file.
+Contributors to this specification are contained in the link:modules/ROOT/pages/contributors.adoc[contributors] file.
 
 For instructions on how to contribute please see the link:CONTRIBUTING.md[CONTRIBUTING] file.
 

@@ -1,7 +1,7 @@
 
 [[Smsdedbga]]
 
-== Supervisor Domain External Trace and Debug Allow Controls
+= Supervisor Domain External Trace and Debug Allow Controls
 
 This chapter describes two extensions `Smsdedbga` and `Smsdetrca` that enable
 the RDSM to enforce isolation of supervisor domains when external debug and
@@ -39,7 +39,7 @@ external debug and/or trace is allowed for a supervisor doamin, an external
 debugger may enable the external debug and/or trace for that supervisor domain.
 ====
 
-=== `Smsdedbga`: External Debug allowed control for Supervisor Domain
+== `Smsdedbga`: External Debug allowed control for Supervisor Domain
 
 When M-mode external debug is enabled, all supervisor domains may also be
 debugged by an external debugger irrespective of the configuration held in
@@ -71,7 +71,7 @@ functional and security requirements cite:[ExtDbgSec] must be met:
   This functional change allows the RDSM to remain in control of external debug
   for supervisor domains when it is not under external debug itself.
 
-=== `Smsdetrca`: External Trace allowed control for Supervisor Domain
+== `Smsdetrca`: External Trace allowed control for Supervisor Domain
 
 When M-mode external trace is enabled, all supervisor domains activity may also
 be traced by an external trace tool irrespective of the configuration held in

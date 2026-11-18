@@ -68,6 +68,7 @@ ifneq ($(SKIP_DOCKER),true)
 	DOCKER_QUOTE := "
 endif
 
+SRC_DIR := src
 BUILD_DIR := build
 
 DOCS_PDF := $(DOCS:%.adoc=%.pdf)
@@ -90,7 +91,8 @@ OPTIONS := --trace \
            --failure-level=ERROR
 REQUIRES := --require=asciidoctor-bibtex \
             --require=asciidoctor-diagram \
-            --require=asciidoctor-mathematical
+            --require=asciidoctor-mathematical \
+            --require=./scripts/cross-page-xrefs.rb
 
 DOCS_RESOURCES_CONFIG := docs-resources/global-config.adoc
 
@@ -126,6 +128,8 @@ ARC_PDF = $(1)-v$(VERSION_NUM)-$(DATE_STAMP).pdf
 # <latest>-<sha> (release-info.sh), so its filename carries the sha and is a dev
 # artifact. Report that honestly rather than asserting compliance it lacks.
 ARC_EXACT := $(if $(findstring -,$(VERSION)),,yes)
+
+vpath %.adoc $(SRC_DIR)
 
 # AsciiDoctor writes the ARC name itself (-o is resolved relative to -D), rather
 # than the build renaming build/<basename>.pdf afterwards. Inside the container

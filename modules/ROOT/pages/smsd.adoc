@@ -1,9 +1,9 @@
 [[Smsd]]
 
-== `Smsd`: Supervisor Domains 
+= `Smsd`: Supervisor Domains 
 
 `Smsd` comprises Memory Protection Tables to set the access permissions for a memory
-region or page associated with a supervisor domain, described in <<Smmpt>>, 
+region or page associated with a supervisor domain, described in <<smmpt.adoc#Smmpt>>, 
 and an interface to program the configuration for supervisor-domain-related extensions 
 
 The interface consists of M-mode CSRs
@@ -25,7 +25,7 @@ at the cost of flushing any prior cached state that was
 associated with the `SDID`.
 ====
 
-=== M-mode Memory Protection Table Configuration (`mmpt`)
+== M-mode Memory Protection Table Configuration (`mmpt`)
 
 The `mmpt` register is an `MXLEN` wide read/write machine-mode register,
 formatted as shown in <<sdid-32>> for `MXLEN=32` and <<sdid-64>> for `MXLEN=64`,
@@ -133,7 +133,7 @@ If an `MPT` structure for an address-space has been modified, or if a `SDID` is
 reused, it may be necessary to execute a `MFENCE.PA` instruction after, or in
 some cases before, writing `mmpt`.
 
-=== Machine Memory Protection Fence Instruction
+== Machine Memory Protection Fence Instruction
 
 [caption="Figure {counter:image}: ", reftext="Figure {image}"]
 [title="MFENCE.PA instruction"]
@@ -185,7 +185,7 @@ A simpler implementation of `MFENCE.PA` may ignore the physical address in `rs1`
 and/or the `SDID` value in `rs2`, and always perform a global fence for all SDs.
 ====
 
-=== M-mode Supervisor Domain Fine-Grain Invalidation Instruction
+== M-mode Supervisor Domain Fine-Grain Invalidation Instruction
 
 The `MINVAL.PA` instruction supports batching of MPT invalidations,
 analogous to `SINVAL.VMA`.
@@ -229,7 +229,7 @@ effect as a hypothetical `MFENCE.PA` in which:
 
 `MINVAL.PA` is only valid in M-mode.
 
-=== Extension to Behavior of Memory-Management Fences
+== Extension to Behavior of Memory-Management Fences
 
 The behavior of the `SFENCE.VMA`, `HFENCE.GVMA`, `HFENCE.VVMA`, `SINVAL.VMA`, `HINVAL.GVMA`,
 and `HINVAL.VVMA` instructions are affected when the `Smsd` extension is implemented. 
@@ -246,7 +246,7 @@ considered to be the combination of the `SDID` with the VS-level `ASID`.
 An effective `VMID` can be considered to be the combination of the `SDID` with
 the `VMID`.
 
-=== Machine supervisor domain configuration (`msdcfg`)
+== Machine supervisor domain configuration (`msdcfg`)
 
 The `msdcfg` is a MXLEN wide machine-mode read/write register, formatted as
 shown in <<MSDCFG>>. This CSR is used to hold configurations for a supervisor

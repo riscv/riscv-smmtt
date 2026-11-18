@@ -1,13 +1,13 @@
 [[Smsdqos]]
 
-== Capacity and Bandwidth QoS Register Interface (CBQRI) for Supervisor Domains
+= Capacity and Bandwidth QoS Register Interface (CBQRI) for Supervisor Domains
 
 Quality of Service (QoS) is defined as the minimal end-to-end performance
 that is guaranteed in advance by a service level agreement (SLA) to a
 workload. A workload may be a single application, a group of applications,
 a virtual machine, a group of virtual machines, or a combination of those.
 
-=== Introduction to CBQRI and Ssqosid
+== Introduction to CBQRI and Ssqosid
 The RISC-V Capacity and Bandwidth QoS Register Interface (CBQRI) cite:[CBQRI]
 specification specifies mechanisms to a) associate QoS identifiers with
 requests made by workloads to resources controlled by capacity and bandwidth
@@ -22,7 +22,7 @@ The Ssqosid extension cite:[SSQOSID] provides a read/write S/HS-mode register
 hart to shared resources. The CBQRI specification specifies the IOMMU extension
 to associate QoS Identifiers with requests made by devices to shared resources.
 
-=== Security objective
+== Security objective
 
 With supervisor domains, resource-usage information associated with an SD or the RDSM 
 shall not be visible through resource monitoring mechanisms to entities outside that SD's 
@@ -51,7 +51,7 @@ To support this security objective, the following capabilities are required:
      for requests made by a hart with effective privilege mode equal to M.
 
 [[SMQOSID]]
-=== Smqosid - Machine-Mode Quality-of-Service Identifiers
+== Smqosid - Machine-Mode Quality-of-Service Identifiers
 
 The Smqosid introduces a read/write M-mode CSR (`mrmcfg`) to configure
 QoS identifiers for requests made by a hart with effective privilege mode equal
@@ -115,7 +115,7 @@ privilege modes less than M.
 ....
 
 [[SMSDQOSID]]
-=== Smsdqosid - Supervisor Domain Quality-of-Service Identifiers
+== Smsdqosid - Supervisor Domain Quality-of-Service Identifiers
 
 The Smsdqosid extension enables the scenario where two or more supervisor domains
 share a common set of capacity and bandwidth controllers. In this setup, access
@@ -162,7 +162,7 @@ The register is formatted as shown in <<MNRMCFG64>> for MXLEN=64 and
 ....
 
 Additionally, the extension introduces the `SRL`, `SML`, `SSRM`, and `SSMM`
-fields in the `msdcfg` <<MSDCFG>> register.
+fields in the `msdcfg` <<smsd.adoc#MSDCFG>> register.
 
 The `SRL` (supervisor-RCID-length) is a WARL field with legal values from 0 to
 `RCIDLEN`, where `RCIDLEN` is the number of implemented bits of the `RCID`
@@ -266,7 +266,7 @@ namespace.
 ====
 
 [[SDQRI]]
-=== Supervisor Domain QoS Register interfaces (QRI)
+== Supervisor Domain QoS Register interfaces (QRI)
 
 Capacity and bandwidth controllers that support supervisor domains provide one
 or more memory-mapped QoS register interfaces (QRIs). A QRI may be made
