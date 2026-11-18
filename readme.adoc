@@ -2,6 +2,8 @@
 
 This document describes Supervisor Domain Access Protection - RISC-V privileged architecture extension to support physical address space (memory and devices) isolation for more than one supervisor domain use cases for RISC-V platforms. Use cases may use supervisor domains to reduce the supervisor Trusted Computing Base (TCB), with differential access to memory and other platform resources e.g. Confidential Computing (CoVE), Security Services, Secure Devices etc.
 
+The top-of-tree specification is now available here: https://riscv.github.io/riscv-smmtt/supervisor-domains/dev/index.html
+
 = License
 
 This work is licensed under a Creative Commons Attribution 4.0 International License (CC-BY-4.0).
