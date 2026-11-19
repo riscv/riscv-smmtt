@@ -1,0 +1,45 @@
+= MPT/IOMPT Indirect Permission and Security Attribute Decoding
+
+== Introduction
+
+The RISC-V Supervisor Domain Access Protection (SDAP) specification defines Memory Protection Tables (MPTs) for controlling accesses to physical memory and an IOMPT extension that applies MPT-based protection to device-initiated transactions. Emerging confidential-computing and system-security use cases additionally require page-level information that selects security attributes associated with a target address.
+
+This work proposes an optional indirect decoding of the existing MPT/IOMPT permission encoding. The encoding acts as an MPT Attribute Selector (`MAS`) that selects a combination of effective access permissions and a Security Attribute Specifier (`SAS`). The proposal is limited to `MXLEN=64`.
+
+== Why Existing Extensions Are Insufficient
+
+* *Translation Requests for XT-enabled PCIe devices:* For an Address Translation Request with `{T=1,XT=0}`, the host translation agent must determine the TEE association of the translated address and return it as the `TE` bit. Existing MPT/IOMPT permission information cannot provide this property from a single protection lookup.
+** Inferring a security association from multiple protection-context lookups increases lookup cost and derives the association indirectly from permission state rather than returning it as part of the protection result.
+** Also, the translation agent must be able to prevent an `{XT=1,T=0}` transaction from accessing trusted memory and an `{XT=1,T=1}` transaction from accessing untrusted memory. `TEE_FLT` is insufficient because both transaction classes are TEE-associated and therefore cannot be distinguished by that mechanism.
+* *Target-side security filtering:* Third-party IPs may support interface protocols that apply security filtering at the target, including at sub-4 KiB granularity. `MAS`-based indirection allows different supervisor domains to associate different `SAS` values with accesses to the same 4 KiB MPT-protected region, enabling the target to apply its protocol-specific security filtering.
+* *Protocol attribute generation:* CXL.mem and other interconnect protocols may require a security attribute derived from the target address for completer-side filtering. Existing MPT permissions determine access rights but do not identify the security association to be conveyed with a downstream transaction.
+
+
+== Definitions
+
+* *MPT:* Memory Protection Table used for access protection of hart-originated transactions.
+* *IOMPT:* Extension of MPT-based access protection to device-initiated transactions.
+* *MPT Attribute Selector (`MAS`):* The existing three-bit MPT or IOMPT permission encoding when indirect decoding is enabled. MAS selects one of eight indirection entries.
+* *Security Attribute Specifier (`SAS`):* An architectural value returned by the indirection entry selected by MAS. It specifies additional security properties associated with a protected physical-address region. The `SAS` width provided by the indirection CSR is implementation-defined and may be zero, up to a maximum of five bits. An implementation may provide additional `SAS` bits through additional CSRs. Mapping `SAS` values to protocol-specific attributes is platform-defined.
+* *Indirect MPT/IOMPT decoding:* Interpretation of the existing permission encoding as `MAS`, selecting effective permissions and an `SAS`.
+* *Indirection entry:* Configuration state defining the effective `{X,W,R,SAS}` or the applicable IOMPT equivalent for a `MAS` value.
+
+== Objectives
+
+Define an SDAP extension (`Smsdind`) that adds indirect permission and security-attribute decoding for MPT and IOMPT:
+
+* Control indirect decoding independently for MPT and IOMPT, using a reserved bit in `mmpt` (`Smsd`) for hart-originated accesses and a reserved bit in `data1` of `SET_SDCFG_ENTRY` for device-initiated accesses.
+* When enabled, interpret the existing three-bit MPT or IOMPT permission encoding as `MAS` rather than directly as X/W/R.
+* Define a 64-bit CSR containing eight indirection entries, indexed by `MAS`. Each entry specifies a complete effective XWR permission value and, when at least one of X, W, or R is set, a `SAS` value. The CSR provides up to five `SAS` bits per entry; an implementation may provide additional `SAS` bits through additional CSRs.
+* Define equivalent indirection semantics for IOMPT so that hart- and device-initiated protection lookups can return effective permissions and `SAS`.
+* Treat changes to the indirection CSR as changes to the corresponding MPT information for cache-maintenance purposes. Software shall use `MFENCE.PA` for MPT and `MPTINVAL` for IO-MPT to invalidate cached results that may be affected by a change to the indirection CSR.
+* Keep `SAS` architecturally independent of PCIe, CXL, CHI, or other protocol-specific encodings.
+* Limit the extension to `MXLEN=64`.
+* Permit indirection entries to return only XWR combinations currently defined by SDAP.
+* Define an alternative decoding of the existing permission encoding without expanding the MPT permission field.
+* Do not define how `SAS`, or a value derived from `SAS`, is forwarded or encoded for completer-side filtering; forwarding and encoding are platform- and protocol-specific.
+
+[NOTE]
+====
+Each three-bit `MAS` indexes an entry specifying a complete effective XWR permission value and, when at least one of X, W, or R is set, an SAS value. For `XWR=000`, `SAS` is not applicable. A platform may provide only `XWR=000` (no access) and `XWR=111` (full access) as effective permission results, assigning multiple MAS values to `XWR=111` with different `SAS` values, or may support additional effective XWR results. The eight `MAS` values limit the number of distinct complete XWR/`SAS` result combinations; the extension does not mandate a particular allocation.
+====
