@@ -203,6 +203,20 @@ A simpler implementation of `MFENCE.PA` may ignore the physical address in `rs1`
 and/or the `SDID` value in `rs2`, and always perform a global fence for all SDs.
 ====
 
+An implicit read of the memory protection tables may return any access type
+permissions for a physical address that were valid at any time since the most
+recent `MFENCE.PA` that subsumes that physical address.
+The ordering implied by `MFENCE.PA` does not place implicit reads to the memory
+protection tables into the global memory order in a way that interacts cleanly
+with the standard RVWMO ordering rules.
+In particular, even though an `MFENCE.PA` orders prior explicit accesses before
+subsequent implicit accesses, and those implicit accesses are ordered before
+their associated explicit accesses, `MFENCE.PA` does not necessarily place
+prior explicit accesses before subsequent explicit accesses in the global
+memory order.
+These implicit loads also need not otherwise obey normal program order
+semantics with respect to prior loads or stores to the same address.
+
 == M-mode Supervisor Domain Fine-Grain Invalidation Instruction
 
 The `MINVAL.PA` instruction supports batching of MPT invalidations,
