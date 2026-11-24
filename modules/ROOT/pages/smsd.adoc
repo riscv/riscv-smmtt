@@ -223,6 +223,11 @@ subsequent valid (V=1) MPTE, and must only raise exceptions for implicit
 accesses that are generated as a result of instruction execution, not those
 that are performed speculatively.
 
+If `mmpt.MODE` is changed for a given `SDID`, an `MFENCE.PA` with `rs1=x0` and
+`rs2` set either to `x0` or the given `SDID` must be executed to order
+subsequent access type permission lookups with the `MODE` change, even if the
+old or new `MODE` is `Bare`.
+
 == M-mode Supervisor Domain Fine-Grain Invalidation Instruction
 
 The `MINVAL.PA` instruction supports batching of MPT invalidations,
