@@ -1,0 +1,5 @@
+# Records which docs-spec-template release this repository's tooling came from.
+# Nothing reads this file. Updated automatically by template-sync.yml.
+template_ref: template/main
+template_sha: ced19b599b62b8458b091c447825f45e24f2c13a
+upgraded_on: 2026-11-23

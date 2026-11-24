@@ -15,6 +15,12 @@ updates:
     directory: /
     schedule:
       interval: weekly
+    # @antora/cli and @antora/site-generator release in lockstep. As separate
+    # PRs both rewrite package-lock.json, so whichever merges second conflicts
+    # and has to wait for a rebase. One grouped PR moves them together.
+    groups:
+      antora:
+        patterns: ['@antora/*']
     ignore:
       # asciidoctor-kroki 1.x needs a newer Asciidoctor.js than Antora 3.1.x
       # bundles and dies with `block.$!= is not a function`. The central playbook
