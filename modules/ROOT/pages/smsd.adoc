@@ -129,7 +129,8 @@ a given value of `mmpt` when `mmpt` is active.
 
 Note that writing `mmpt` does not imply any ordering constraint between
 updates of virtual memory system page-tables or memory protection tables and
-subsequent address translations or memory protection.
+subsequent address translations or memory protection, nor does it imply any
+invalidation of address-translation caches or MPT caches.
 
 If an `MPT` structure for an address-space has been modified, or if a `SDID` is
 reused, it may be necessary to execute a `MFENCE.PA` instruction after, or in
