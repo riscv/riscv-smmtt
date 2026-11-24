@@ -162,18 +162,33 @@ The behavior of `MFENCE.PA` depends on `rs1` and `rs2` as follows:
 
 * If `rs1=x0` and `rs2=x0`, the fence orders all reads and writes to any level
   of the MPTs for all supervisor domain address spaces.
+  The fence also invalidates all MPT cache entries, for all supervisor domain
+  address spaces.
 * If `rs1=x0` and `rs2!=x0`, the fence orders all reads and writes to any level
   of the MPT for the supervisor domain address space identified by the
   `SDID` in `rs2`.
-* If `rs1!=x0` and `rs2=x0`, the fence orders all reads and writes made to the
+  The fence also invalidates all MPT cache entries matching the supervisor
+  domain address space identified by the `SDID` in `rs2`.
+* If `rs1!=x0` and `rs2=x0`, the fence orders only reads and writes made to the
   leaf MPT entries that correspond to the physical address in `rs1`, for all
   supervisor domain address spaces.
-* If `rs1!=x0` and `rs2!=x0`, the fence orders all reads and writes made to the
+  The fence also invalidates all MPT cache entries that contain leaf MPT
+  entries corresponding to the physical address in `rs1`, for all supervisor
+  domain address spaces.
+* If `rs1!=x0` and `rs2!=x0`, the fence orders only reads and writes made to the
   leaf MPT PTEs that correspond to the physical address in `rs1`, for the
+  supervisor domain address space identified by the `SDID` in `rs2`.
+  The fence also invalidates all MPT cache entries that contain leaf MPT
+  entries corresponding to the physical address in `rs1` and that match the
   supervisor domain address space identified by the `SDID` in `rs2`.
 
 Executing a `MFENCE.PA` guarantees that any previous stores already visible to
 the current hart are ordered before all implicit reads by that hart to memory
+protection tables.
+`MFENCE.PA` is also used to invalidate entries in the MPT cache associated with
+a hart.
+
+`MFENCE.PA` orders only the local hart's implicit references to the memory
 protection tables.
 
 When `SDID` is specified in `rs2`, bits `XLEN-1:SDIDMAX` held in `rs2` are
