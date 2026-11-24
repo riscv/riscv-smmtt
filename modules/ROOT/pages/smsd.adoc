@@ -217,6 +217,12 @@ memory order.
 These implicit loads also need not otherwise obey normal program order
 semantics with respect to prior loads or stores to the same address.
 
+Implementations must only perform implicit reads of the memory protection
+tables pointed to by the current contents of the `mmpt` register or a
+subsequent valid (V=1) MPTE, and must only raise exceptions for implicit
+accesses that are generated as a result of instruction execution, not those
+that are performed speculatively.
+
 == M-mode Supervisor Domain Fine-Grain Invalidation Instruction
 
 The `MINVAL.PA` instruction supports batching of MPT invalidations,
