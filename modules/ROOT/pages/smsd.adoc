@@ -248,8 +248,11 @@ analogous to `SINVAL.VMA`.
 ], config:{lanes: 1, hspace:1024}}
 ....
 
-`MINVAL.PA` is only ordered against `SFENCE.W.INVAL` and `SFENCE.INVAL.IR`
-instructions.
+The `MINVAL.PA` instruction invalidates any MPT cache entries that an
+`MFENCE.PA` instruction with the same values of _rs1_ and _rs2_ would
+invalidate.
+However, unlike `MFENCE.PA`, `MINVAL.PA` instructions are only ordered with
+respect to `MFENCE.PA`, `SFENCE.W.INVAL`, and `SFENCE.INVAL.IR` instructions.
 
 The `SFENCE.W.INVAL` instruction guarantees that any previous stores already
 visible to the current RISC-V hart are ordered before subsequent `MINVAL.PA`
