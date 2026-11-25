@@ -231,6 +231,29 @@ follows:
 Implicit accesses to MPT by this process are checked by PMP/Smepmp as implicit
 M-mode accesses. The endianness of such implicit accesses is controlled by
 `mstatus.MBE`.
+All implicit accesses to the memory protection tables in this algorithm are
+performed using width MPTESIZE.
+
+The results of implicit MPT reads in step 2 may be held in a read-only,
+incoherent _MPT cache_ but not shared with other harts.
+The MPT cache may hold an arbitrary number of entries, including an arbitrary
+number of entries for the same address and `SDID`.
+Entries in the MPT cache may then satisfy subsequent step 2 reads if the `SDID`
+associated with the entry matches the `SDID` loaded in step 1.
+To ensure that implicit reads observe writes to the same memory locations, an
+`MFENCE.PA` instruction must be executed after the writes to flush the relevant
+cached translations.
+
+Implementations may also execute the access type permissions lookup algorithm
+speculatively at any time, for any physical address, as long as `mmpt` is
+_active_. Such speculative executions have the effect of pre-populating the
+MPT cache.
+
+Speculative executions of the access type permission lookup algorithm behave as
+non-speculative executions of the algorithm do, except that they must not
+trigger an exception, and they must not create MPT cache entries if those
+entries would have been invalidated by any `MFENCE.PA` instruction executed by
+the hart since the speculative execution of the algorithm began.
 
 == Smmpt43: Page-Based 43-bit Memory Protection System
 
